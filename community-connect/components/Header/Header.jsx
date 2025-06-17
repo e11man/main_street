@@ -95,9 +95,7 @@ const Header = ({ openModal }) => {
             })}
           </ul>
           <div className="flex items-center gap-4">
-            <Link href="/company-login" className="text-text-secondary font-montserrat text-sm hover:text-accent1 transition-colors duration-200">
-              Company Login
-            </Link>
+         
             <Button onClick={openModal} variant="primary" className="shadow-sm hover:shadow-md whitespace-nowrap">
               Request Volunteers
             </Button>

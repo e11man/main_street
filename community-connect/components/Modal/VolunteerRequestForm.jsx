@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import Input from '../ui/Input';
 import Textarea from '../ui/Textarea';
 import Select from '../ui/Select';
@@ -162,12 +163,12 @@ const VolunteerRequestForm = ({ onSubmit, onCancel, onCompanyLoginClick }) => {
         
         <div className="text-center mt-6 pt-4 border-t border-border-light">
           <p className="text-sm text-text-secondary mb-2">Are you a company looking to post volunteer opportunities?</p>
-          <button 
-            onClick={onCompanyLoginClick}
+          <Link 
+            href="/company-login"
             className="text-accent1 hover:text-primary font-medium text-sm focus:outline-none"
           >
             Login as Company
-          </button>
+          </Link>
         </div>
       </div>
     </>
