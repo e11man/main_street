@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Apply basic styles from the original CSS to ensure global consistency */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-source-serif bg-background text-text-primary leading-relaxed font-normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(82, 45, 114, 0.3); /* Using --taylor-purple from your original CSS as a starting point */
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(82, 45, 114, 0.5);
+}
+
+/* Ensure focus styles are consistent across elements */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  @apply outline-none shadow-taylor-purple-focus; /* Custom shadow for focus */
+}
+
+/* Define custom utility classes for shadows, if not already covered by default Tailwind */
+@layer utilities {
+  .shadow-taylor-purple-focus {
+    box-shadow: 0 0 0 3px rgba(82, 45, 114, 0.3);
+  }
+}
+
+/* Custom headers pseudo-elements */
+.hero-title::after,
+.feed-title::after,
+.testimonials h2::after,
+.newsletter h2::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 3px;
+}
+
+.hero-title::after {
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent1));
+}
+
+.feed-title::after,
+.testimonials h2::after,
+.newsletter h2::after {
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--taylor-purple), var(--legacy-gold));
+}
+
