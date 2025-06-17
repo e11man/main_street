@@ -1,44 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import Input from '../ui/Input';
-import Textarea from '../ui/Textarea';
-import Select from '../ui/Select';
 import Button from '../ui/Button';
-import Icon from '../ui/Icon';
 
-const VolunteerRequestForm = ({ onSubmit, onCancel, onCompanyLoginClick }) => {
-  const [formData, setFormData] = useState({
-    projectTitle: '',
-    category: '',
-    projectDescription: '',
-    eventDate: '',
-    volunteersNeeded: '',
-    location: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Simulate API call or data processing
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    onSubmit(formData);
-    setIsSubmitting(false);
-    setFormData({ // Reset form after submission
-      projectTitle: '',
-      category: '',
-      projectDescription: '',
-      eventDate: '',
-      volunteersNeeded: '',
-      location: '',
-    });
+const VolunteerRequestForm = ({ onCancel }) => {
+  const handleEmailClick = () => {
+    const subject = encodeURIComponent('Interest in Community Connect Beta Access');
+    const body = encodeURIComponent('Hi,\n\nI\'m interested in learning more about Community Connect and getting access to post volunteer opportunities.\n\nPlease let me know how I can get involved.\n\nThank you!');
+    window.open(`mailto:info@communityconnect.com?subject=${subject}&body=${body}`);
   };
 
   return (
@@ -53,122 +21,61 @@ const VolunteerRequestForm = ({ onSubmit, onCancel, onCompanyLoginClick }) => {
           &times;
         </button>
       </div>
-      <div className="p-6">
-        <form onSubmit={handleSubmit}>
-          <div className="mb-5 animate-slideUp">
-            <label htmlFor="projectTitle" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
-              Project Title *
-            </label>
-            <Input
-              type="text"
-              id="projectTitle"
-              name="projectTitle"
-              value={formData.projectTitle}
-              onChange={handleChange}
-              required
-            />
+      <div className="p-6 text-center">
+        <div className="mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-accent1/10 rounded-full mb-4">
+            <span className="text-2xl">🚧</span>
           </div>
+          <h3 className="font-montserrat text-xl font-semibold text-text-primary mb-3">
+            We're in Beta!
+          </h3>
+          <p className="text-text-secondary mb-4 leading-relaxed">
+            Community Connect is currently in beta testing. We're only allowing verified companies and organizations to post volunteer opportunities at this time.
+          </p>
+          <p className="text-text-secondary mb-6 leading-relaxed">
+            Individual volunteer requests will be available soon!
+          </p>
+        </div>
 
-          <div className="mb-5 animate-slideUp" style={{ animationDelay: '50ms' }}>
-            <label htmlFor="category" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
-              Project Category *
-            </label>
-            <Select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
+        <div className="space-y-4">
+          <div className="p-4 bg-surface rounded-lg border border-border-light">
+            <h4 className="font-montserrat font-semibold text-text-primary mb-2">
+              Are you a company or organization?
+            </h4>
+            <p className="text-sm text-text-secondary mb-3">
+              Companies can already post volunteer opportunities
+            </p>
+            <Link 
+              href="/company-login"
+              className="inline-block"
             >
-              <option value="">Select a category</option>
-              <option value="community">Community</option>
-              <option value="education">Education</option>
-              <option value="environment">Environment</option>
-              <option value="health">Health</option>
-              <option value="fundraising">Fundraising</option>
-              <option value="other">Other</option>
-            </Select>
+              <Button variant="primary" className="w-full">
+                Company Login
+              </Button>
+            </Link>
           </div>
 
-          <div className="mb-5 animate-slideUp" style={{ animationDelay: '100ms' }}>
-            <label htmlFor="projectDescription" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
-              Project Description *
-            </label>
-            <Textarea
-              id="projectDescription"
-              name="projectDescription"
-              rows="3"
-              placeholder="Describe what volunteers will be doing and the impact of this project..."
-              value={formData.projectDescription}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-            <div className="animate-slideUp" style={{ animationDelay: '150ms' }}>
-              <label htmlFor="eventDate" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
-                Event Date *
-              </label>
-              <Input
-                type="date"
-                id="eventDate"
-                name="eventDate"
-                value={formData.eventDate}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="animate-slideUp" style={{ animationDelay: '200ms' }}>
-              <label htmlFor="volunteersNeeded" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
-                Volunteers Needed *
-              </label>
-              <Input
-                type="number"
-                id="volunteersNeeded"
-                name="volunteersNeeded"
-                min="1"
-                max="100"
-                value={formData.volunteersNeeded}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="mb-5 animate-slideUp" style={{ animationDelay: '250ms' }}>
-            <label htmlFor="location" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
-              Location *
-            </label>
-            <Input
-              type="text"
-              id="location"
-              name="location"
-              placeholder="Address or general area"
-              value={formData.location}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-6 border-t border-border-light mt-6">
-            <Button type="button" variant="cancel" onClick={onCancel}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit Request'}
+          <div className="p-4 bg-surface rounded-lg border border-border-light">
+            <h4 className="font-montserrat font-semibold text-text-primary mb-2">
+              Want to be notified when we launch?
+            </h4>
+            <p className="text-sm text-text-secondary mb-3">
+              Get in touch and we'll let you know when individual requests are available
+            </p>
+            <Button 
+              variant="secondary" 
+              onClick={handleEmailClick}
+              className="w-full"
+            >
+              Email for More Info
             </Button>
           </div>
-        </form>
-        
-        <div className="text-center mt-6 pt-4 border-t border-border-light">
-          <p className="text-sm text-text-secondary mb-2">Are you a company looking to post volunteer opportunities?</p>
-          <Link 
-            href="/company-login"
-            className="text-accent1 hover:text-primary font-medium text-sm focus:outline-none"
-          >
-            Login as Company
-          </Link>
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-border-light">
+          <Button type="button" variant="cancel" onClick={onCancel}>
+            Close
+          </Button>
         </div>
       </div>
     </>
