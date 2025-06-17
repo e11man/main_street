@@ -3,17 +3,17 @@ import Icon from '../ui/Icon';
 
 const FloatingCardSection = () => {
   return (
-    <section className="max-w-screen-xl mx-auto mt-[-40px] md:mt-[-80px] mb-20 md:mb-20 px-6 md:px-8 relative z-20">
+    <section className="max-w-screen-xl mx-auto mt-[-60px] md:mt-[-100px] mb-20 md:mb-20 px-6 md:px-8 relative z-20">
       <div className="group rounded-xl md:rounded-2xl overflow-hidden shadow-xl transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] bg-white relative z-10
                       hover:translate-y-[-8px] hover:scale-[1.02] hover:shadow-[0_25px_30px_-12px_rgba(0,0,0,0.2)]">
-        <div className="relative w-full h-[250px] md:h-[400px] bg-surface overflow-hidden">
+        <div className="relative w-full h-[280px] md:h-[420px] bg-surface overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-accent1/10 rounded-full -translate-x-1/2 -translate-y-1/2 opacity-30 z-10"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-accent2/10 to-accent1/10 rounded-full translate-x-1/2 translate-y-1/2 opacity-20 z-10"></div>
           
           <img
-            src="/IMG_2645.jpg"
-            alt="Community volunteers working together"
+            src="/IMG_2700.jpg"
+            alt="Community garden and volunteer activities"
             className="w-full h-full object-cover transition-transform duration-700 ease-in-out
                        group-hover:scale-[1.05]"
           />
