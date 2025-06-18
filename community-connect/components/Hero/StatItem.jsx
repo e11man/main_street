@@ -3,7 +3,7 @@ import { useAnimatedCounter } from '../../lib/hooks';
 import Icon from '../ui/Icon';
 
 const StatItem = ({ target, label, icon, className = '' }) => {
-  const counterRef = useAnimatedCounter(target);
+  const { value, ref } = useAnimatedCounter(target);
 
   return (
     <div className={`text-center p-6 md:p-8 bg-white/95 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg
@@ -28,13 +28,13 @@ const StatItem = ({ target, label, icon, className = '' }) => {
       
       {/* Counter */}
       <span
-        ref={counterRef}
+        ref={ref}
         className="font-montserrat text-4xl md:text-5xl font-extrabold mb-3 block
                    bg-gradient-to-r from-primary to-accent1 bg-clip-text text-transparent
                    drop-shadow-sm"
         data-count={target}
       >
-        0
+        {value.toLocaleString()}
       </span>
       
       {/* Label */}
