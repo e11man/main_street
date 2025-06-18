@@ -78,7 +78,7 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
         <h3 className="font-montserrat text-xl font-bold mb-3 text-primary tracking-tight leading-tight group-hover:text-primary-light transition-all duration-300">
           {opportunity.title}
         </h3>
-        <p className="text-text-secondary font-source-serif text-sm leading-relaxed mb-4">
+        <p className="text-text-secondary font-source-serif text-sm leading-relaxed mb-4 line-clamp-3">
           {opportunity.description}
         </p>
         
@@ -146,7 +146,7 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
               <span className="truncate max-w-[120px]">{opportunity.location}</span>
             </div>
           )}
-          <div className="card-spots bg-surface/70 p-4 rounded-lg border-2 border-accent1/20 min-w-[140px] flex flex-col gap-3 transition-all duration-300 group-hover:border-accent1/40 group-hover:shadow-md">
+          <div className="card-spots bg-surface/70 p-4 rounded-lg border-2 border-accent1/20 w-full flex flex-col gap-3 transition-all duration-300 group-hover:border-accent1/40 group-hover:shadow-md">
             <div className="flex items-center gap-2 font-montserrat font-bold text-sm text-primary">
               <div className="bg-accent1/10 p-1.5 rounded-full">
                 <Icon 
@@ -162,20 +162,13 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
             </div>
           </div>
         </div>
-        <div className="flex gap-4 flex-wrap mt-auto">
+        <div className="flex justify-center mt-auto">
           <Button 
             variant="secondary" 
-            className="py-2.5 px-5 rounded-full bg-accent1 hover:bg-accent1/90"
+            className="py-2.5 px-8 rounded-full bg-accent1 hover:bg-accent1/90 w-full max-w-[200px]"
             onClick={() => onJoinClick(opportunity)}
           >
             Join Now
-          </Button>
-          <Button 
-            variant="outline" 
-            className="py-2.5 px-5 rounded-full border-accent1/50 text-accent1 hover:bg-accent1/10"
-            onClick={() => onLearnMoreClick && onLearnMoreClick(opportunity)}
-          >
-            Learn More
           </Button>
         </div>
       </div>

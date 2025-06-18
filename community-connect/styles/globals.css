@@ -48,6 +48,13 @@ select:focus {
     box-shadow: 0 0 0 3px rgba(82, 45, 114, 0.3);
   }
   
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
   /* Hide scrollbar for horizontal scroll */
   .scrollbar-hide {
     -ms-overflow-style: none;  /* Internet Explorer 10+ */
