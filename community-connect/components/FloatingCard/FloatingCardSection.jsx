@@ -3,7 +3,7 @@ import Icon from '../ui/Icon';
 
 const FloatingCardSection = () => {
   return (
-    <section className="max-w-screen-xl mx-auto mt-[-60px] md:mt-[-100px] mb-20 md:mb-20 px-6 md:px-8 relative z-20">
+    <section id="about" className="max-w-screen-xl mx-auto mt-[-60px] md:mt-[-100px] mb-20 md:mb-20 px-6 md:px-8 relative z-20">
       <div className="group rounded-xl md:rounded-2xl overflow-hidden shadow-xl transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] bg-white relative z-10
                       hover:translate-y-[-8px] hover:scale-[1.02] hover:shadow-[0_25px_30px_-12px_rgba(0,0,0,0.2)]">
         <div className="relative w-full h-[280px] md:h-[420px] bg-surface overflow-hidden">
@@ -25,18 +25,7 @@ const FloatingCardSection = () => {
                              bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent drop-shadow-sm">Join Our Community</h3>
               <p className="text-base md:text-lg text-white/90 font-source-serif mb-6">Be part of something bigger</p>
               
-              <div className="flex flex-wrap gap-4 mt-4">
-                <button className="px-5 py-2.5 bg-white/10 backdrop-blur-sm rounded-full text-white font-medium 
-                                   border border-white/20 transition-all duration-300 hover:bg-white/20 hover:border-white/30 
-                                   flex items-center gap-2 group/btn">
-                  <span>Get Involved</span>
-                  <Icon path="M13 7l5 5m0 0l-5 5m5-5H6" className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-                </button>
-                <button className="px-5 py-2.5 bg-transparent rounded-full text-white/90 font-medium 
-                                   border border-white/10 transition-all duration-300 hover:bg-white/10 hover:border-white/20">
-                  Learn More
-                </button>
-              </div>
+    
             </div>
           </div>
         </div>

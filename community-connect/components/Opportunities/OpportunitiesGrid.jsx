@@ -12,7 +12,7 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
   }, [opportunities, opportunityRefs]);
 
   return (
-    <section className="content max-w-screen-xl mx-auto px-6 md:px-8 pb-24">
+    <section id="opportunities" className="content max-w-screen-xl mx-auto px-6 md:px-8 pb-24">
       <div className="text-center mb-16">
         <h2 className="feed-title font-montserrat text-clamp-32-48 font-extrabold mb-5 tracking-[-0.025em] text-primary relative inline-block">
           Opportunities

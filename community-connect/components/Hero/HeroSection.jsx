@@ -10,6 +10,20 @@ const HeroSection = forwardRef((props, ref) => {
     setIsVisible(true);
   }, []);
 
+  const scrollToOpportunities = () => {
+    const opportunitiesSection = document.getElementById('opportunities');
+    if (opportunitiesSection) {
+      opportunitiesSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const scrollToAbout = () => {
+    const aboutSection = document.getElementById('about');
+    if (aboutSection) {
+      aboutSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="pt-18 relative overflow-hidden bg-gradient-to-b from-background to-surface">
       {/* Background pattern */}
@@ -39,6 +53,7 @@ const HeroSection = forwardRef((props, ref) => {
             <Button 
               variant="primary" 
               className="group text-base px-8 py-4 shadow-lg hover:shadow-xl"
+              onClick={scrollToOpportunities}
             >
               Find Opportunities
               <Icon 
@@ -49,6 +64,7 @@ const HeroSection = forwardRef((props, ref) => {
             <Button 
               variant="outline" 
               className="text-base px-8 py-4"
+              onClick={scrollToAbout}
             >
               Learn More
             </Button>

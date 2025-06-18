@@ -20,26 +20,41 @@ const ContactSection = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setIsSubmitted(false);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      setFormData({ name: '', email: '', message: '' }); // Clear form on success
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-      // Reset 'Submitted' state after a delay
-      setTimeout(() => {
-        setIsSubmitted(false);
-      }, 2000);
-    }, 1000);
+      if (response.ok) {
+        setIsSubmitted(true);
+        setFormData({ name: '', email: '', message: '' }); // Clear form on success
+        
+        // Reset 'Submitted' state after a delay
+        setTimeout(() => {
+          setIsSubmitted(false);
+        }, 3000);
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <section className="bg-white text-text-primary py-16 md:py-20 text-center">
+    <section id="contact" className="bg-white text-text-primary py-16 md:py-20 text-center">
       <div className="max-w-xl mx-auto px-6 md:px-8">
         <h2 className="contact h2 font-montserrat text-3xl md:text-4xl font-bold mb-4 text-primary">
           Get In Touch

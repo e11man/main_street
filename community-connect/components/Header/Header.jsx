@@ -59,7 +59,7 @@ const Header = ({ openModal }) => {
   const navLinks = [
     { name: 'About', href: '#about' },
     { name: 'Opportunities', href: '#opportunities' },
-    { name: 'Impact', href: '#impact' },
+
     { name: 'Contact', href: '#contact' },
   ];
 

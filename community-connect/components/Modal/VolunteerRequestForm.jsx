@@ -12,7 +12,7 @@ const VolunteerRequestForm = ({ onCancel }) => {
   return (
     <>
       <div className="px-6 pt-6 flex justify-between items-center">
-        <h2 className="font-montserrat text-2xl font-bold text-taylor-purple m-0">Request Volunteers</h2>
+        <h2 className="font-montserrat text-2xl font-bold text-primary m-0">Request Volunteers</h2>
         <button
           className="bg-none border-none text-2xl cursor-pointer text-text-secondary p-2 rounded-md transition-all duration-200 hover:bg-surface hover:text-text-primary"
           onClick={onCancel}

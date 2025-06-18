@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Header from '../components/Header/Header.jsx';
 import HeroSection from '../components/Hero/HeroSection.jsx';
 import FloatingCardSection from '../components/FloatingCard/FloatingCardSection.jsx';
