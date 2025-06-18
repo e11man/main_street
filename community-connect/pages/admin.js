@@ -613,6 +613,217 @@ export default function AdminPage() {
     );
   };
 
+  // Edit Opportunity Modal
+  const EditOpportunityModal = () => {
+    const [formData, setFormData] = useState({
+      title: editingOpportunity?.title || '',
+      description: editingOpportunity?.description || '',
+      category: editingOpportunity?.category || 'Community',
+      priority: editingOpportunity?.priority || 'Medium',
+      date: editingOpportunity?.date || '',
+      time: editingOpportunity?.time || '',
+      totalSpots: editingOpportunity?.totalSpots || '',
+      location: editingOpportunity?.location || ''
+    });
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setLoading(true);
+      try {
+        const response = await fetch('/api/admin/opportunities', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...formData, id: editingOpportunity.id })
+        });
+        if (response.ok) {
+          const updatedOpportunity = await response.json();
+          setOpportunities(opportunities.map(opp => 
+            opp.id === updatedOpportunity.id ? updatedOpportunity : opp
+          ));
+          setEditingOpportunity(null);
+        } else {
+          alert('Failed to update opportunity');
+        }
+      } catch (error) {
+        alert('Error updating opportunity');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg w-96 max-h-96 overflow-y-auto">
+          <h3 className="text-lg font-semibold mb-4">Edit Opportunity</h3>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Title</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                rows="3"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Category</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                <option value="Community">Community</option>
+                <option value="Education">Education</option>
+                <option value="Environment">Environment</option>
+                <option value="Health">Health</option>
+                <option value="Fundraising">Fundraising</option>
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Priority</label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Date</label>
+              <input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({...formData, date: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Time</label>
+              <input
+                type="time"
+                value={formData.time}
+                onChange={(e) => setFormData({...formData, time: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Total Spots</label>
+              <input
+                type="number"
+                value={formData.totalSpots}
+                onChange={(e) => setFormData({...formData, totalSpots: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Location</label>
+              <input
+                type="text"
+                value={formData.location}
+                onChange={(e) => setFormData({...formData, location: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={() => setEditingOpportunity(null)}
+                className="px-4 py-2 text-gray-600 border rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50"
+              >
+                {loading ? 'Updating...' : 'Update Opportunity'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // Add Blocked Email Modal
+  const AddBlockedEmailModal = () => {
+    const [email, setEmail] = useState('');
+    const [modalLoading, setModalLoading] = useState(false);
+    const [modalError, setModalError] = useState('');
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setModalError('');
+      
+      if (!email) {
+        setModalError('Email is required');
+        return;
+      }
+
+      setModalLoading(true);
+      await addBlockedEmail(email);
+      setModalLoading(false);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-8 max-w-md w-full">
+          <h2 className="text-xl font-bold mb-4">Block Email Address</h2>
+          {modalError && <div className="mb-4 text-red-500">{modalError}</div>}
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md"
+                placeholder="Enter email to block"
+                required
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={() => setShowAddBlockedEmail(false)}
+                className="px-4 py-2 text-gray-600 border rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={modalLoading}
+                className="px-4 py-2 bg-red-500 text-white rounded-md disabled:opacity-50"
+              >
+                {modalLoading ? 'Blocking...' : 'Block Email'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <Head>
@@ -889,217 +1100,4 @@ export default function AdminPage() {
     </>
   );
 
-
-
-
-  // Edit Opportunity Modal
-  const EditOpportunityModal = () => {
-    const [formData, setFormData] = useState({
-      title: editingOpportunity?.title || '',
-      description: editingOpportunity?.description || '',
-      category: editingOpportunity?.category || 'Community',
-      priority: editingOpportunity?.priority || 'Medium',
-      date: editingOpportunity?.date || '',
-      time: editingOpportunity?.time || '',
-      totalSpots: editingOpportunity?.totalSpots || '',
-      location: editingOpportunity?.location || ''
-    });
-    const [loading, setLoading] = useState(false);
-
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setLoading(true);
-      try {
-        const response = await fetch('/api/admin/opportunities', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...formData, id: editingOpportunity.id })
-        });
-        if (response.ok) {
-          const updatedOpportunity = await response.json();
-          setOpportunities(opportunities.map(opp => 
-            opp.id === updatedOpportunity.id ? updatedOpportunity : opp
-          ));
-          setEditingOpportunity(null);
-        } else {
-          alert('Failed to update opportunity');
-        }
-      } catch (error) {
-        alert('Error updating opportunity');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg w-96 max-h-96 overflow-y-auto">
-          <h3 className="text-lg font-semibold mb-4">Edit Opportunity</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Title</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                className="w-full px-3 py-2 border rounded-md"
-                rows="3"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Category</label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
-                className="w-full px-3 py-2 border rounded-md"
-              >
-                <option value="Community">Community</option>
-                <option value="Education">Education</option>
-                <option value="Environment">Environment</option>
-                <option value="Health">Health</option>
-                <option value="Fundraising">Fundraising</option>
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Priority</label>
-              <select
-                value={formData.priority}
-                onChange={(e) => setFormData({...formData, priority: e.target.value})}
-                className="w-full px-3 py-2 border rounded-md"
-              >
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Date</label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({...formData, date: e.target.value})}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Time</label>
-              <input
-                type="time"
-                value={formData.time}
-                onChange={(e) => setFormData({...formData, time: e.target.value})}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Total Spots</label>
-              <input
-                type="number"
-                value={formData.totalSpots}
-                onChange={(e) => setFormData({...formData, totalSpots: e.target.value})}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Location</label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => setFormData({...formData, location: e.target.value})}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => setEditingOpportunity(null)}
-                className="px-4 py-2 text-gray-600 border rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50"
-              >
-                {loading ? 'Updating...' : 'Update Opportunity'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  };
-
-  // Add Blocked Email Modal
-  const AddBlockedEmailModal = () => {
-    const [email, setEmail] = useState('');
-    const [modalLoading, setModalLoading] = useState(false);
-    const [modalError, setModalError] = useState('');
-
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setModalError('');
-      
-      if (!email) {
-        setModalError('Email is required');
-        return;
-      }
-
-      setModalLoading(true);
-      await addBlockedEmail(email);
-      setModalLoading(false);
-    };
-
-    return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8 max-w-md w-full">
-          <h2 className="text-xl font-bold mb-4">Block Email Address</h2>
-          {modalError && <div className="mb-4 text-red-500">{modalError}</div>}
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-                placeholder="Enter email to block"
-                required
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => setShowAddBlockedEmail(false)}
-                className="px-4 py-2 text-gray-600 border rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={modalLoading}
-                className="px-4 py-2 bg-red-500 text-white rounded-md disabled:opacity-50"
-              >
-                {modalLoading ? 'Blocking...' : 'Block Email'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  };
 }
