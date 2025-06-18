@@ -82,8 +82,25 @@ export default async function handler(req, res) {
     // Get all opportunities from the collection
     const allOpportunities = await db.collection('opportunities').find({}).toArray();
     
+    // Get all companies to join with opportunities
+    const allCompanies = await db.collection('companies').find({}).toArray();
+    const companiesMap = new Map(allCompanies.map(company => [company._id.toString(), company]));
+    
+    // Enrich opportunities with company information
+    const enrichedOpportunities = allOpportunities.map(opportunity => {
+      const company = companiesMap.get(opportunity.companyId?.toString());
+      return {
+        ...opportunity,
+        companyName: company?.name || opportunity.companyName,
+        companyEmail: company?.email,
+        companyPhone: company?.phone,
+        companyWebsite: company?.website,
+        companyDescription: company?.description
+      };
+    });
+    
     // Filter recurring opportunities to show only the most recent instance
-    const filteredOpportunities = filterRecurringOpportunities(allOpportunities);
+    const filteredOpportunities = filterRecurringOpportunities(enrichedOpportunities);
     
     // Return the filtered data as JSON
     res.status(200).json(filteredOpportunities);

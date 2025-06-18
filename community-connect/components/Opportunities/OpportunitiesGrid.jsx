@@ -23,15 +23,16 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
         </p>
       </div>
 
-      <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+      <div ref={gridRef} className="flex overflow-x-auto gap-8 md:gap-10 pb-4 scrollbar-hide">
         {opportunities.map((opportunity, index) => (
-          <OpportunityCard
-            key={opportunity.id}
-            opportunity={opportunity}
-            ref={el => opportunityRefs.current[index] = el}
-            onJoinClick={onJoinClick}
-            onLearnMoreClick={onLearnMoreClick}
-          />
+          <div key={opportunity.id} className="flex-shrink-0 w-80 md:w-96">
+            <OpportunityCard
+              opportunity={opportunity}
+              ref={el => opportunityRefs.current[index] = el}
+              onJoinClick={onJoinClick}
+              onLearnMoreClick={onLearnMoreClick}
+            />
+          </div>
         ))}
       </div>
     </section>
