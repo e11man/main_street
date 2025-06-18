@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Header from '../components/Header/Header.jsx';
 import Footer from '../components/Footer/Footer.jsx';
@@ -18,6 +18,13 @@ const CompanyLogin = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  
+  // Check for error parameter in URL
+  useEffect(() => {
+    if (router.query.error === 'not_approved') {
+      setError('Your company account is pending approval by an administrator. Please check back later.');
+    }
+  }, [router.query]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -78,15 +85,31 @@ const CompanyLogin = () => {
           phone
         });
 
-        // Store company data in localStorage
-        localStorage.setItem('companyData', JSON.stringify(response.data));
+        // Show success message instead of redirecting
+        setIsLogin(true);
+        setError('');
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          description: '',
+          website: '',
+          phone: ''
+        });
         
-        // Redirect to company dashboard
-        router.push('/company-dashboard');
+        // Display success message
+        alert('Your company registration has been submitted and is pending approval. You will be notified once approved.');
       }
     } catch (error) {
       console.error('Company auth error:', error);
-      setError(error.response?.data?.error || 'Authentication failed');
+      if (error.response?.status === 403 && error.response?.data?.error === 'Company account pending approval') {
+        setError('Your company account is pending approval by an administrator. Please check back later.');
+      } else if (error.response?.status === 403 && error.response?.data?.error === 'Company account not approved') {
+        setError('Your company account has not been approved. Please contact an administrator.');
+      } else {
+        setError(error.response?.data?.error || 'Authentication failed');
+      }
     } finally {
       setLoading(false);
     }

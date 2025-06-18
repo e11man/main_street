@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   try {
     // Connect to MongoDB
     const client = await clientPromise;
-    const db = client.db('community-connect');
+    const db = client.db('mainStreetOpportunities');
     const opportunitiesCollection = db.collection('opportunities');
 
     if (req.method === 'DELETE') {

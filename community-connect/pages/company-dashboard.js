@@ -45,6 +45,16 @@ export default function CompanyDashboard() {
     }
 
     const parsedCompanyData = JSON.parse(storedCompanyData);
+    
+    // Check if company is approved
+    if (!parsedCompanyData.approved) {
+      // Remove the stored data
+      localStorage.removeItem('companyData');
+      // Redirect to login page with error message
+      router.push('/company-login?error=not_approved');
+      return;
+    }
+    
     setCompanyData(parsedCompanyData);
     
     // Initialize company form data

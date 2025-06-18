@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   try {
     // Connect to MongoDB
     const client = await clientPromise;
-    const db = client.db('community-connect');
+    const db = client.db('mainStreetOpportunities');
     const opportunitiesCollection = db.collection('opportunities');
 
     if (req.method === 'GET') {
@@ -77,6 +77,23 @@ export default async function handler(req, res) {
       return res.status(200).json(updatedOpportunity);
     }
 
+    if (req.method === 'DELETE') {
+      // Delete opportunity
+      const { id } = req.query;
+      
+      if (!id) {
+        return res.status(400).json({ error: 'Opportunity ID is required' });
+      }
+      
+      const result = await opportunitiesCollection.deleteOne({ id: parseInt(id) });
+      
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ error: 'Opportunity not found' });
+      }
+      
+      return res.status(200).json({ message: 'Opportunity deleted successfully' });
+    }
+    
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error('Admin opportunities API error:', error);

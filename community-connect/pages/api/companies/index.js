@@ -114,10 +114,20 @@ async function handleSignup(req, res, companiesCollection) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   
-  // Check if company already exists
+  // Check if company already exists in companies collection
   const existingCompany = await companiesCollection.findOne({ email });
   if (existingCompany) {
     return res.status(409).json({ error: 'Company with this email already exists' });
+  }
+  
+  // Check if company already exists in pending companies collection
+  const client = await clientPromise;
+  const db = client.db('mainStreetOpportunities');
+  const pendingCompaniesCollection = db.collection('pendingCompanies');
+  
+  const existingPendingCompany = await pendingCompaniesCollection.findOne({ email });
+  if (existingPendingCompany) {
+    return res.status(409).json({ error: 'Company with this email is already pending approval' });
   }
   
   // Hash password
@@ -133,17 +143,22 @@ async function handleSignup(req, res, companiesCollection) {
     phone: phone || '',
     opportunities: [], // Array to store opportunity IDs created by this company
     createdAt: new Date(),
-    approved: true // Companies are auto-approved for now
+    approved: false // Companies require approval
   };
   
-  // Insert new company
+  // Insert new company into pending companies collection
   try {
-    const result = await companiesCollection.insertOne(newCompany);
+    const result = await pendingCompaniesCollection.insertOne(newCompany);
     
     // Return company data (excluding password)
     const { password: _, ...companyWithoutPassword } = newCompany;
-    return res.status(201).json(companyWithoutPassword);
+    return res.status(201).json({
+      ...companyWithoutPassword,
+      pending: true,
+      message: 'Your company account has been submitted for approval. You will be notified when it is approved.'
+    });
   } catch (error) {
+    console.error('Error creating pending company:', error);
     return res.status(500).json({ error: 'Failed to create company account' });
   }
 }
@@ -159,7 +174,32 @@ async function handleLogin(req, res, companiesCollection) {
   // Find company
   const company = await companiesCollection.findOne({ email });
   if (!company) {
+    // Check if company is in pending companies collection
+    const client = await clientPromise;
+    const db = client.db('mainStreetOpportunities');
+    const pendingCompaniesCollection = db.collection('pendingCompanies');
+    
+    const pendingCompany = await pendingCompaniesCollection.findOne({ email });
+    if (pendingCompany) {
+      // Compare passwords for pending company
+      const passwordMatch = await compare(password, pendingCompany.password);
+      if (passwordMatch) {
+        return res.status(403).json({ 
+          error: 'Your company account is pending approval by an administrator',
+          pending: true
+        });
+      }
+    }
+    
     return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  
+  // Check if company is approved
+  if (!company.approved) {
+    return res.status(403).json({ 
+      error: 'Your company account is pending approval by an administrator',
+      pending: true
+    });
   }
   
   // Compare passwords

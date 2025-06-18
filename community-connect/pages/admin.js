@@ -8,11 +8,14 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
   const [blockedEmails, setBlockedEmails] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
+  const [pendingCompanies, setPendingCompanies] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [editingOpportunity, setEditingOpportunity] = useState(null);
+  const [editingCompany, setEditingCompany] = useState(null);
   const [showAddUser, setShowAddUser] = useState(false);
   const [showAddOpportunity, setShowAddOpportunity] = useState(false);
   const [showAddBlockedEmail, setShowAddBlockedEmail] = useState(false);
@@ -74,6 +77,13 @@ export default function AdminPage() {
         setUsers(usersData);
       }
 
+      // Fetch companies
+      const companiesResponse = await fetch('/api/companies');
+      if (companiesResponse.ok) {
+        const companiesData = await companiesResponse.json();
+        setCompanies(companiesData);
+      }
+
       // Fetch opportunities
       const opportunitiesResponse = await fetch('/api/opportunities');
       if (opportunitiesResponse.ok) {
@@ -93,6 +103,13 @@ export default function AdminPage() {
       if (pendingUsersResponse.ok) {
         const pendingUsersData = await pendingUsersResponse.json();
         setPendingUsers(pendingUsersData);
+      }
+
+      // Fetch pending companies
+      const pendingCompaniesResponse = await fetch('/api/admin/pending-companies');
+      if (pendingCompaniesResponse.ok) {
+        const pendingCompaniesData = await pendingCompaniesResponse.json();
+        setPendingCompanies(pendingCompaniesData);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -132,6 +149,24 @@ export default function AdminPage() {
       }
     } catch (error) {
       alert('Error deleting opportunity');
+    }
+  };
+
+  const deleteCompany = async (companyId) => {
+    if (!confirm('Are you sure you want to delete this company?')) return;
+
+    try {
+      const response = await fetch(`/api/admin/companies/${companyId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setCompanies(companies.filter(company => company._id !== companyId));
+      } else {
+        alert('Failed to delete company');
+      }
+    } catch (error) {
+      alert('Error deleting company');
     }
   };
 
@@ -226,6 +261,52 @@ export default function AdminPage() {
       }
     } catch (error) {
       alert('Error rejecting user');
+    }
+  };
+
+  const approveCompany = async (companyId) => {
+    if (!confirm('Are you sure you want to approve this company?')) return;
+
+    try {
+      const response = await fetch('/api/admin/pending-companies?approve=true', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ companyId }),
+      });
+
+      if (response.ok) {
+        setPendingCompanies(pendingCompanies.filter(company => company._id !== companyId));
+        // Refresh data to include the newly approved company
+        fetchData();
+      } else {
+        alert('Failed to approve company');
+      }
+    } catch (error) {
+      alert('Error approving company');
+    }
+  };
+
+  const rejectCompany = async (companyId) => {
+    if (!confirm('Are you sure you want to reject this company?')) return;
+
+    try {
+      const response = await fetch('/api/admin/pending-companies', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ companyId }),
+      });
+
+      if (response.ok) {
+        setPendingCompanies(pendingCompanies.filter(company => company._id !== companyId));
+      } else {
+        alert('Failed to reject company');
+      }
+    } catch (error) {
+      alert('Error rejecting company');
     }
   };
 
@@ -765,6 +846,119 @@ export default function AdminPage() {
     );
   };
 
+  // Edit Company Modal
+  const EditCompanyModal = () => {
+    const [formData, setFormData] = useState({
+      _id: editingCompany?._id || '',
+      name: editingCompany?.name || '',
+      email: editingCompany?.email || '',
+      website: editingCompany?.website || '',
+      phone: editingCompany?.phone || '',
+      description: editingCompany?.description || ''
+    });
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setLoading(true);
+      try {
+        const response = await fetch('/api/companies', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...formData, id: editingCompany._id })
+        });
+
+        if (response.ok) {
+          const updatedCompany = await response.json();
+          setCompanies(companies.map(company => 
+            company._id === updatedCompany._id ? updatedCompany : company
+          ));
+          setEditingCompany(null);
+        } else {
+          alert('Failed to update company');
+        }
+      } catch (error) {
+        alert('Error updating company');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg w-96 max-h-96 overflow-y-auto">
+          <h3 className="text-lg font-semibold mb-4">Edit Company</h3>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Name</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+                disabled
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Website</label>
+              <input
+                type="text"
+                value={formData.website}
+                onChange={(e) => setFormData({...formData, website: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Phone</label>
+              <input
+                type="text"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                rows="3"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={() => setEditingCompany(null)}
+                className="px-4 py-2 text-gray-600 border rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50"
+              >
+                {loading ? 'Updating...' : 'Update Company'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   // Add Blocked Email Modal
   const AddBlockedEmailModal = () => {
     const [email, setEmail] = useState('');
@@ -867,6 +1061,26 @@ export default function AdminPage() {
                 }`}
               >
                 Pending Users ({pendingUsers.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('companies')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'companies'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Companies ({companies.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('pendingCompanies')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'pendingCompanies'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Pending Companies ({pendingCompanies.length})
               </button>
               <button
                 onClick={() => setActiveTab('opportunities')}
@@ -1040,6 +1254,137 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* Companies Tab */}
+          {activeTab === 'companies' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Companies Management</h2>
+              </div>
+              <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                <ul className="divide-y divide-gray-200">
+                  {companies.map((company) => (
+                    <li key={company._id} className="px-6 py-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{company.name}</p>
+                              <p className="text-sm text-gray-500">{company.email}</p>
+                              <p className="text-xs text-gray-400">
+                                Registered on: {new Date(company.createdAt).toLocaleDateString()}
+                              </p>
+                              {company.website && (
+                                <p className="text-xs text-gray-400">
+                                  Website: {company.website}
+                                </p>
+                              )}
+                              {company.phone && (
+                                <p className="text-xs text-gray-400">
+                                  Phone: {company.phone}
+                                </p>
+                              )}
+                              {company.description && (
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Description: {company.description}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-400">
+                                Opportunities: {company.opportunities ? company.opportunities.length : 0}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => setEditingCompany(company)}
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => deleteCompany(company._id)}
+                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                  {companies.length === 0 && (
+                    <li className="px-6 py-4 text-center text-gray-500">
+                      No companies found
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Pending Companies Tab */}
+          {activeTab === 'pendingCompanies' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Pending Companies Management</h2>
+              </div>
+              <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                <ul className="divide-y divide-gray-200">
+                  {pendingCompanies.map((company) => (
+                    <li key={company._id} className="px-6 py-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{company.name}</p>
+                              <p className="text-sm text-gray-500">{company.email}</p>
+                              <p className="text-xs text-gray-400">
+                                Requested on: {new Date(company.createdAt).toLocaleDateString()}
+                              </p>
+                              {company.website && (
+                                <p className="text-xs text-gray-400">
+                                  Website: {company.website}
+                                </p>
+                              )}
+                              {company.phone && (
+                                <p className="text-xs text-gray-400">
+                                  Phone: {company.phone}
+                                </p>
+                              )}
+                              {company.description && (
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Description: {company.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => approveCompany(company._id)}
+                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => rejectCompany(company._id)}
+                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                  {pendingCompanies.length === 0 && (
+                    <li className="px-6 py-4 text-center text-gray-500">
+                      No pending companies found
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          )}
+
           {/* Blocked Emails Tab */}
           {activeTab === 'blockedEmails' && (
             <div>
@@ -1095,6 +1440,7 @@ export default function AdminPage() {
         {showAddOpportunity && <AddOpportunityModal />}
         {editingUser && <EditUserModal />}
         {editingOpportunity && <EditOpportunityModal />}
+        {editingCompany && <EditCompanyModal />}
         {showAddBlockedEmail && <AddBlockedEmailModal />}
       </div>
     </>
