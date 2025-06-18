@@ -58,11 +58,11 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
   return (
     <div
       ref={ref}
-      className="opportunity-card bg-white rounded-xl md:rounded-2xl border border-border/80 overflow-hidden shadow-md
+      className="opportunity-card bg-white rounded-xl md:rounded-2xl border border-border/80 overflow-hidden shadow-md h-full flex flex-col
                  transition-all duration-400 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]
                  hover:translate-y-[-8px] hover:scale-[1.02] hover:shadow-xl hover:border-accent1/50 group"
     >
-      <div className="p-6">
+      <div className="p-6 flex flex-col flex-grow">
         <div className="flex items-center justify-between mb-5">
           <span className="card-category bg-accent2 text-white px-3 py-1.5 rounded-full font-montserrat text-xs font-semibold tracking-wide uppercase shadow-sm">
             {opportunity.category}
@@ -162,7 +162,7 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
             </div>
           </div>
         </div>
-        <div className="flex gap-4 flex-wrap">
+        <div className="flex gap-4 flex-wrap mt-auto">
           <Button 
             variant="secondary" 
             className="py-2.5 px-5 rounded-full bg-accent1 hover:bg-accent1/90"
