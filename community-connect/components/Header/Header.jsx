@@ -57,9 +57,9 @@ const Header = ({ openModal }) => {
   }, []);
 
   const navLinks = [
-    { name: 'About', href: '#about' },
+    { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
     { name: 'Opportunities', href: '#opportunities' },
-
     { name: 'Contact', href: '#contact' },
   ];
 
@@ -78,7 +78,8 @@ const Header = ({ openModal }) => {
         <nav className="hidden md:flex items-center gap-8">
           <ul className="flex gap-8 list-none">
             {navLinks.map((link) => {
-              const isActive = activeLink === link.href.substring(1);
+              const isAnchorLink = link.href.startsWith('#');
+              const isActive = isAnchorLink ? activeLink === link.href.substring(1) : false;
               return (
                 <li key={link.name}>
                   <Link 
@@ -86,7 +87,7 @@ const Header = ({ openModal }) => {
                     className={`text-${isActive ? 'primary font-semibold' : 'text-secondary'} font-montserrat text-sm relative transition-colors duration-300
                                after:content-[''] after:absolute after:w-${isActive ? 'full' : '0'} after:h-[2px] after:bottom-[-4px] after:left-0 after:bg-accent1 after:transition-all after:duration-300
                                hover:text-accent1 hover:after:w-full`}
-                    onClick={() => setActiveLink(link.href.substring(1))}
+                    onClick={() => isAnchorLink && setActiveLink(link.href.substring(1))}
                   >
                     {link.name}
                   </Link>

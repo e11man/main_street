@@ -1,43 +1,22 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
-// Hook for animating counters
+// Hook for animating counters with intersection observer
 export const useAnimatedCounter = (target, duration = 2500, initialDelay = 300) => {
+  const [value, setValue] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
 
+  // Detect when element is visible
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setTimeout(() => {
-              const counter = ref.current;
-              if (!counter) return;
-
-              const startTime = Date.now();
-              const startValue = 0;
-
-              const updateCounter = () => {
-                const currentTime = Date.now();
-                const progress = Math.min((currentTime - startTime) / duration, 1);
-                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-                const currentValue = Math.floor(startValue + (target - startValue) * easeOutQuart);
-
-                counter.textContent = currentValue.toLocaleString();
-
-                if (progress < 1) {
-                  requestAnimationFrame(updateCounter);
-                } else {
-                  counter.textContent = target.toLocaleString();
-                  counter.style.animation = 'pulse 1.5s ease infinite';
-                }
-              };
-              updateCounter();
-            }, initialDelay);
-            observer.unobserve(entry.target);
+          if (entry.isIntersecting && !isVisible) {
+            setIsVisible(true);
           }
         });
       },
-      { threshold: 0.15, rootMargin: '0px 0px -10% 0px' }
+      { threshold: 0.1 }
     );
 
     if (ref.current) {
@@ -49,12 +28,46 @@ export const useAnimatedCounter = (target, duration = 2500, initialDelay = 300) 
         observer.unobserve(ref.current);
       }
     };
-  }, [target, duration, initialDelay]);
+  }, [isVisible]);
 
-  return ref;
+  // Animate the counter when visible
+  useEffect(() => {
+    if (!isVisible) return;
+    
+    let animationFrame;
+    let startTime;
+
+    const animate = () => {
+      const currentTime = Date.now();
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      const currentValue = Math.floor(0 + (target - 0) * easeOutQuart);
+
+      setValue(currentValue);
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      startTime = Date.now();
+      animationFrame = requestAnimationFrame(animate);
+    }, initialDelay);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [isVisible, target, duration, initialDelay]);
+
+  return { value, ref };
 };
 
-// Hook for scroll-triggered animations
+
+// Hook for scroll-triggered animations (multiple elements)
 export const useScrollTriggeredAnimation = (elementsRef, initialClasses, visibleClasses, observerOptions) => {
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -84,7 +97,7 @@ export const useScrollTriggeredAnimation = (elementsRef, initialClasses, visible
       });
     }, observerOptions);
 
-    if (elementsRef.current) {
+    if (elementsRef.current && Array.isArray(elementsRef.current)) {
       elementsRef.current.forEach(el => {
         if (el) {
           // Initialize with initial classes
@@ -95,7 +108,7 @@ export const useScrollTriggeredAnimation = (elementsRef, initialClasses, visible
     }
 
     return () => {
-      if (elementsRef.current) {
+      if (elementsRef.current && Array.isArray(elementsRef.current)) {
         elementsRef.current.forEach(el => {
           if (el) {
             observer.unobserve(el);
@@ -104,6 +117,33 @@ export const useScrollTriggeredAnimation = (elementsRef, initialClasses, visible
       }
     };
   }, [elementsRef, initialClasses, visibleClasses, observerOptions]);
+};
+
+// Hook for single element scroll-triggered animation with callback
+export const useScrollTriggeredAnimationCallback = (elementRef, callback, options = {}) => {
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (callback) {
+          callback(entry);
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -10% 0px',
+      ...options
+    });
+
+    if (elementRef.current) {
+      observer.observe(elementRef.current);
+    }
+
+    return () => {
+      if (elementRef.current) {
+        observer.unobserve(elementRef.current);
+      }
+    };
+  }, [elementRef, callback, options]);
 };
 
 
