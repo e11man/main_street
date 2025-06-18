@@ -1,4 +1,5 @@
 import React, { forwardRef, useState, useEffect } from 'react';
+import Link from 'next/link';
 import HeroStats from './HeroStats';
 import Button from '../ui/Button';
 import Icon from '../ui/Icon';
@@ -61,13 +62,14 @@ const HeroSection = forwardRef((props, ref) => {
                 className="ml-2 w-5 h-5 inline-block transition-transform group-hover:translate-x-1"
               />
             </Button>
-            <Button 
-              variant="outline" 
-              className="text-base px-8 py-4"
-              onClick={scrollToAbout}
-            >
-              Learn More
-            </Button>
+            <Link href="/about">
+              <Button 
+                variant="outline" 
+                className="text-base px-8 py-4"
+              >
+                Learn More
+              </Button>
+            </Link>
           </div>
           <HeroStats />
         </div>
