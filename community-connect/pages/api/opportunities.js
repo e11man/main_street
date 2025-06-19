@@ -79,6 +79,9 @@ export default async function handler(req, res) {
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
     
+    // Clean up old opportunities (5+ days old) before fetching
+    await cleanupOldOpportunities(db);
+    
     // Get all opportunities from the collection
     const allOpportunities = await db.collection('opportunities').find({}).toArray();
     
@@ -102,12 +105,66 @@ export default async function handler(req, res) {
     // Filter recurring opportunities to show only the most recent instance
     const filteredOpportunities = filterRecurringOpportunities(enrichedOpportunities);
     
+    // Filter out outdated opportunities (past their date)
+    const currentOpportunities = filterOutdatedOpportunities(filteredOpportunities);
+    
     // Return the filtered data as JSON
-    res.status(200).json(filteredOpportunities);
+    res.status(200).json(currentOpportunities);
   } catch (error) {
     console.error('Error fetching opportunities from MongoDB:', error);
     res.status(500).json({ error: 'Failed to load opportunities data' });
   }
+}
+
+// Helper function to clean up opportunities that are 5+ days old
+async function cleanupOldOpportunities(db) {
+  try {
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+    
+    // Delete opportunities where the date is 5 or more days in the past
+    const result = await db.collection('opportunities').deleteMany({
+      $expr: {
+        $lt: [
+          {
+            $dateFromString: {
+              dateString: "$date",
+              onError: new Date(0) // Default to epoch if date parsing fails
+            }
+          },
+          fiveDaysAgo
+        ]
+      }
+    });
+    
+    if (result.deletedCount > 0) {
+      console.log(`Cleaned up ${result.deletedCount} old opportunities`);
+    }
+  } catch (error) {
+    console.error('Error cleaning up old opportunities:', error);
+    // Don't throw error to prevent breaking the main functionality
+  }
+}
+
+// Helper function to filter out outdated opportunities (past their date)
+function filterOutdatedOpportunities(opportunities) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+  
+  return opportunities.filter(opportunity => {
+    try {
+      // Parse the opportunity date
+      const opportunityDate = new Date(opportunity.date);
+      opportunityDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
+      
+      // Only show opportunities that are today or in the future
+      return opportunityDate >= today;
+    } catch (error) {
+      console.error('Error parsing opportunity date:', opportunity.date, error);
+      // If date parsing fails, include the opportunity to be safe
+      return true;
+    }
+  });
 }
 
 // Helper function to filter recurring opportunities
