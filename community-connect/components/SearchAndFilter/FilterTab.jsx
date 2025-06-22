@@ -25,24 +25,34 @@ const FilterTab = ({ category, isActive, onClick }) => {
   return (
     <button
       className={`
-        bg-surface border border-border/80 text-primary py-2.5 px-5 rounded-full font-montserrat font-medium text-sm
-        cursor-pointer transition-all duration-300 ease-in-out whitespace-nowrap relative overflow-hidden
-        flex items-center gap-2 group
-        ${isActive ? 'bg-accent1 text-white border-accent1 translate-y-[-2px] shadow-[0_4px_15px_rgba(0,175,206,0.3)] font-semibold' : ''}
-        hover:bg-accent1 hover:text-white hover:border-accent1 hover:translate-y-[-2px] hover:shadow-[0_4px_15px_rgba(0,175,206,0.3)]
-        active:translate-y-[-1px] active:shadow-[0_2px_10px_rgba(0,175,206,0.2)]
+        relative overflow-hidden py-3 px-6 rounded-full font-montserrat font-semibold text-sm
+        cursor-pointer transition-all duration-300 ease-in-out whitespace-nowrap
+        flex items-center gap-2 group transform
+        ${isActive 
+          ? 'bg-gradient-to-r from-accent1 to-accent1-light text-white border-2 border-accent1 translate-y-[-3px] shadow-[0_8px_25px_rgba(0,175,206,0.4)] scale-105' 
+          : 'bg-white text-primary border-2 border-border/60 shadow-md'
+        }
+        hover:bg-gradient-to-r hover:from-accent1 hover:to-accent1-light hover:text-white hover:border-accent1 hover:translate-y-[-3px] hover:shadow-[0_8px_25px_rgba(0,175,206,0.4)] hover:scale-105
+        active:translate-y-[-1px] active:shadow-[0_4px_15px_rgba(0,175,206,0.3)] active:scale-100
+        focus:outline-none focus:ring-2 focus:ring-accent1/50 focus:ring-offset-2
       `}
       onClick={onClick}
+      role="tab"
+      aria-selected={isActive}
+      aria-label={`Filter by ${category} opportunities`}
     >
       <Icon 
         path={getCategoryIcon(category)} 
-        className={`w-4 h-4 ${isActive ? 'text-white' : 'text-accent1 group-hover:text-white'} transition-all duration-300`} 
+        className={`w-5 h-5 ${isActive ? 'text-white' : 'text-accent1 group-hover:text-white'} transition-all duration-300`} 
       />
-      <span className="relative z-10">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+      <span className="relative z-10 font-bold">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
       
-      {/* Decorative background element */}
+      {/* Animated background shimmer effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+      
+      {/* Active indicator */}
       {isActive && (
-        <span className="absolute inset-0 bg-gradient-to-r from-accent1 to-accent1-light opacity-100 -z-10"></span>
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full animate-pulse"></div>
       )}
     </button>
   );

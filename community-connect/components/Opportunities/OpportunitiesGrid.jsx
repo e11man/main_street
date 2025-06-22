@@ -45,7 +45,7 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
   };
 
   return (
-    <section id="opportunities" className="content max-w-screen-xl mx-auto px-6 md:px-8 pb-24">
+    <section id="opportunities" className="content max-w-screen-xl mx-auto px-6 md:px-8 pb-24 pt-16 bg-gradient-to-b from-surface/30 to-transparent">
       <div className="text-center mb-16">
         <h2 className="feed-title font-montserrat text-clamp-32-48 font-extrabold mb-5 tracking-[-0.025em] text-primary relative inline-block">
           Opportunities
@@ -61,12 +61,12 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
         {canScrollLeft && (
           <button
             onClick={scrollLeft}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 hover:scale-110 border border-border/20"
-            aria-label="Scroll left"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-gradient-to-r from-accent1 to-accent1-light hover:from-accent1-light hover:to-accent1 text-white shadow-xl rounded-full p-4 transition-all duration-300 hover:scale-110 border-2 border-white/20 backdrop-blur-sm"
+            aria-label="Scroll left to see previous opportunities"
           >
             <Icon 
               path="M15 18l-6-6 6-6" 
-              className="w-5 h-5 text-primary" 
+              className="w-6 h-6" 
             />
           </button>
         )}
@@ -75,12 +75,12 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
         {canScrollRight && (
           <button
             onClick={scrollRight}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 hover:scale-110 border border-border/20"
-            aria-label="Scroll right"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-gradient-to-r from-accent1 to-accent1-light hover:from-accent1-light hover:to-accent1 text-white shadow-xl rounded-full p-4 transition-all duration-300 hover:scale-110 border-2 border-white/20 backdrop-blur-sm"
+            aria-label="Scroll right to see more opportunities"
           >
             <Icon 
               path="M9 18l6-6-6-6" 
-              className="w-5 h-5 text-primary" 
+              className="w-6 h-6" 
             />
           </button>
         )}
@@ -105,11 +105,27 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
           ))}
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="flex justify-center mt-4 gap-2">
-          <div className="flex items-center gap-1 text-xs text-text-tertiary">
-            <Icon path="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M7 4h10M9 9l2 2 4-4" className="w-4 h-4" />
-            <span>Scroll horizontally to see more opportunities</span>
+        {/* Enhanced Scroll Indicator */}
+        <div className="flex flex-col items-center mt-6 gap-3">
+          <div className="flex items-center gap-2 bg-accent1/10 px-4 py-2 rounded-full border border-accent1/20">
+            <Icon path="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M7 4h10M9 9l2 2 4-4" className="w-4 h-4 text-accent1" />
+            <span className="text-sm font-medium text-accent1">Use arrow buttons or swipe to explore more opportunities</span>
+          </div>
+          {/* Scroll Progress Indicator */}
+          <div className="flex gap-1">
+            {Array.from({ length: Math.ceil(opportunities.length / 3) }, (_, i) => {
+              const isActive = gridRef.current ? 
+                Math.floor(gridRef.current.scrollLeft / (gridRef.current.scrollWidth / Math.ceil(opportunities.length / 3))) === i :
+                i === 0;
+              return (
+                <div 
+                  key={i} 
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    isActive ? 'bg-accent1 w-6' : 'bg-accent1/30'
+                  }`}
+                />
+              );
+            })}
           </div>
         </div>
       </div>

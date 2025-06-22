@@ -63,6 +63,41 @@ select:focus {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Safari and Chrome */
   }
+  
+  /* Enhanced focus styles for accessibility */
+  .focus-enhanced:focus {
+    outline: 3px solid rgba(0, 175, 206, 0.5);
+    outline-offset: 2px;
+  }
+  
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .text-text-secondary {
+      color: #000000;
+    }
+    .border-border {
+      border-color: #000000;
+    }
+  }
+  
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  /* Shimmer animation for progress bars */
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
 }
 
 /* Custom headers pseudo-elements */
