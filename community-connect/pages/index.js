@@ -255,7 +255,7 @@ export default function Home() {
   // Scroll triggered animations for opportunity cards and testimonial cards
   const opportunityRefs = useRef([]);
   const testimonialRefs = useRef([]);
-  useScrollTriggeredAnimation(opportunityRefs, 'opacity-0 translate-y-5', 'opacity-100 translate-y-0', {
+  useScrollTriggeredAnimation(opportunityRefs, '', '', {
     threshold: 0.15,
     rootMargin: '0px 0px -10% 0px'
   });

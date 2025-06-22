@@ -76,20 +76,18 @@ export const useScrollTriggeredAnimation = (elementsRef, initialClasses, visible
           setTimeout(() => {
             if (entry.target) {
               // Remove initial classes and add visible classes
-              initialClasses.split(' ').forEach(cls => entry.target.classList.remove(cls));
-              visibleClasses.split(' ').forEach(cls => entry.target.classList.add(cls));
-              // Ensure transition is applied after initial classes are removed
-              entry.target.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+              initialClasses.split(' ').filter(Boolean).forEach(cls => entry.target.classList.remove(cls));
+              visibleClasses.split(' ').filter(Boolean).forEach(cls => entry.target.classList.add(cls));
+              // Remove transition and animation for fade in/out
+              entry.target.style.transition = '';
             }
           }, index * 120);
 
-          // For opportunity cards, also add pulse animation to category tag
+          // For opportunity cards, REMOVE pulse animation from category tag
           if (entry.target.classList.contains('opportunity-card')) {
             const categoryTag = entry.target.querySelector('.card-category');
             if (categoryTag) {
-              setTimeout(() => {
-                categoryTag.style.animation = 'pulse 2s infinite';
-              }, index * 120 + 500);
+              categoryTag.style.animation = '';
             }
           }
           observer.unobserve(entry.target);
@@ -101,7 +99,7 @@ export const useScrollTriggeredAnimation = (elementsRef, initialClasses, visible
       elementsRef.current.forEach(el => {
         if (el) {
           // Initialize with initial classes
-          initialClasses.split(' ').forEach(cls => el.classList.add(cls));
+          initialClasses.split(' ').filter(Boolean).forEach(cls => el.classList.add(cls));
           observer.observe(el);
         }
       });

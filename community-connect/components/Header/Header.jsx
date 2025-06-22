@@ -70,11 +70,15 @@ const Header = ({ openModal }) => {
                  data-[scrolled=true]:bg-white/98 data-[scrolled=true]:shadow-md data-[scrolled=true]:h-16"
     >
       <div ref={headerAndNavRef} className="max-w-screen-xl mx-auto px-6 md:px-8 flex items-center justify-between h-16 transition-all duration-300 ease-in-out">
-        <Link href="/" className="flex items-center gap-3 font-montserrat text-lg md:text-xl font-bold text-primary tracking-tight transition-transform duration-300 hover:translate-y-[-1px]">
+        {/* Desktop: Logo and text */}
+        <Link href="/" className="hidden md:flex items-center gap-3 font-montserrat text-lg md:text-xl font-bold text-primary tracking-tight transition-transform duration-300 hover:translate-y-[-1px]">
           <img src="/logo.svg" alt="Community Connect Logo" className="h-9 md:h-10 w-auto object-contain" />
           <span className="text-sm md:text-base lg:text-xl">Community Connect</span>
         </Link>
-
+        {/* Mobile: Logo left, buttons right */}
+        <Link href="/" className="md:hidden flex items-center flex-shrink-0">
+          <img src="/logo.svg" alt="Community Connect Logo" className="h-9 w-auto object-contain" />
+        </Link>
         <nav className="hidden md:flex items-center gap-8">
           <ul className="flex gap-8 list-none">
             {navLinks.map((link) => {
@@ -102,14 +106,7 @@ const Header = ({ openModal }) => {
             </Button>
           </div>
         </nav>
-
-        <div className="md:hidden flex items-center gap-3">
-          <Link 
-            href="/company-login" 
-            className="text-text-secondary text-xs font-montserrat hover:text-accent1 transition-colors duration-200"
-          >
-            Company Login
-          </Link>
+        <div className="md:hidden flex items-center gap-3 ml-auto">
           <Button 
             onClick={openModal} 
             variant="primary" 
