@@ -143,7 +143,14 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
                 path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
                 className="w-4 h-4 text-accent1/70 group-hover:text-accent1 transition-all duration-300" 
               />
-              <span className="truncate max-w-[120px]">{opportunity.location}</span>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(opportunity.location)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate max-w-[120px] underline hover:text-accent1"
+              >
+                {opportunity.location}
+              </a>
             </div>
           )}
           <div className="card-spots bg-surface/70 p-4 rounded-lg border-2 border-accent1/20 w-full flex flex-col gap-3 transition-all duration-300 group-hover:border-accent1/40 group-hover:shadow-md">

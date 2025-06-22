@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import axios from 'axios';
 import Header from '../components/Header/Header.jsx';
 import Modal from '../components/Modal/Modal.jsx';
+import GooglePlacesAutocomplete from '../components/GooglePlacesAutocomplete';
 
 export default function CompanyDashboard() {
   const router = useRouter();
@@ -572,15 +573,11 @@ export default function CompanyDashboard() {
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="location">
                 Location
               </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="location"
-                type="text"
-                name="location"
+              <GooglePlacesAutocomplete
                 value={opportunityFormData.location}
-                onChange={handleOpportunityFormChange}
-                placeholder="Location"
-                required
+                onChange={e => setOpportunityFormData(prev => ({ ...prev, location: e.target.value }))}
+                onSelect={address => setOpportunityFormData(prev => ({ ...prev, location: address }))}
+                placeholder="Search for a valid address"
               />
             </div>
 

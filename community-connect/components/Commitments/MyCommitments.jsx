@@ -319,7 +319,14 @@ const CommitmentCard = ({ commitment, spotsTotal, spotsFilled, progress, onDecom
               />
               <div>
                 <span className="font-montserrat font-semibold text-primary block">Location:</span>
-                <span className="text-text-secondary">{commitment.location}</span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(commitment.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-accent1"
+                >
+                  {commitment.location}
+                </a>
               </div>
             </div>
           )}
