@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Button from '../ui/Button';
 import Icon from '../ui/Icon';
-import ChatModal from '../Modal/ChatModal.jsx';
 
 // Helper function to format time from 24-hour to 12-hour format
 const formatTime = (time) => {
@@ -79,17 +78,6 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
   const [userCommitments, setUserCommitments] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const scrollContainerRef = useRef(null);
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-  const [selectedCommitment, setSelectedCommitment] = useState(null);
-  const [userData, setUserData] = useState(null);
-
-  useEffect(() => {
-    // Get user data from localStorage
-    const storedUserData = localStorage.getItem('userData');
-    if (storedUserData) {
-      setUserData(JSON.parse(storedUserData));
-    }
-  }, []);
 
   useEffect(() => {
     if (currentUser && currentUser.commitments && opportunities.length > 0) {
@@ -163,15 +151,6 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
                 spotsFilled={spotsFilled} 
                 progress={progress} 
                 onDecommit={onDecommit}
-                onOpenChat={(commitment) => {
-                  console.log('onOpenChat called with:', commitment);
-                  // Ensure the commitment has proper ID format before setting it
-                  const formattedCommitment = ensureOpportunityId(commitment);
-                  console.log('Setting selectedCommitment with formatted IDs:', formattedCommitment);
-                  setSelectedCommitment(formattedCommitment);
-                  setIsChatModalOpen(true);
-                  console.log('Modal state should now be open, isChatModalOpen:', true);
-                }}
               />
             );
           })}
@@ -208,15 +187,6 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
                      spotsFilled={spotsFilled}
                      progress={progress}
                      onDecommit={onDecommit}
-                     onOpenChat={(commitment) => {
-                       console.log('Mobile onOpenChat called with:', commitment);
-                       // Ensure the commitment has proper ID format before setting it
-                       const formattedCommitment = ensureOpportunityId(commitment);
-                       console.log('Setting selectedCommitment with formatted IDs (mobile):', formattedCommitment);
-                       setSelectedCommitment(formattedCommitment);
-                       setIsChatModalOpen(true);
-                       console.log('Modal state should now be open (mobile), isChatModalOpen:', true);
-                     }}
                    />
                  </div>
                );
@@ -257,27 +227,12 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
           You can join {2 - userCommitments.length} more {userCommitments.length === 1 ? 'opportunity' : 'opportunities'}.
         </p>
       )}
-      
-      {/* Chat Modal */}
-      {userData && (
-        <ChatModal
-          isOpen={isChatModalOpen}
-          onClose={() => {
-            console.log('Closing chat modal');
-            setIsChatModalOpen(false);
-            setSelectedCommitment(null);
-          }}
-          opportunity={selectedCommitment}
-          userType="volunteer"
-          userData={userData}
-        />
-      )}
     </div>
   );
 };
 
 // Extracted CommitmentCard component for reusability
-const CommitmentCard = ({ commitment, spotsTotal, spotsFilled, progress, onDecommit, onOpenChat }) => {
+const CommitmentCard = ({ commitment, spotsTotal, spotsFilled, progress, onDecommit }) => {
   return (
     <div className="bg-gradient-to-br from-white to-gray-50/30 rounded-xl border border-border/40 p-5 transition-all duration-300 hover:shadow-lg hover:border-accent1/30 hover:-translate-y-0.5">
       {/* Header with Title and Company */}
@@ -400,20 +355,6 @@ const CommitmentCard = ({ commitment, spotsTotal, spotsFilled, progress, onDecom
       
       {/* Action Buttons */}
       <div className="flex justify-between items-center">
-        <Button 
-          variant="outline" 
-          className="py-2 px-4 rounded-full border-accent1/30 text-accent1 hover:bg-accent1/10 hover:border-accent1 text-sm font-medium transition-all duration-300 flex items-center gap-2"
-          onClick={() => {
-            console.log('Chat Room button clicked!', commitment);
-            onOpenChat(commitment);
-          }}
-        >
-          <Icon 
-            path="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" 
-            className="w-4 h-4" 
-          />
-          Chat Room
-        </Button>
         <Button 
           variant="outline" 
           className="py-2 px-4 rounded-full border-red-400 text-red-500 hover:bg-red-50 hover:border-red-500 text-sm font-medium transition-all duration-300"
