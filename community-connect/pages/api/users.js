@@ -139,7 +139,12 @@ async function handleSignup(req, res, usersCollection) {
   
   const isBlocked = await blockedEmailsCollection.findOne({ email: normalizedEmail });
   if (isBlocked) {
-    return res.status(403).json({ error: 'This email address has been blocked' });
+    // Return a special response that doesn't reveal the block status
+    // The frontend will interpret this as a pending account
+    return res.status(200).json({
+      blocked: true,
+      message: 'Your account has been created and is pending admin approval. You will be notified when your account is approved.'
+    });
   }
   
   // Check if user already exists in users collection
@@ -197,6 +202,21 @@ async function handleLogin(req, res, usersCollection) {
   
   // Normalize email to lowercase for case-insensitive handling
   const normalizedEmail = email.toLowerCase().trim();
+  
+  // Check if email is blocked
+  const client = await clientPromise;
+  const db = client.db('mainStreetOpportunities');
+  const blockedEmailsCollection = db.collection('blockedEmails');
+  
+  const isBlocked = await blockedEmailsCollection.findOne({ email: normalizedEmail });
+  if (isBlocked) {
+    // Return a special response that doesn't reveal the block status
+    // The frontend will interpret this as a pending account
+    return res.status(200).json({
+      blocked: true,
+      message: 'Your account has been created and is pending admin approval. You will be notified when your account is approved.'
+    });
+  }
   
   // Find user
   const user = await usersCollection.findOne({ email: normalizedEmail });

@@ -46,6 +46,21 @@ const AuthModal = ({ onClose, onSuccess }) => {
 
       const data = await response.json();
 
+      // Handle blocked users with a generic message that doesn't reveal they're blocked
+      if (data.blocked) {
+        // Use the same message as pending to avoid revealing the block status
+        setPendingMessage('Your account has been created and is pending admin approval. You will be notified when your account is approved.');
+        if (!isLogin) {
+          setFormData({
+            name: '',
+            email: '',
+            password: ''
+          });
+        }
+        setIsSubmitting(false);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(data.error || 'Authentication failed');
       }
