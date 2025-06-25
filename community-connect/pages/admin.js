@@ -144,7 +144,7 @@ export default function AdminPage() {
       });
 
       if (response.ok) {
-        setOpportunities(opportunities.filter(opp => opp.id !== opportunityId || opp._id !== opportunityId));
+        setOpportunities(opportunities.filter(opp => opp.id !== opportunityId && opp._id !== opportunityId));
         alert('Opportunity deleted successfully');
       } else {
         const errorData = await response.json();
@@ -168,7 +168,7 @@ export default function AdminPage() {
       });
 
       if (response.ok) {
-        setCompanies(companies.filter(company => company._id !== companyId || company.id !== companyId));
+        setCompanies(companies.filter(company => company._id !== companyId && (company.id !== companyId || !company.id)));
         alert('Company deleted successfully');
       } else {
         const errorData = await response.json();
@@ -630,7 +630,7 @@ export default function AdminPage() {
           delete updateData.password;
         }
 
-        const response = await fetch('/api/admin/users', {
+        const response = await fetch(`/api/admin/users/${formData._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updateData)
@@ -724,11 +724,12 @@ export default function AdminPage() {
       e.preventDefault();
       setLoading(true);
       try {
-        const response = await fetch('/api/admin/opportunities', {
+        const response = await fetch(`/api/admin/opportunities/${editingOpportunity.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...formData, id: editingOpportunity.id })
+          body: JSON.stringify(formData)
         });
+
         if (response.ok) {
           const updatedOpportunity = await response.json();
           setOpportunities(opportunities.map(opp => 
@@ -874,10 +875,10 @@ export default function AdminPage() {
       e.preventDefault();
       setLoading(true);
       try {
-        const response = await fetch('/api/companies', {
+        const response = await fetch(`/api/admin/companies/${formData._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...formData, id: editingCompany._id })
+          body: JSON.stringify(formData)
         });
 
         if (response.ok) {
