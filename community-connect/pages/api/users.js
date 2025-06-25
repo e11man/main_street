@@ -129,25 +129,28 @@ async function handleSignup(req, res, usersCollection) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   
+  // Normalize email to lowercase for case-insensitive handling
+  const normalizedEmail = email.toLowerCase().trim();
+  
   // Check if email is blocked
   const client = await clientPromise;
   const db = client.db('mainStreetOpportunities');
   const blockedEmailsCollection = db.collection('blockedEmails');
   
-  const isBlocked = await blockedEmailsCollection.findOne({ email });
+  const isBlocked = await blockedEmailsCollection.findOne({ email: normalizedEmail });
   if (isBlocked) {
     return res.status(403).json({ error: 'This email address has been blocked' });
   }
   
   // Check if user already exists in users collection
-  const existingUser = await usersCollection.findOne({ email });
+  const existingUser = await usersCollection.findOne({ email: normalizedEmail });
   if (existingUser) {
     return res.status(409).json({ error: 'User already exists' });
   }
   
   // Check if user already exists in pending users collection
   const pendingUsersCollection = db.collection('pendingUsers');
-  const existingPendingUser = await pendingUsersCollection.findOne({ email });
+  const existingPendingUser = await pendingUsersCollection.findOne({ email: normalizedEmail });
   if (existingPendingUser) {
     return res.status(409).json({ error: 'Your account is pending approval. Please wait for admin confirmation.' });
   }
@@ -157,7 +160,7 @@ async function handleSignup(req, res, usersCollection) {
   
   // Create new user object
   const newUser = {
-    email,
+    email: normalizedEmail,
     password: hashedPassword,
     name,
     commitments: [], // Array to store opportunity IDs (max 2)
@@ -165,7 +168,7 @@ async function handleSignup(req, res, usersCollection) {
   };
   
   // Check if email ends with taylor.edu
-  if (email.toLowerCase().endsWith('taylor.edu')) {
+  if (normalizedEmail.endsWith('taylor.edu')) {
     // Taylor.edu emails don't need approval - insert directly into users collection
     const result = await usersCollection.insertOne(newUser);
     
@@ -192,8 +195,11 @@ async function handleLogin(req, res, usersCollection) {
     return res.status(400).json({ error: 'Missing email or password' });
   }
   
+  // Normalize email to lowercase for case-insensitive handling
+  const normalizedEmail = email.toLowerCase().trim();
+  
   // Find user
-  const user = await usersCollection.findOne({ email });
+  const user = await usersCollection.findOne({ email: normalizedEmail });
   if (!user) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }

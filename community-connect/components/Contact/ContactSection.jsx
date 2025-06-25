@@ -54,7 +54,7 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contact" className="bg-white text-text-primary py-16 md:py-20 text-center">
+    <section className="bg-white text-text-primary py-16 md:py-20 text-center">
       <div className="max-w-xl mx-auto px-6 md:px-8">
         <h2 className="contact h2 font-montserrat text-3xl md:text-4xl font-bold mb-4 text-primary">
           Get In Touch

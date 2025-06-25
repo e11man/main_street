@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 
@@ -138,17 +138,23 @@ export default function AdminPage() {
     if (!confirm('Are you sure you want to delete this opportunity?')) return;
 
     try {
+      setLoading(true);
       const response = await fetch(`/api/admin/opportunities/${opportunityId}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        setOpportunities(opportunities.filter(opp => opp.id !== opportunityId));
+        setOpportunities(opportunities.filter(opp => opp.id !== opportunityId || opp._id !== opportunityId));
+        alert('Opportunity deleted successfully');
       } else {
-        alert('Failed to delete opportunity');
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to delete opportunity');
       }
     } catch (error) {
+      console.error('Error deleting opportunity:', error);
       alert('Error deleting opportunity');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -156,17 +162,23 @@ export default function AdminPage() {
     if (!confirm('Are you sure you want to delete this company?')) return;
 
     try {
+      setLoading(true);
       const response = await fetch(`/api/admin/companies/${companyId}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        setCompanies(companies.filter(company => company._id !== companyId));
+        setCompanies(companies.filter(company => company._id !== companyId || company.id !== companyId));
+        alert('Company deleted successfully');
       } else {
-        alert('Failed to delete company');
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to delete company');
       }
     } catch (error) {
+      console.error('Error deleting company:', error);
       alert('Error deleting company');
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -42,11 +42,14 @@ const Footer = () => {
               </div>
             </div>
             <div className="flex flex-wrap gap-6">
-              <Link href="#about" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
+              <Link href="/about" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
                 <Icon path="M12 4v16m8-8H4" className="w-4 h-4 text-accent1" /> About
               </Link>
-              <Link href="#contact" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
+              <Link href="/" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
                 <Icon path="M21 8V7a2 2 0 00-2-2H5a2 2 0 00-2 2v1m18 0v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8m18 0l-9 6-9-6" className="w-4 h-4 text-accent1" /> Contact
+              </Link>
+              <Link href="/#opportunities" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
+                <Icon path="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" className="w-4 h-4 text-accent1" /> Opportunities
               </Link>
               <Link href="/company-login" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
                 <Icon path="M3 7v4a1 1 0 001 1h3v2a2 2 0 002 2h2a2 2 0 002-2v-2h3a1 1 0 001-1V7a1 1 0 00-1-1H4a1 1 0 00-1 1zm16 0V5a2 2 0 00-2-2H7a2 2 0 00-2 2v2" className="w-4 h-4 text-accent1" /> Company Login

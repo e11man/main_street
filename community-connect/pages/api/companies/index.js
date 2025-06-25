@@ -114,8 +114,11 @@ async function handleSignup(req, res, companiesCollection) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   
+  // Normalize email to lowercase for case-insensitive handling
+  const normalizedEmail = email.toLowerCase().trim();
+  
   // Check if company already exists in companies collection
-  const existingCompany = await companiesCollection.findOne({ email });
+  const existingCompany = await companiesCollection.findOne({ email: normalizedEmail });
   if (existingCompany) {
     return res.status(409).json({ error: 'Company with this email already exists' });
   }
@@ -125,7 +128,7 @@ async function handleSignup(req, res, companiesCollection) {
   const db = client.db('mainStreetOpportunities');
   const pendingCompaniesCollection = db.collection('pendingCompanies');
   
-  const existingPendingCompany = await pendingCompaniesCollection.findOne({ email });
+  const existingPendingCompany = await pendingCompaniesCollection.findOne({ email: normalizedEmail });
   if (existingPendingCompany) {
     return res.status(409).json({ error: 'Company with this email is already pending approval' });
   }
@@ -136,7 +139,7 @@ async function handleSignup(req, res, companiesCollection) {
   // Create new company object
   const newCompany = {
     name,
-    email,
+    email: normalizedEmail,
     password: hashedPassword,
     description: description || '',
     website: website || '',
@@ -171,15 +174,18 @@ async function handleLogin(req, res, companiesCollection) {
     return res.status(400).json({ error: 'Missing email or password' });
   }
   
+  // Normalize email to lowercase for case-insensitive handling
+  const normalizedEmail = email.toLowerCase().trim();
+  
   // Find company
-  const company = await companiesCollection.findOne({ email });
+  const company = await companiesCollection.findOne({ email: normalizedEmail });
   if (!company) {
     // Check if company is in pending companies collection
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
     const pendingCompaniesCollection = db.collection('pendingCompanies');
     
-    const pendingCompany = await pendingCompaniesCollection.findOne({ email });
+    const pendingCompany = await pendingCompaniesCollection.findOne({ email: normalizedEmail });
     if (pendingCompany) {
       // Compare passwords for pending company
       const passwordMatch = await compare(password, pendingCompany.password);

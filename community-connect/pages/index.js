@@ -281,14 +281,18 @@ export default function Home() {
         onJoinOpportunity={handleJoinOpportunity}
         onUserUpdate={handleUserUpdate}
       />
-        <OpportunitiesGrid
-          opportunities={filteredOpportunities}
-          opportunityRefs={opportunityRefs}
-          onJoinClick={handleJoinOpportunity}
-          onLearnMoreClick={handleLearnMoreClick}
-        />
+        <div id="opportunities">
+          <OpportunitiesGrid
+            opportunities={filteredOpportunities}
+            opportunityRefs={opportunityRefs}
+            onJoinClick={handleJoinOpportunity}
+            onLearnMoreClick={handleLearnMoreClick}
+          />
+        </div>
         <TestimonialsSection testimonialRefs={testimonialRefs} />
-        <ContactSection />
+        <div id="contact">
+          <ContactSection />
+        </div>
       </main>
       <Footer />
 

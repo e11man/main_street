@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import OpportunityCard from './OpportunityCard';
 import Icon from '../ui/Icon';
 
@@ -45,7 +45,7 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
   };
 
   return (
-    <section id="opportunities" className="content max-w-screen-xl mx-auto px-6 md:px-8 pb-24 pt-16 bg-gradient-to-b from-surface/30 to-transparent">
+    <section className="content max-w-screen-xl mx-auto px-6 md:px-8 pb-24 pt-16 bg-gradient-to-b from-surface/30 to-transparent">
       <div className="text-center mb-16">
         <h2 className="feed-title font-montserrat text-clamp-32-48 font-extrabold mb-5 tracking-[-0.025em] text-primary relative inline-block">
           Opportunities
@@ -57,30 +57,30 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
       </div>
 
       <div className="relative">
-        {/* Left Arrow */}
+        {/* Left Arrow - Mobile Optimized */}
         {canScrollLeft && (
           <button
             onClick={scrollLeft}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-gradient-to-r from-accent1 to-accent1-light hover:from-accent1-light hover:to-accent1 text-white shadow-xl rounded-full p-4 transition-all duration-300 hover:scale-110 border-2 border-white/20 backdrop-blur-sm"
+            className="absolute left-2 md:left-0 top-1/2 -translate-y-1/2 z-20 bg-gradient-to-r from-accent1 to-accent1-light hover:from-accent1-light hover:to-accent1 text-white shadow-lg rounded-full p-2 md:p-4 transition-all duration-300 hover:scale-110 border-2 border-white/20 backdrop-blur-sm"
             aria-label="Scroll left to see previous opportunities"
           >
             <Icon 
               path="M15 18l-6-6 6-6" 
-              className="w-6 h-6" 
+              className="w-4 h-4 md:w-6 md:h-6" 
             />
           </button>
         )}
 
-        {/* Right Arrow */}
+        {/* Right Arrow - Mobile Optimized */}
         {canScrollRight && (
           <button
             onClick={scrollRight}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-gradient-to-r from-accent1 to-accent1-light hover:from-accent1-light hover:to-accent1 text-white shadow-xl rounded-full p-4 transition-all duration-300 hover:scale-110 border-2 border-white/20 backdrop-blur-sm"
+            className="absolute right-2 md:right-0 top-1/2 -translate-y-1/2 z-20 bg-gradient-to-r from-accent1 to-accent1-light hover:from-accent1-light hover:to-accent1 text-white shadow-lg rounded-full p-2 md:p-4 transition-all duration-300 hover:scale-110 border-2 border-white/20 backdrop-blur-sm"
             aria-label="Scroll right to see more opportunities"
           >
             <Icon 
               path="M9 18l6-6-6-6" 
-              className="w-6 h-6" 
+              className="w-4 h-4 md:w-6 md:h-6" 
             />
           </button>
         )}
@@ -105,11 +105,11 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
           ))}
         </div>
 
-        {/* Enhanced Scroll Indicator */}
+        {/* Enhanced Scroll Indicator - Mobile Optimized */}
         <div className="flex flex-col items-center mt-6 gap-3">
-          <div className="flex items-center gap-2 bg-accent1/10 px-4 py-2 rounded-full border border-accent1/20">
+          <div className="flex items-center gap-2 bg-accent1/10 px-3 md:px-4 py-2 rounded-full border border-accent1/20">
             <Icon path="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M7 4h10M9 9l2 2 4-4" className="w-4 h-4 text-accent1" />
-            <span className="text-sm font-medium text-accent1">Use arrow buttons or swipe to explore more opportunities</span>
+            <span className="text-xs md:text-sm font-medium text-accent1 text-center">Use arrow buttons or swipe to explore more opportunities</span>
           </div>
           {/* Scroll Progress Indicator */}
           <div className="flex gap-1">
