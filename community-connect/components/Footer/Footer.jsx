@@ -45,7 +45,7 @@ const Footer = () => {
               <Link href="/about" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
                 <Icon path="M12 4v16m8-8H4" className="w-4 h-4 text-accent1" /> About
               </Link>
-              <Link href="/" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
+              <Link href="/#contact" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
                 <Icon path="M21 8V7a2 2 0 00-2-2H5a2 2 0 00-2 2v1m18 0v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8m18 0l-9 6-9-6" className="w-4 h-4 text-accent1" /> Contact
               </Link>
               <Link href="/#opportunities" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
