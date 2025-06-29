@@ -39,7 +39,7 @@ export default async function handler(req, res) {
         category,
         priority,
         date,
-        totalSpots: parseInt(totalSpots),
+        spotsTotal: parseInt(totalSpots),
         spotsFilled: parseInt(spotsFilled) || 0,
         location: location || ''
       };

@@ -285,7 +285,9 @@ async function handleAddCommitment(req, res, usersCollection, opportunitiesColle
     }
     
     // Check if the opportunity is already full
-    if (opportunity.spotsFilled >= opportunity.totalSpots) {
+    const totalSpots = opportunity.spotsTotal || opportunity.totalSpots || 0;
+    const filledSpots = opportunity.spotsFilled || 0;
+    if (filledSpots >= totalSpots) {
       console.log('Opportunity is full:', opportunity.title);
       return res.status(400).json({ error: 'This opportunity is already full' });
     }

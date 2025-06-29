@@ -29,20 +29,7 @@ export default function Home() {
   const [selectedCompanyInfo, setSelectedCompanyInfo] = useState(null);
 
   useEffect(() => {
-    // Fetch opportunities from the JSON file
-    // In the future, this can be replaced with an API call
-    const fetchOpportunities = async () => {
-      try {
-        const response = await fetch('/api/opportunities');
-        const data = await response.json();
-        setOpportunities(data);
-      } catch (error) {
-        console.error('Error fetching opportunities:', error);
-        // Fallback to empty array if fetch fails
-        setOpportunities([]);
-      }
-    };
-
+    // Fetch opportunities on component mount
     fetchOpportunities();
     
     // Check if company is logged in from localStorage
@@ -155,10 +142,25 @@ export default function Home() {
   };
   
   // Handle updating user state (for commitment removal)
-  const handleUserUpdate = (updatedUser) => {
+  const handleUserUpdate = async (updatedUser) => {
     setCurrentUser(updatedUser);
+    // Refetch opportunities to show updated counts
+    await fetchOpportunities();
   };
   
+  // Function to fetch opportunities
+  const fetchOpportunities = async () => {
+    try {
+      const response = await fetch('/api/opportunities');
+      const data = await response.json();
+      setOpportunities(data);
+    } catch (error) {
+      console.error('Error fetching opportunities:', error);
+      // Fallback to empty array if fetch fails
+      setOpportunities([]);
+    }
+  };
+
   // Handle joining an opportunity
   const handleJoinOpportunity = async (opportunity) => {
     if (!currentUser) {
@@ -221,6 +223,9 @@ export default function Home() {
       
       // Update current user with new commitments
       setCurrentUser(data);
+      
+      // Immediately refetch opportunities to show updated counts
+      await fetchOpportunities();
       
       // Show success message
       setMessageBox({

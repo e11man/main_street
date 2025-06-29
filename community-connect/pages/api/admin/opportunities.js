@@ -34,7 +34,7 @@ export default async function handler(req, res) {
         priority,
         date,
         time,
-        totalSpots: parseInt(totalSpots),
+        spotsTotal: parseInt(totalSpots),
         spotsFilled: 0,
         location,
         createdAt: new Date()
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
         priority,
         date,
         time,
-        totalSpots: parseInt(totalSpots),
+        spotsTotal: parseInt(totalSpots),
         spotsFilled: parseInt(spotsFilled) || 0,
         location
       };
