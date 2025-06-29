@@ -126,4 +126,4 @@ const MobileNav = ({ isOpen, navLinks, closeMenu, openModal }) => {
   );
 };
 
-export default MobileNav;
+export default MobileNav; 
