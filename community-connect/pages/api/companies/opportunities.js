@@ -206,7 +206,18 @@ export default async function handler(req, res) {
       }
 
       // Verify company exists and owns this opportunity
-      const opportunity = await opportunitiesCollection.findOne({ _id: new ObjectId(id) });
+      let opportunity;
+      
+      // Try to find by MongoDB ObjectId first
+      if (ObjectId.isValid(id)) {
+        opportunity = await opportunitiesCollection.findOne({ _id: new ObjectId(id) });
+      }
+      
+      // If not found and id looks like a number, try numeric id
+      if (!opportunity && !isNaN(parseInt(id))) {
+        opportunity = await opportunitiesCollection.findOne({ id: parseInt(id) });
+      }
+      
       if (!opportunity) {
         return res.status(404).json({ error: 'Opportunity not found' });
       }
@@ -226,6 +237,8 @@ export default async function handler(req, res) {
         location
       };
       
+      let unsetData = null;
+      
       // Add recurring fields if present
       if (isRecurring !== undefined) {
         updateData.isRecurring = isRecurring;
@@ -235,43 +248,102 @@ export default async function handler(req, res) {
           updateData.recurringDays = recurringDays;
         } else {
           // If no longer recurring, remove recurring fields
-          updateData.$unset = { recurringFrequency: "", recurringDays: "" };
+          unsetData = { recurringFrequency: "", recurringDays: "" };
         }
       }
 
       // Check if this is a recurring opportunity with children
-      const isParentOpportunity = await opportunitiesCollection.findOne({ parentOpportunityId: parseInt(id) });
+      let isParentOpportunity;
+      
+      // Use the same ID format that was found for the opportunity
+      const searchId = opportunity._id ? opportunity._id : opportunity.id;
+      
+      if (opportunity._id) {
+        // This opportunity uses MongoDB ObjectId
+        isParentOpportunity = await opportunitiesCollection.findOne({ parentOpportunityId: opportunity._id });
+      } else {
+        // This opportunity uses numeric id
+        isParentOpportunity = await opportunitiesCollection.findOne({ parentOpportunityId: opportunity.id });
+      }
       
       if (isParentOpportunity || (opportunity.isRecurring && !opportunity.parentOpportunityId)) {
         // This is a parent recurring opportunity, update all future instances
         const currentDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD
         
         // Update all future instances of this recurring opportunity
-        const result = await opportunitiesCollection.updateMany(
-          { 
+        let updateFilter;
+        
+        if (opportunity._id) {
+          // Using MongoDB ObjectId format
+          updateFilter = {
             $or: [
-              { id: parseInt(id) }, // The parent
-              { parentOpportunityId: parseInt(id) } // All children
+              { _id: opportunity._id }, // The parent
+              { parentOpportunityId: opportunity._id } // All children
             ],
             date: { $gte: currentDate } // Only future dates
-          },
-          { $set: updateData }
-        );
+          };
+        } else {
+          // Using numeric id format
+          updateFilter = {
+            $or: [
+              { id: opportunity.id }, // The parent
+              { parentOpportunityId: opportunity.id } // All children
+            ],
+            date: { $gte: currentDate } // Only future dates
+          };
+        }
         
-        const updatedOpportunity = await opportunitiesCollection.findOne({ id: parseInt(id) });
+        // Build the update operation
+        const updateOperation = { $set: updateData };
+        if (unsetData) {
+          updateOperation.$unset = unsetData;
+        }
+        
+        const result = await opportunitiesCollection.updateMany(updateFilter, updateOperation);
+        
+        let updatedOpportunity;
+        
+        if (opportunity._id) {
+          updatedOpportunity = await opportunitiesCollection.findOne({ _id: opportunity._id });
+        } else {
+          updatedOpportunity = await opportunitiesCollection.findOne({ id: opportunity.id });
+        }
+        
         return res.status(200).json(updatedOpportunity);
       } else {
         // Regular update for single opportunity or child instance
-        const result = await opportunitiesCollection.updateOne(
-          { id: parseInt(id) },
-          { $set: updateData }
-        );
+        let updateResult;
+        
+        // Build the update operation
+        const updateOperation = { $set: updateData };
+        if (unsetData) {
+          updateOperation.$unset = unsetData;
+        }
+        
+        if (opportunity._id) {
+          updateResult = await opportunitiesCollection.updateOne(
+            { _id: opportunity._id },
+            updateOperation
+          );
+        } else {
+          updateResult = await opportunitiesCollection.updateOne(
+            { id: opportunity.id },
+            updateOperation
+          );
+        }
 
-        if (result.matchedCount === 0) {
+        if (updateResult.matchedCount === 0) {
           return res.status(404).json({ error: 'Opportunity not found' });
         }
 
-        const updatedOpportunity = await opportunitiesCollection.findOne({ id: parseInt(id) });
+        let updatedOpportunity;
+        
+        if (opportunity._id) {
+          updatedOpportunity = await opportunitiesCollection.findOne({ _id: opportunity._id });
+        } else {
+          updatedOpportunity = await opportunitiesCollection.findOne({ id: opportunity.id });
+        }
+        
         return res.status(200).json(updatedOpportunity);
       }
     }
@@ -284,7 +356,18 @@ export default async function handler(req, res) {
       }
 
       // Verify company exists and owns this opportunity
-      const opportunity = await opportunitiesCollection.findOne({ _id: new ObjectId(id) });
+      let opportunity;
+      
+      // Try to find by MongoDB ObjectId first
+      if (ObjectId.isValid(id)) {
+        opportunity = await opportunitiesCollection.findOne({ _id: new ObjectId(id) });
+      }
+      
+      // If not found and id looks like a number, try numeric id
+      if (!opportunity && !isNaN(parseInt(id))) {
+        opportunity = await opportunitiesCollection.findOne({ id: parseInt(id) });
+      }
+      
       if (!opportunity) {
         return res.status(404).json({ error: 'Opportunity not found' });
       }
@@ -298,24 +381,45 @@ export default async function handler(req, res) {
           (opportunity.isRecurring || opportunity.parentOpportunityId)) {
         
         // Get the parent ID (either this opportunity's ID or its parent ID)
-        const parentId = opportunity.parentOpportunityId || opportunity._id;
+        const parentId = opportunity.parentOpportunityId || (opportunity._id ? opportunity._id : opportunity.id);
         const currentDate = new Date().toISOString().split('T')[0]; // Today's date
         
         // Find all future recurring instances to delete
-        const recurringOpportunities = await opportunitiesCollection.find({
-          $or: [
-            { _id: parentId },
-            { parentOpportunityId: parentId }
-          ],
-          date: { $gte: currentDate } // Only future dates
-        }).toArray();
+        let recurringOpportunities;
+        
+        if (opportunity._id || ObjectId.isValid(parentId)) {
+          // Using MongoDB ObjectId format
+          const parentObjectId = ObjectId.isValid(parentId) ? new ObjectId(parentId) : parentId;
+          recurringOpportunities = await opportunitiesCollection.find({
+            $or: [
+              { _id: parentObjectId },
+              { parentOpportunityId: parentObjectId }
+            ],
+            date: { $gte: currentDate } // Only future dates
+          }).toArray();
+        } else {
+          // Using numeric id format
+          recurringOpportunities = await opportunitiesCollection.find({
+            $or: [
+              { id: parentId },
+              { parentOpportunityId: parentId }
+            ],
+            date: { $gte: currentDate } // Only future dates
+          }).toArray();
+        }
         
         // Get all IDs to delete
-        const idsToDelete = recurringOpportunities.map(opp => opp._id);
+        const idsToDelete = recurringOpportunities.map(opp => opp._id || opp.id);
         
         // Delete all future recurring opportunities
         await opportunitiesCollection.deleteMany({
-          _id: { $in: idsToDelete }
+          _id: { $in: idsToDelete.map(id => {
+            try {
+              return new ObjectId(id);
+            } catch (error) {
+              return id;
+            }
+          }) }
         });
         
         // Remove all opportunity IDs from company's opportunities array
@@ -330,13 +434,26 @@ export default async function handler(req, res) {
         });
       } else {
         // Delete just this single opportunity
-        const result = await opportunitiesCollection.deleteOne({ _id: new ObjectId(id) });
+        let result;
+        
+        if (opportunity._id) {
+          result = await opportunitiesCollection.deleteOne({ _id: opportunity._id });
+        } else {
+          result = await opportunitiesCollection.deleteOne({ id: opportunity.id });
+        }
         
         // Remove opportunity ID from company's opportunities array
-        await companiesCollection.updateOne(
-          { _id: new ObjectId(companyId) },
-          { $pull: { opportunities: new ObjectId(id) } }
-        );
+        if (opportunity._id) {
+          await companiesCollection.updateOne(
+            { _id: new ObjectId(companyId) },
+            { $pull: { opportunities: opportunity._id } }
+          );
+        } else {
+          await companiesCollection.updateOne(
+            { _id: new ObjectId(companyId) },
+            { $pull: { opportunities: opportunity.id } }
+          );
+        }
 
         return res.status(200).json({ success: true });
       }

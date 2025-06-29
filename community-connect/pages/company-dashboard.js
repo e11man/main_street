@@ -150,7 +150,7 @@ export default function CompanyDashboard() {
         // Update existing opportunity
         await axios.put('/api/companies/opportunities', {
           ...opportunityData,
-          id: currentOpportunity.id
+          id: currentOpportunity._id
         });
       } else {
         // Create new opportunity

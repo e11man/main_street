@@ -25,14 +25,14 @@ const FilterTab = ({ category, isActive, onClick }) => {
   return (
     <button
       className={`
-        relative overflow-hidden py-3 px-6 rounded-full font-montserrat font-semibold text-sm
+        relative overflow-hidden py-2 px-4 md:py-3 md:px-6 rounded-full font-montserrat font-semibold text-xs md:text-sm
         cursor-pointer transition-all duration-300 ease-in-out whitespace-nowrap
-        flex items-center gap-2 group transform
+        flex items-center gap-1.5 md:gap-2 group transform min-w-fit
         ${isActive 
-          ? 'bg-gradient-to-r from-accent1 to-accent1-light text-white border-2 border-accent1 translate-y-[-3px] shadow-[0_8px_25px_rgba(0,175,206,0.4)] scale-105' 
+          ? 'bg-gradient-to-r from-accent1 to-accent1-light text-white border-2 border-accent1 md:translate-y-[-3px] shadow-[0_4px_15px_rgba(0,175,206,0.3)] md:shadow-[0_8px_25px_rgba(0,175,206,0.4)] md:scale-105' 
           : 'bg-white text-primary border-2 border-border/60 shadow-md'
         }
-        hover:bg-gradient-to-r hover:from-accent1 hover:to-accent1-light hover:text-white hover:border-accent1 hover:translate-y-[-3px] hover:shadow-[0_8px_25px_rgba(0,175,206,0.4)] hover:scale-105
+        hover:bg-gradient-to-r hover:from-accent1 hover:to-accent1-light hover:text-white hover:border-accent1 md:hover:translate-y-[-3px] hover:shadow-[0_4px_15px_rgba(0,175,206,0.3)] md:hover:shadow-[0_8px_25px_rgba(0,175,206,0.4)] md:hover:scale-105
         active:translate-y-[-1px] active:shadow-[0_4px_15px_rgba(0,175,206,0.3)] active:scale-100
         focus:outline-none focus:ring-2 focus:ring-accent1/50 focus:ring-offset-2
       `}
@@ -43,7 +43,7 @@ const FilterTab = ({ category, isActive, onClick }) => {
     >
       <Icon 
         path={getCategoryIcon(category)} 
-        className={`w-5 h-5 ${isActive ? 'text-white' : 'text-accent1 group-hover:text-white'} transition-all duration-300`} 
+        className={`w-4 h-4 md:w-5 md:h-5 ${isActive ? 'text-white' : 'text-accent1 group-hover:text-white'} transition-all duration-300`} 
       />
       <span className="relative z-10 font-bold">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
       
