@@ -5,7 +5,7 @@ const TestimonialsSection = ({ testimonialRefs }) => {
   const testimonials = [
     {
       id: 1,
-      text: "Community Connect helped me find the perfect volunteer opportunity. I've made lifelong friends while making a real difference in my community.",
+      text: "Community Connect helped me find the perfect volunteer opportunity. I've made lifelong friends while making a real difference in upland.",
       author: 'Sarah Johnson, Volunteer',
     },
     {
@@ -34,7 +34,7 @@ const TestimonialsSection = ({ testimonialRefs }) => {
             <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
           </h2>
           <p className="text-text-secondary max-w-2xl mx-auto mt-6">
-            Discover how Community Connect is bringing people together and making a difference in our communities.
+            Discover how Community Connect is bringing people together and making a difference in upland.
           </p>
         </div>
         

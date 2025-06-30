@@ -47,7 +47,7 @@ const HeroSection = forwardRef((props, ref) => {
           </h1>
           
           <p className="font-source-serif text-clamp-18-24 font-normal text-text-secondary mb-10 max-w-2xl mx-auto leading-relaxed">
-            Connect with meaningful opportunities that create lasting impact in your community.
+            Connect with meaningful opportunities that create lasting impact in upland.
           </p>
           
           <div className="flex flex-wrap justify-center gap-4 mb-16">

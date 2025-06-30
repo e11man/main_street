@@ -52,7 +52,7 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
           <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
         </h2>
         <p className="font-montserrat text-lg font-normal text-text-secondary max-w-xl mx-auto leading-relaxed mt-8">
-          Find ways to make a meaningful difference in your community.
+          Find ways to make a meaningful difference in upland.
         </p>
       </div>
 

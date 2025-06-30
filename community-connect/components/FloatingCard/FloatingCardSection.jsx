@@ -22,7 +22,7 @@ const FloatingCardSection = () => {
             <div className="translate-y-2 opacity-90 transition-all duration-400 ease-in-out
                             group-hover:translate-y-0 group-hover:opacity-100 w-full">
               <h3 className="text-2xl md:text-3xl font-bold mb-2 text-white font-montserrat
-                             bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent drop-shadow-sm">Join Our Community</h3>
+                             bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent drop-shadow-sm">Join Our Upland</h3>
               <p className="text-base md:text-lg text-white/90 font-source-serif mb-6">Be part of something bigger</p>
               
     
