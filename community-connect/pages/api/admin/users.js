@@ -1,9 +1,13 @@
 import clientPromise from '../../../lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { hash } from 'bcryptjs';
+import { protectRoute } from '../../../lib/authUtils'; // Import protectRoute
 
-export default async function handler(req, res) {
+async function usersHandler(req, res) { // Renamed original handler
   try {
+    // req.user is available here if protectRoute was successful
+    // console.log('Authenticated admin user:', req.user);
+
     // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
@@ -86,3 +90,6 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+// Wrap the handler with protectRoute, requiring 'admin' role
+export default protectRoute(usersHandler, ['admin']);
