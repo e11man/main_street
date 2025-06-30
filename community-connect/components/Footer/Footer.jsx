@@ -16,12 +16,12 @@ const Footer = () => {
               Community Connect
             </h3>
             <p className="font-source-serif text-base text-text-secondary leading-relaxed mb-6">
-              Connecting passionate volunteers with meaningful opportunities to create lasting change in communities worldwide.
+              Connecting passionate volunteers with meaningful opportunities to create lasting change in upland.
             </p>
             <div className="flex gap-4">
               <div className="bg-accent1/10 px-4 py-2 rounded-full flex items-center gap-2">
                 <Icon path="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.79 3.05h-1.96c-.1-1.05-.82-1.87-2.65-1.87-1.96 0-2.4.98-2.4 1.59 0 .83.44 1.61 2.67 2.14 2.48.6 4.18 1.62 4.18 3.67 0 1.72-1.39 2.84-3.11 3.21z" className="w-5 h-5 text-accent1" />
-                <span className="text-accent1 font-semibold text-sm">Building Communities</span>
+                <span className="text-accent1 font-semibold text-sm">Supporting Upland</span>
               </div>
               <div className="bg-accent1/10 px-4 py-2 rounded-full flex items-center gap-2">
                 <Icon path="M13 16h-1v-4h-1V9h2v3h1v4zm-1-14C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" className="w-5 h-5 text-accent1" />
@@ -59,7 +59,7 @@ const Footer = () => {
         </div>
         <div className="border-t-2 border-gradient-to-r from-accent1/20 via-accent1/40 to-accent1/20 pt-8 text-center">
           <div className="bg-white/60 rounded-full px-6 py-3 inline-block border border-border/30">
-            <p className="text-text-tertiary text-sm font-medium">&copy; 2025 Community Connect. All rights reserved. Made with <span className="inline-block align-middle"><Icon path="M4.318 6.318a4.5 4.5 0 016.364 0l.318.319.318-.319a4.5 4.5 0 116.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 010-6.364z" className="w-4 h-4 text-red-400 inline-block align-middle" /></span> for communities.</p>
+             <p className="text-text-tertiary text-sm font-medium">&copy; 2025 Community Connect. All rights reserved. Made with <span className="inline-block align-middle"><Icon path="M4.318 6.318a4.5 4.5 0 016.364 0l.318.319.318-.319a4.5 4.5 0 116.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 010-6.364z" className="w-4 h-4 text-red-400 inline-block align-middle" /></span> for upland.</p>
           </div>
         </div>
       </div>

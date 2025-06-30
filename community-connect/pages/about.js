@@ -115,7 +115,7 @@ export default function About() {
               </h1>
               
               <p className="font-source-serif text-clamp-18-24 font-normal text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Connect with meaningful opportunities that create lasting impact in your community.
+                Connect with meaningful opportunities that create lasting impact in upland.
               </p>
               
               <div className="flex flex-wrap justify-center gap-4">
@@ -153,7 +153,7 @@ export default function About() {
                 Our Mission
               </h2>
               <p className="font-source-serif text-lg text-text-secondary max-w-4xl mx-auto leading-relaxed">
-                Community Connect is dedicated to fostering meaningful relationships between passionate volunteers and impactful opportunities. We believe that when individuals come together with shared purpose, they can create transformative change that extends far beyond individual efforts. Our platform serves as a bridge, connecting hearts and hands to build stronger, more resilient communities through collective action.
+                Community Connect is dedicated to fostering meaningful relationships between passionate volunteers and impactful opportunities. We believe that when individuals come together with shared purpose, they can create transformative change that extends far beyond individual efforts. Our platform serves as a bridge, connecting hearts and hands to build stronger, more resilient upland through collective action.
               </p>
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function About() {
                   iconPath: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z", 
                   number: 3500, 
                   label: "Volunteers Connected",
-                  description: "Passionate individuals serving their communities" 
+                  description: "Passionate individuals serving upland"
                 },
                 { 
                   iconPath: "M13 10V3L4 14h7v7l9-11h-7z", 
@@ -190,8 +190,8 @@ export default function About() {
                 { 
                   iconPath: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4", 
                   number: 120, 
-                  label: "Communities Served",
-                  description: "Local neighborhoods transformed through service" 
+                  label: "Impacted Areas in Upland",
+                  description: "Local areas in Upland transformed through service"
                 }
               ].map((stat, index) => {
                 const number = useAnimatedNumber(isVisible.impact ? stat.number : 0);
@@ -243,7 +243,7 @@ export default function About() {
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
               <p className="font-source-serif text-lg text-text-secondary max-w-4xl mx-auto leading-relaxed">
-                Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in the world.
+                Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in upland.
               </p>
             </div>
 
@@ -267,7 +267,7 @@ export default function About() {
                     Local Ministries
                   </h3>
                   <p className="font-source-serif text-text-secondary leading-relaxed text-sm">
-                    Taylor World Outreach (TWO) ministries provide hands-on opportunities to serve in our local community and beyond. These programs focus on meeting immediate needs while building lasting relationships.
+                    Taylor World Outreach (TWO) ministries provide hands-on opportunities to serve in our local upland and beyond. These programs focus on meeting immediate needs while building lasting relationships.
                   </p>
                 </div>
               </div>
@@ -294,7 +294,7 @@ export default function About() {
                     Community Plunge
                   </h3>
                   <p className="font-source-serif text-white/90 leading-relaxed text-sm relative z-10">
-                    Our signature immersive experience where volunteers dive deep into community service, building connections and creating lasting impact through intensive, focused engagement.
+                    Our signature immersive experience where volunteers dive deep into service in Upland, building connections and creating lasting impact through intensive, focused engagement.
                   </p>
                 </div>
               </div>
@@ -333,7 +333,7 @@ export default function About() {
                   Community Outreach Programs
                 </h3>
                 <p className="font-source-serif text-text-secondary leading-relaxed max-w-3xl mx-auto">
-                  Share the love of Christ through diverse service opportunities that address real community needs and foster meaningful relationships.
+                  Share the love of Christ through diverse service opportunities that address real needs in Upland and foster meaningful relationships.
                 </p>
               </div>
               
