@@ -169,13 +169,20 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
             </div>
           </div>
         </div>
-        <div className="flex justify-center mt-auto">
+        <div className="flex justify-around mt-auto space-x-2">
           <Button 
             variant="secondary" 
-            className="py-2.5 px-8 rounded-full bg-accent1 hover:bg-accent1/90 w-full max-w-[200px]"
+            className="py-2.5 px-8 rounded-full bg-accent1 hover:bg-accent1/90 w-full max-w-[150px]"
             onClick={() => onJoinClick(opportunity)}
           >
             Join Now
+          </Button>
+          <Button
+            variant="outline"
+            className="py-2.5 px-8 rounded-full border-accent1 text-accent1 hover:bg-accent1/10 w-full max-w-[150px]"
+            onClick={() => onLearnMoreClick(opportunity, true)} // Pass true to indicate chat button click
+          >
+            Chat
           </Button>
         </div>
       </div>
