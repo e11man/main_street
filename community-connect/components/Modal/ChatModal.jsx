@@ -12,11 +12,31 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
   const [error, setError] = useState('');
   const chatMessagesEndRef = useRef(null);
 
-  const senderType = isCompany ? 'organization' : 'user';
-  // Ensure currentUser and _id are available, default to a generic ID if not (should not happen in practice)
-  const senderId = currentUser?._id || 'anonymous';
-  const companyName = opportunity?.companyName || 'Organization';
-  const userName = currentUser?.name || 'User';
+  // Determine the role of the current user viewing the chat
+  // 'viewerIs' can be 'user', 'company', or 'admin'
+  const viewerIs = isCompany ? 'company' : (currentUser?.isAdmin ? 'admin' : 'user');
+
+  // senderTypeForNewMessages: what senderType to use when this viewer sends a message
+  let senderTypeForNewMessages;
+  // senderIdForNewMessages: what senderId to use when this viewer sends a message
+  let senderIdForNewMessages;
+  // companyIdForContext: The ID of the company hosting the opportunity, used when admin sends as host.
+  const companyIdForContext = opportunity?.companyId || opportunity?.company?._id;
+
+
+  if (viewerIs === 'user') {
+    senderTypeForNewMessages = 'user';
+    senderIdForNewMessages = currentUser?._id;
+  } else if (viewerIs === 'company') {
+    senderTypeForNewMessages = 'organization';
+    senderIdForNewMessages = currentUser?._id; // Company's own ID
+  } else { // viewerIs === 'admin'
+    // Admin sends as the organization hosting the opportunity
+    senderTypeForNewMessages = 'organization'; // Or 'admin_as_host' if API handles it distinctly
+    senderIdForNewMessages = companyIdForContext; // Admin sends on behalf of the company
+  }
+
+  const currentViewerIdToCompare = viewerIs === 'admin' ? companyIdForContext : currentUser?._id;
 
   const scrollToBottom = () => {
     chatMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -55,17 +75,26 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !opportunity?._id || !senderId) return;
+    if (!newMessage.trim() || !opportunity?._id || !senderIdForNewMessages) {
+      setError('Cannot send message: missing critical information.');
+      return;
+    }
 
     setLoading(true);
     setError('');
     try {
-      const response = await axios.post('/api/chat/messages', {
+      const payload = {
         opportunityId: opportunity._id,
-        senderId: senderId,
-        senderType: senderType,
+        senderId: senderIdForNewMessages, // ID of user, or company (even if admin is sending)
+        senderType: senderTypeForNewMessages, // 'user' or 'organization'
         message: newMessage.trim(),
-      });
+      };
+      // If an admin is sending, their actual ID might be useful for logging/API
+      if (viewerIs === 'admin' && currentUser?._id) {
+        payload.actualSenderId = currentUser._id; // Admin's own ID
+      }
+
+      const response = await axios.post('/api/chat/messages', payload);
       setMessages([...messages, response.data]);
       setNewMessage('');
     } catch (err) {
@@ -94,26 +123,59 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
             </div>
           )}
           {messages.map((msg, index) => {
-            const isCurrentUserMessage = msg.senderId === senderId && msg.senderType === senderType;
-            const messageSenderName = msg.senderType === 'organization' ? companyName : (isCurrentUserMessage ? userName : 'Volunteer');
+            // Determine if the message is from the current viewer
+            // currentViewerIdToCompare is the ID of the user/company the viewer is acting as
+            const isFromCurrentViewer = msg.senderId === currentViewerIdToCompare;
+
+            let senderDisplayName;
+            if (viewerIs === 'user') {
+              if (msg.senderType === 'user' && isFromCurrentViewer) {
+                senderDisplayName = 'You';
+              } else if (msg.senderType === 'organization') {
+                senderDisplayName = opportunity?.companyName || 'Organization';
+              } else { // Other users, though not typical in this setup yet
+                senderDisplayName = 'Volunteer';
+              }
+            } else if (viewerIs === 'company') {
+              if (msg.senderType === 'organization' && isFromCurrentViewer) {
+                senderDisplayName = 'You';
+              } else if (msg.senderType === 'user') {
+                senderDisplayName = 'Volunteer';
+              } else { // Other orgs?
+                senderDisplayName = msg.senderType;
+              }
+            } else { // viewerIs === 'admin'
+              if (msg.senderType === 'organization' && isFromCurrentViewer) {
+                // Admin sent this message acting as the host company
+                senderDisplayName = `You (as ${opportunity?.companyName || 'Host'})`;
+              } else if (msg.senderType === 'organization') {
+                // Message from another organization (not the admin acting as host)
+                senderDisplayName = opportunity?.companyName || 'Organization';
+              } else if (msg.senderType === 'user') {
+                senderDisplayName = 'Volunteer';
+              } else {
+                senderDisplayName = msg.senderType; // Fallback
+              }
+            }
 
             return (
               <div
-                key={msg._id || index} // Use msg._id if available, otherwise index as fallback
-                className={`flex ${isCurrentUserMessage ? 'justify-end' : 'justify-start'}`}
+                key={msg._id || index}
+                className={`flex flex-col ${isFromCurrentViewer ? 'items-end' : 'items-start'} mb-1`}
               >
                 <div
-                  className={`max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-xl shadow ${
-                    isCurrentUserMessage
-                      ? 'bg-accent1 text-white rounded-br-none'
-                      : 'bg-white text-text-primary border border-border rounded-bl-none'
-                  }`}
+                  className={`max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-2xl shadow-md ${
+                    isFromCurrentViewer
+                      ? 'bg-accent1 text-white rounded-br-lg'
+                      : 'bg-white text-text-primary border border-gray-200 rounded-bl-lg'
+                  } ${isFromCurrentViewer ? 'ml-auto' : 'mr-auto'}`}
+                  style={isFromCurrentViewer ? {borderBottomRightRadius: '4px'} : {borderBottomLeftRadius: '4px'}}
                 >
-                  <p className="font-montserrat text-xs font-semibold mb-1">
-                    {isCurrentUserMessage ? 'You' : messageSenderName}
+                  <p className="font-montserrat text-xs font-semibold mb-1 opacity-90">
+                    {senderDisplayName}
                   </p>
-                  <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                  <p className="text-xs opacity-70 mt-1 text-right">
+                  <p className="text-sm whitespace-pre-wrap leading-snug">{msg.message}</p>
+                  <p className="text-xs opacity-60 mt-1.5 text-right">
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>

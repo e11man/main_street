@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import ChatModal from '../components/Modal/ChatModal'; // Import ChatModal
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -21,6 +22,9 @@ export default function AdminPage() {
   const [showAddBlockedEmail, setShowAddBlockedEmail] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [selectedOpportunityForChat, setSelectedOpportunityForChat] = useState(null);
+  const [adminUser, setAdminUser] = useState(null); // To store admin user data for ChatModal
   
   // Search states
   const [searchTerms, setSearchTerms] = useState({
@@ -37,6 +41,17 @@ export default function AdminPage() {
   useEffect(() => {
     const adminAuth = localStorage.getItem('adminAuth');
     if (adminAuth === 'true') {
+      // Potentially fetch admin user details here or set a generic admin object
+      // For ChatModal, currentUser needs an _id and isAdmin flag.
+      // Let's assume the admin's ID is stored or can be fetched upon login.
+      // For now, we'll set a placeholder and update it on successful login.
+      const storedAdminUser = JSON.parse(localStorage.getItem('adminUser'));
+      if (storedAdminUser) {
+        setAdminUser(storedAdminUser);
+      } else {
+        // Fallback if not in localStorage, though ideally it should be set on login
+        setAdminUser({ _id: 'admin_user_id_placeholder', name: 'Admin', isAdmin: true });
+      }
       setIsAuthenticated(true);
       fetchData();
     }
@@ -57,6 +72,14 @@ export default function AdminPage() {
       });
 
       if (response.ok) {
+        const adminData = await response.json(); // Assuming login returns admin user data
+        const adminUserDetails = {
+           _id: adminData.id || adminData._id || 'default_admin_id', // Use a proper ID from response
+           name: adminData.username || 'Admin',
+           isAdmin: true
+        };
+        setAdminUser(adminUserDetails);
+        localStorage.setItem('adminUser', JSON.stringify(adminUserDetails));
         setIsAuthenticated(true);
         localStorage.setItem('adminAuth', 'true');
         fetchData();
@@ -74,8 +97,25 @@ export default function AdminPage() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('adminAuth');
+    localStorage.removeItem('adminUser'); // Clear admin user details on logout
+    setAdminUser(null);
     setUsername('');
     setPassword('');
+  };
+
+  const openChatModalForAdmin = (opportunity) => {
+    // Ensure opportunity has companyId, if not, try to find it or use a placeholder
+    // This is crucial for admin to send messages as the host.
+    const opportunityWithCompanyId = {
+      ...opportunity,
+      companyId: opportunity.companyId || opportunity.company?._id || opportunity.company, // Adjust based on actual structure
+    };
+    if (!opportunityWithCompanyId.companyId) {
+      alert("Error: Company ID missing for this opportunity. Admin cannot chat as host.");
+      return;
+    }
+    setSelectedOpportunityForChat(opportunityWithCompanyId);
+    setIsChatModalOpen(true);
   };
 
   const fetchData = async () => {
@@ -1242,6 +1282,12 @@ export default function AdminPage() {
                           >
                             Delete
                           </button>
+                          <button
+                            onClick={() => openChatModalForAdmin(opportunity)}
+                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm"
+                          >
+                            Chat
+                          </button>
                         </div>
                       </div>
                     </li>
@@ -1658,6 +1704,21 @@ export default function AdminPage() {
         {editingOpportunity && <EditOpportunityModal />}
         {editingCompany && <EditCompanyModal />}
         {showAddBlockedEmail && <AddBlockedEmailModal />}
+
+        {/* Chat Modal for Admin */}
+        {selectedOpportunityForChat && adminUser && (
+          <ChatModal
+            isOpen={isChatModalOpen}
+            onClose={() => {
+              setIsChatModalOpen(false);
+              setSelectedOpportunityForChat(null);
+            }}
+            opportunity={selectedOpportunityForChat}
+            currentUser={adminUser} // Pass admin user object
+            isCompany={false} // Admin is not the company, but will act as them
+                              // ChatModal logic uses currentUser.isAdmin to set viewerIs='admin'
+          />
+        )}
       </div>
     </>
   );
