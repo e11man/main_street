@@ -77,11 +77,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid company ID format' });
       }
 
-      // Get the next ID
-      const lastOpportunity = await opportunitiesCollection.findOne({}, { sort: { id: -1 } });
-      const nextId = lastOpportunity ? lastOpportunity.id + 1 : 1;
+      // Fetch company details once using the companyId from req.body
+      // The company existence check is already performed before this block.
+      const companyObject = await companiesCollection.findOne({ _id: new ObjectId(companyId) });
+      // No need to check if companyObject is null again, as it's checked above.
 
-      const baseOpportunity = {
+      const commonOpportunityData = {
         title,
         description,
         category,
@@ -90,96 +91,87 @@ export default async function handler(req, res) {
         spotsFilled: 0,
         location,
         time,
-        companyId, // Store the company ID with the opportunity
-        companyName: (await companiesCollection.findOne({ _id: new ObjectId(companyId) })).name,
-        createdAt: new Date()
+        companyId: companyObject._id, // Store companyId as ObjectId, from the fetched company
+        companyName: companyObject.name, // Use already fetched company name
+        createdAt: new Date(),
       };
 
-      // Handle recurring opportunities
       if (isRecurring) {
-        baseOpportunity.isRecurring = true;
-        baseOpportunity.recurringFrequency = recurringFrequency;
-        baseOpportunity.recurringDays = recurringDays;
+        commonOpportunityData.isRecurring = true;
+        commonOpportunityData.recurringFrequency = recurringFrequency;
+        commonOpportunityData.recurringDays = recurringDays;
         
-        // Create recurring instances based on frequency and days
-        const opportunities = [];
-        let currentId = nextId;
+        const opportunityInstancesToCreate = [];
+        const startDateFromInput = new Date(date);
+        const endDate = new Date(startDateFromInput);
+        endDate.setMonth(endDate.getMonth() + 3);
         
-        // Generate dates for the next 3 months
-        const startDate = new Date(date);
-        const endDate = new Date(startDate);
-        endDate.setMonth(endDate.getMonth() + 3); // 3 months of recurring opportunities
+        let currentDateIterator = new Date(startDateFromInput);
         
-        let currentDate = new Date(startDate);
-        
-        while (currentDate <= endDate) {
+        while (currentDateIterator <= endDate) {
           let shouldCreateForDate = false;
-          
           if (recurringFrequency === 'daily') {
-            if (recurringDays.includes('weekdays')) {
-              // Check if it's a weekday (0 = Sunday, 6 = Saturday)
-              const dayOfWeek = currentDate.getDay();
-              shouldCreateForDate = dayOfWeek > 0 && dayOfWeek < 6;
-            } else {
-              shouldCreateForDate = true; // Every day
-            }
+            shouldCreateForDate = recurringDays.includes('weekdays') ? (currentDateIterator.getDay() > 0 && currentDateIterator.getDay() < 6) : true;
           } else if (recurringFrequency === 'weekly') {
-            // Check if current day of week is in selected days
-            const dayOfWeek = currentDate.getDay();
             const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            shouldCreateForDate = recurringDays.includes(dayNames[dayOfWeek]);
+            shouldCreateForDate = recurringDays.includes(dayNames[currentDateIterator.getDay()]);
           } else if (recurringFrequency === 'monthly') {
-            // Same day of month as the original date
-            shouldCreateForDate = currentDate.getDate() === startDate.getDate();
+            shouldCreateForDate = currentDateIterator.getDate() === startDateFromInput.getDate();
           }
           
           if (shouldCreateForDate) {
-            const opportunityInstance = {
-              ...baseOpportunity,
-              id: currentId++,
-              date: currentDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
-              parentOpportunityId: nextId // Reference to the first/parent opportunity
-            };
-            
-            opportunities.push(opportunityInstance);
+            opportunityInstancesToCreate.push({
+              ...commonOpportunityData,
+              date: currentDateIterator.toISOString().split('T')[0],
+            });
           }
-          
-          // Move to next day
-          currentDate.setDate(currentDate.getDate() + 1);
+          currentDateIterator.setDate(currentDateIterator.getDate() + 1);
         }
         
-        // Insert all recurring opportunities
-        if (opportunities.length > 0) {
-          await opportunitiesCollection.insertMany(opportunities);
+        if (opportunityInstancesToCreate.length > 0) {
+          const firstInstanceData = opportunityInstancesToCreate.shift();
+          const firstInsertResult = await opportunitiesCollection.insertOne(firstInstanceData);
+          const parentGeneratedId = firstInsertResult.insertedId;
           
-          // Add opportunity IDs to company's opportunities array
-          const opportunityIds = opportunities.map(opp => opp.id);
+          const allInsertedOpportunitiesWithIds = [{ ...firstInstanceData, _id: parentGeneratedId }];
+
+          if (opportunityInstancesToCreate.length > 0) {
+            const remainingInstancesWithParent = opportunityInstancesToCreate.map(oppData => ({
+              ...oppData,
+              parentOpportunityId: parentGeneratedId,
+            }));
+            const remainingInsertResults = await opportunitiesCollection.insertMany(remainingInstancesWithParent);
+            for (let i = 0; i < remainingInstancesWithParent.length; i++) {
+              allInsertedOpportunitiesWithIds.push({ ...remainingInstancesWithParent[i], _id: remainingInsertResults.insertedIds[i] });
+            }
+          }
+
+          const insertedOpportunityObjectIds = allInsertedOpportunitiesWithIds.map(opp => opp._id);
           await companiesCollection.updateOne(
-            { _id: new ObjectId(companyId) },
-            { $push: { opportunities: { $each: opportunityIds } } }
+            { _id: companyObject._id }, // Use companyObject._id
+            { $push: { opportunities: { $each: insertedOpportunityObjectIds } } }
           );
           
-          return res.status(201).json(opportunities[0]); // Return the first instance
+          return res.status(201).json(allInsertedOpportunitiesWithIds[0]);
         } else {
           return res.status(400).json({ error: 'No valid recurring dates could be generated' });
         }
       } else {
         // Non-recurring opportunity
-        const newOpportunity = {
-          ...baseOpportunity,
-          id: nextId,
-          date
+        const singleOpportunityData = {
+          ...commonOpportunityData,
+          date: date,
+          isRecurring: false
         };
-
-        const result = await opportunitiesCollection.insertOne(newOpportunity);
+        const result = await opportunitiesCollection.insertOne(singleOpportunityData);
+        const insertedOpportunityWithId = { ...singleOpportunityData, _id: result.insertedId };
         
-        // Add opportunity ID to company's opportunities array
         await companiesCollection.updateOne(
-          { _id: new ObjectId(companyId) },
-          { $push: { opportunities: nextId } }
+          { _id: companyObject._id }, // Use companyObject._id
+          { $push: { opportunities: result.insertedId } }
         );
 
-        return res.status(201).json(newOpportunity);
+        return res.status(201).json(insertedOpportunityWithId);
       }
     }
 
