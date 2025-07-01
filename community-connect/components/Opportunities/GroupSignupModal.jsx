@@ -10,12 +10,6 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
   const [error, setError] = useState('');
   const [showOnlyDorm, setShowOnlyDorm] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && currentUser?._id) {
-      fetchFloorUsers();
-    }
-  }, [isOpen, currentUser, showOnlyDorm]);
-
   const fetchFloorUsers = async () => {
     try {
       setLoading(true);
@@ -41,6 +35,13 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen && currentUser?._id) {
+      fetchFloorUsers();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, currentUser, showOnlyDorm]);
 
   const handleSearch = () => {
     fetchFloorUsers();

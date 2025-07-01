@@ -22,6 +22,11 @@ export default function About() {
   const contactRef = useRef(null);
   const ctaRef = useRef(null);
   
+  // Animated numbers for impact section
+  const volunteersNumber = useAnimatedNumber(isVisible.impact ? 3500 : 0);
+  const projectsNumber = useAnimatedNumber(isVisible.impact ? 250 : 0);
+  const areasNumber = useAnimatedNumber(isVisible.impact ? 120 : 0);
+
   // Apply scroll animations
   useScrollTriggeredAnimationCallback(heroRef, (entry) => {
     setIsVisible(prev => ({ ...prev, hero: entry.isIntersecting }));
@@ -177,24 +182,23 @@ export default function About() {
               {[
                 { 
                   iconPath: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z", 
-                  number: 3500, 
+                  number: volunteersNumber, 
                   label: "Volunteers Connected",
                   description: "Passionate individuals serving upland"
                 },
                 { 
                   iconPath: "M13 10V3L4 14h7v7l9-11h-7z", 
-                  number: 250, 
+                  number: projectsNumber, 
                   label: "Active Projects",
                   description: "Ongoing initiatives creating lasting change" 
                 },
                 { 
                   iconPath: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4", 
-                  number: 120, 
+                  number: areasNumber, 
                   label: "Impacted Areas in Upland",
                   description: "Local areas in Upland transformed through service"
                 }
               ].map((stat, index) => {
-                const number = useAnimatedNumber(isVisible.impact ? stat.number : 0);
                 
                 return (
                   <div 
@@ -213,7 +217,7 @@ export default function About() {
                       />
                     </div>
                     <div className="text-4xl md:text-5xl font-montserrat font-bold text-accent1 mb-2 transition-all duration-300 group-hover:text-accent1">
-                      {number.toLocaleString()}
+                      {stat.number.toLocaleString()}
                     </div>
                     <div className="font-source-serif text-text-secondary font-medium transition-all duration-300 group-hover:text-text-primary mb-2">
                       {stat.label}
@@ -350,7 +354,7 @@ export default function About() {
                     iconPath: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
                   },
                   { 
-                    name: "Carpenter's Hands", 
+                    name: "Carpenter&apos;s Hands", 
                     description: "Home repair and construction projects",
                     iconPath: "M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   },
@@ -410,7 +414,7 @@ export default function About() {
                 Get In Touch
               </h2>
               <p className="font-source-serif text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed mb-8">
-                Have questions or want to learn more about how you can get involved? We'd love to hear from you and help you find the perfect opportunity to make a difference.
+                Have questions or want to learn more about how you can get involved? We&apos;d love to hear from you and help you find the perfect opportunity to make a difference.
               </p>
               
               <div className="mb-8">

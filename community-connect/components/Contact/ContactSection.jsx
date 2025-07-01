@@ -60,7 +60,7 @@ const ContactSection = () => {
           Get In Touch
         </h2>
         <p className="font-source-serif text-base text-text-secondary mb-8">
-          Have questions or want to learn more about our volunteer opportunities? Send us a message and we'll get back to you soon.
+          Have questions or want to learn more about our volunteer opportunities? Send us a message and we&apos;ll get back to you soon.
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-md mx-auto text-left bg-surface p-6 rounded-lg shadow-md border border-border">
           <Input
