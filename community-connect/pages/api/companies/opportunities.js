@@ -41,7 +41,13 @@ export default async function handler(req, res) {
       }
 
       // Get all opportunities for this company
-      const opportunities = await opportunitiesCollection.find({ companyId }).toArray();
+      // Handle both string and ObjectId formats for companyId to ensure compatibility
+      const opportunities = await opportunitiesCollection.find({ 
+        $or: [
+          { companyId: companyId }, // String format (legacy)
+          { companyId: new ObjectId(companyId) } // ObjectId format (current)
+        ]
+      }).toArray();
       return res.status(200).json(opportunities);
     }
 
@@ -235,7 +241,9 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: 'Opportunity not found' });
       }
 
-      if (opportunity.companyId !== companyId) {
+      // Handle both string and ObjectId formats for companyId comparison
+      const opportunityCompanyId = opportunity.companyId?.toString();
+      if (opportunityCompanyId !== companyId) {
         return res.status(403).json({ error: 'Not authorized to update this opportunity' });
       }
 
@@ -392,7 +400,9 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: 'Opportunity not found' });
       }
 
-      if (opportunity.companyId !== companyId) {
+      // Handle both string and ObjectId formats for companyId comparison
+      const opportunityCompanyId = opportunity.companyId?.toString();
+      if (opportunityCompanyId !== companyId) {
         return res.status(403).json({ error: 'Not authorized to delete this opportunity' });
       }
 
