@@ -29,17 +29,9 @@ export default async function handler(req, res) {
     }
 
     // Build query for users
-    let query = {};
+    let query = { _id: { $ne: new ObjectId(userId) } }; // Always exclude the requesting user
     
-    if (dorm) {
-      // If specific dorm is requested, filter by that dorm
-      query.dorm = dorm;
-    } else if (requestingUser.dorm) {
-      // Otherwise, default to PA's own dorm/floor
-      query.dorm = requestingUser.dorm;
-    }
-
-    // Add search functionality
+    // Add search functionality if provided
     if (search && search.trim()) {
       const searchRegex = new RegExp(search.trim(), 'i');
       query.$or = [
@@ -48,14 +40,34 @@ export default async function handler(req, res) {
       ];
     }
 
-    // Get users from the same floor/dorm (excluding the requesting user)
-    const floorUsers = await usersCollection.find({
-      ...query,
-      _id: { $ne: new ObjectId(userId) } // Exclude the requesting user
-    }).toArray();
+    // If a specific dorm is requested, filter by that dorm only
+    if (dorm) {
+      query.dorm = dorm;
+    }
+
+    // Get all users matching the query
+    const allUsers = await usersCollection.find(query).toArray();
+
+    // Sort users: dorm users first (if not searching by specific dorm), then others alphabetically
+    let sortedUsers;
+    if (!dorm && requestingUser.dorm) {
+      // Separate users into dorm users and others
+      const dormUsers = allUsers.filter(user => user.dorm === requestingUser.dorm);
+      const otherUsers = allUsers.filter(user => user.dorm !== requestingUser.dorm);
+      
+      // Sort each group alphabetically by name
+      dormUsers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      otherUsers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      
+      // Combine: dorm users first, then others
+      sortedUsers = [...dormUsers, ...otherUsers];
+    } else {
+      // Just sort alphabetically if searching specific dorm or no dorm info
+      sortedUsers = allUsers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }
 
     // Remove sensitive data and return user info
-    const safeUsers = floorUsers.map(user => ({
+    const safeUsers = sortedUsers.map(user => ({
       _id: user._id,
       name: user.name,
       email: user.email,

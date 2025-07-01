@@ -8,19 +8,25 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showOnlyDorm, setShowOnlyDorm] = useState(false);
 
   useEffect(() => {
     if (isOpen && currentUser?._id) {
       fetchFloorUsers();
     }
-  }, [isOpen, currentUser]);
+  }, [isOpen, currentUser, showOnlyDorm]);
 
   const fetchFloorUsers = async () => {
     try {
       setLoading(true);
       setError('');
       
-      const response = await fetch(`/api/users/floor-users?userId=${currentUser._id}&search=${searchTerm}`);
+      let url = `/api/users/floor-users?userId=${currentUser._id}&search=${searchTerm}`;
+      if (showOnlyDorm && currentUser.dorm) {
+        url += `&dorm=${encodeURIComponent(currentUser.dorm)}`;
+      }
+      
+      const response = await fetch(url);
       if (response.ok) {
         const users = await response.json();
         setFloorUsers(users);
@@ -121,12 +127,12 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
             </div>
           )}
 
-          {/* Search */}
+          {/* Search and Filter */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Search Users
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-2">
               <input
                 type="text"
                 value={searchTerm}
@@ -143,8 +149,30 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
                 Search
               </Button>
             </div>
+            
+            {/* Filter Toggle */}
+            {currentUser.dorm && (
+              <div className="mb-2">
+                <label className="flex items-center text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={showOnlyDorm}
+                                         onChange={(e) => setShowOnlyDorm(e.target.checked)}
+                    className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  Show only users from {currentUser.dorm}
+                </label>
+              </div>
+            )}
+            
             <p className="text-xs text-gray-500 mt-1">
-              {searchTerm ? 'Showing search results' : `Showing users from your floor (${currentUser.dorm || 'your dorm'})`}
+              {searchTerm ? 
+                `Showing search results${showOnlyDorm ? ` from ${currentUser.dorm}` : ' from all users'}` : 
+                (showOnlyDorm ? 
+                  `Showing users from ${currentUser.dorm}` : 
+                  `Showing all users (${currentUser.dorm || 'your dorm'} users listed first)`
+                )
+              }
             </p>
           </div>
 
@@ -154,7 +182,7 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
               <div className="p-4 text-center text-gray-500">Loading users...</div>
             ) : floorUsers.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
-                {searchTerm ? 'No users found matching your search' : 'No users found on your floor'}
+                {searchTerm ? 'No users found matching your search' : 'No users found'}
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
@@ -162,8 +190,9 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
                   const isSelected = selectedUsers.includes(user._id);
                   const isDisabled = !canSelectMore && !isSelected;
                   const hasMaxCommitments = (user.commitments || []).length >= 2;
-                                     const isAlreadyCommitted = opportunity?.id && ((user.commitments || []).includes(opportunity.id) || 
+                  const isAlreadyCommitted = opportunity?.id && ((user.commitments || []).includes(opportunity.id) || 
                                               (user.commitments || []).includes(parseInt(opportunity.id)));
+                  const isFromSameDorm = user.dorm === currentUser.dorm;
 
                   return (
                     <div
@@ -182,6 +211,7 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
                           <p className="text-sm font-medium text-gray-900 flex items-center">
                             {user.name}
                             {user.isPA && <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">PA</span>}
+                            {isFromSameDorm && <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Your Dorm</span>}
                           </p>
                           <p className="text-xs text-gray-500">{user.email}</p>
                           <p className="text-xs text-gray-400">
