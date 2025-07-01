@@ -1,5 +1,6 @@
 import clientPromise from '../../../lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { sendBulkGroupSignupNotifications, sendGroupSignupNotification } from '../../../lib/email';
 
 export default async function handler(req, res) {
   try {
@@ -7,15 +8,16 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { paUserId, opportunityId, userIds } = req.body;
+    const { paUserId, opportunityId, userIds, includeSelf } = req.body;
 
     // Validate input
-    if (!paUserId || !opportunityId || !userIds || !Array.isArray(userIds) || userIds.length === 0) {
-      return res.status(400).json({ error: 'Missing required fields: paUserId, opportunityId, and userIds array' });
+    if (!paUserId || !opportunityId || (!userIds || !Array.isArray(userIds) || userIds.length === 0) && !includeSelf) {
+      return res.status(400).json({ error: 'Must provide userIds array or set includeSelf to true' });
     }
 
-    if (userIds.length > 10) {
-      return res.status(400).json({ error: 'Cannot sign up more than 10 users at once' });
+    const totalUsers = (userIds ? userIds.length : 0) + (includeSelf ? 1 : 0);
+    if (totalUsers > 10) {
+      return res.status(400).json({ error: 'Cannot sign up more than 10 users at once (including yourself)' });
     }
 
     // Connect to MongoDB
@@ -45,19 +47,28 @@ export default async function handler(req, res) {
     const filledSpots = opportunity.spotsFilled || 0;
     const availableSpots = totalSpots - filledSpots;
 
-    if (userIds.length > availableSpots) {
+    if (totalUsers > availableSpots) {
       return res.status(400).json({ 
-        error: `Not enough spots available. Requested: ${userIds.length}, Available: ${availableSpots}` 
+        error: `Not enough spots available. Requested: ${totalUsers}, Available: ${availableSpots}` 
       });
     }
 
     // Validate all users exist and check for existing commitments
-    const users = await usersCollection.find({ 
-      _id: { $in: userIds.map(id => new ObjectId(id)) } 
-    }).toArray();
+    let users = [];
+    if (userIds && userIds.length > 0) {
+      users = await usersCollection.find({ 
+        _id: { $in: userIds.map(id => new ObjectId(id)) } 
+      }).toArray();
 
-    if (users.length !== userIds.length) {
-      return res.status(400).json({ error: 'One or more users not found' });
+      if (users.length !== userIds.length) {
+        return res.status(400).json({ error: 'One or more users not found' });
+      }
+    }
+
+    // Include PA user if includeSelf is true
+    let allUsersToSignUp = [...users];
+    if (includeSelf) {
+      allUsersToSignUp.push(paUser);
     }
 
     // Check for existing commitments and commitment limits
@@ -65,7 +76,7 @@ export default async function handler(req, res) {
     const maxCommitmentUsers = [];
     const opportunityIdNum = parseInt(opportunityId);
 
-    for (const user of users) {
+    for (const user of allUsersToSignUp) {
       const commitments = user.commitments || [];
       
       // Check if user already committed to this opportunity
@@ -94,17 +105,19 @@ export default async function handler(req, res) {
     // Perform group signup
     const results = [];
     let successCount = 0;
+    const signedUpUsers = [];
 
-    for (const userId of userIds) {
+    // Sign up all users (including PA if includeSelf is true)
+    for (const user of allUsersToSignUp) {
       try {
         // Add commitment to user
         await usersCollection.updateOne(
-          { _id: new ObjectId(userId) },
+          { _id: new ObjectId(user._id) },
           { $push: { commitments: opportunityIdNum } }
         );
 
         // Get updated user info
-        const updatedUser = await usersCollection.findOne({ _id: new ObjectId(userId) });
+        const updatedUser = await usersCollection.findOne({ _id: new ObjectId(user._id) });
         const { password: _, ...userWithoutPassword } = updatedUser;
         
         results.push({
@@ -112,12 +125,13 @@ export default async function handler(req, res) {
           user: userWithoutPassword
         });
         
+        signedUpUsers.push(userWithoutPassword);
         successCount++;
       } catch (error) {
-        console.error(`Error signing up user ${userId}:`, error);
+        console.error(`Error signing up user ${user._id}:`, error);
         results.push({
           success: false,
-          userId: userId,
+          userId: user._id,
           error: 'Failed to sign up user'
         });
       }
@@ -131,9 +145,44 @@ export default async function handler(req, res) {
       );
     }
 
+    // Send email notifications to successfully signed up users
+    let emailResults = [];
+    if (signedUpUsers.length > 0) {
+      try {
+        // Get the company information for the opportunity
+        const companiesCollection = db.collection('companies');
+        const company = await companiesCollection.findOne({ _id: new ObjectId(opportunity.companyId) });
+        
+        // Enrich opportunity with company details
+        const enrichedOpportunity = {
+          ...opportunity,
+          companyName: company?.name,
+          companyEmail: company?.email,
+          companyPhone: company?.phone,
+          companyWebsite: company?.website
+        };
+
+        emailResults = await sendBulkGroupSignupNotifications(
+          signedUpUsers, 
+          enrichedOpportunity, 
+          {
+            _id: paUser._id,
+            name: paUser.name,
+            email: paUser.email
+          }
+        );
+        
+        console.log('Email notifications sent:', emailResults);
+      } catch (emailError) {
+        console.error('Error sending email notifications:', emailError);
+        // Don't fail the entire request if email fails
+      }
+    }
+
     return res.status(200).json({
-      message: `Successfully signed up ${successCount} out of ${userIds.length} users`,
+      message: `Successfully signed up ${successCount} out of ${totalUsers} users`,
       results: results,
+      emailResults: emailResults,
       opportunityId: opportunityId,
       paUser: {
         _id: paUser._id,
