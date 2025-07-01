@@ -123,6 +123,7 @@ async function handleTaylorVerify(req, res, usersCollection, taylorVerificationC
       email: normalizedEmail,
       password: verificationData.hashedPassword, // Use the stored hashed password
       name: verificationData.name,
+      dorm: verificationData.dorm,
       commitments: [],
       createdAt: new Date()
     };
@@ -189,10 +190,10 @@ export default async function handler(req, res) {
 }
 
 async function handleSignup(req, res, usersCollection) {
-  const { email, password, name } = req.body;
+  const { email, password, name, dorm } = req.body;
   
   // Validate input
-  if (!email || !password || !name) {
+  if (!email || !password || !name || !dorm) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   
@@ -231,13 +232,14 @@ async function handleSignup(req, res, usersCollection) {
   const hashedPassword = await hash(password, 10);
   
   // Create new user object
-  const newUser = {
-    email: normalizedEmail,
-    password: hashedPassword,
-    name,
-    commitments: [], // Array to store opportunity IDs (max 2)
-    createdAt: new Date()
-  };
+    const newUser = {
+      email: normalizedEmail,
+      password: hashedPassword,
+      name,
+      dorm,
+      commitments: [], // Array to store opportunity IDs (max 2)
+      createdAt: new Date()
+    };
   
   // Check if email ends with taylor.edu
   if (normalizedEmail.endsWith('taylor.edu')) {
@@ -261,6 +263,7 @@ async function handleSignup(req, res, usersCollection) {
     await taylorVerificationCollection.insertOne({
       email: normalizedEmail,
       name,
+      dorm,
       hashedPassword,
       verificationCode,
       codeExpiresAt,

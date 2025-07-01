@@ -8,7 +8,8 @@ const AuthModal = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: ''
+    password: '',
+    dorm: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -241,6 +242,31 @@ const AuthModal = ({ onClose, onSuccess }) => {
                 required={!isLogin}
                 disabled={isSubmitting}
               />
+            </div>
+          )}
+
+          {!isLogin && (
+            <div className="mb-4 animate-slideUp" style={{ animationDelay: '25ms' }}>
+              <label htmlFor="dorm" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
+                Select Your Dorm *
+              </label>
+              <select
+                id="dorm"
+                name="dorm"
+                value={formData.dorm}
+                onChange={handleChange}
+                required={!isLogin}
+                disabled={isSubmitting}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent1 focus:border-transparent transition-all duration-200 bg-white"
+              >
+                <option value="">Choose your dorm...</option>
+                <option value="Berg">Berg</option>
+                <option value="Sammy">Sammy</option>
+                <option value="Wengatz">Wengatz</option>
+                <option value="Olson">Olson</option>
+                <option value="English">English</option>
+                <option value="Brue">Brue</option>
+              </select>
             </div>
           )}
 

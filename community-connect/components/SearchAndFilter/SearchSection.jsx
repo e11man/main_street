@@ -70,6 +70,7 @@ const SearchSection = ({ filter, setFilter, searchTerm, setSearchTerm, currentUs
           opportunities={opportunities} 
           onLoginClick={handleLoginClick} 
           onDecommit={handleDecommit}
+          onDormUpdate={onUserUpdate} // Pass down user update handler
         />
       </div>
       

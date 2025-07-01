@@ -238,6 +238,20 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
         </p>
       )}
 
+      {/* Dorm Management Section */}
+      <DormManagement currentUser={currentUser} onDormUpdate={(updatedUser) => {
+        // Update local user data with the updated user from dorm change
+        // This assumes the updated user object contains the latest data
+        setUserCommitments(prevCommitments => 
+          prevCommitments.map(commitment => {
+            if (commitment.userId === updatedUser._id) {
+              return { ...commitment, dorm: updatedUser.dorm };
+            }
+            return commitment;
+          })
+        );
+      }} />
+
       {/* Chat Modal */}
       {selectedOpportunityForChat && currentUser && (
         <ChatModal
@@ -316,7 +330,7 @@ const CommitmentCard = ({ commitment, spotsTotal, spotsFilled, progress, onDecom
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium text-text-secondary">
               <Icon 
-                path="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                path="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 01-2 2z" 
                 className="w-4 h-4 text-accent1/70" 
               />
               <span className="font-montserrat font-semibold text-primary">Date:</span>
@@ -403,6 +417,126 @@ const CommitmentCard = ({ commitment, spotsTotal, spotsFilled, progress, onDecom
           <span className="truncate whitespace-nowrap">Chat</span>
         </Button>
       </div>
+    </div>
+  );
+};
+
+// Dorm Management Component
+const DormManagement = ({ currentUser, onDormUpdate }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedDorm, setSelectedDorm] = useState(currentUser?.dorm || '');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState('');
+
+  const dorms = ['Berg', 'Sammy', 'Wengatz', 'Olson', 'English', 'Brue'];
+
+  const handleDormUpdate = async () => {
+    if (!selectedDorm || selectedDorm === currentUser.dorm) {
+      setIsEditing(false);
+      return;
+    }
+
+    setIsUpdating(true);
+    setUpdateMessage('');
+
+    try {
+      const response = await fetch(`/api/admin/users/${currentUser._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...currentUser,
+          dorm: selectedDorm
+        }),
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUpdateMessage('Dorm updated successfully!');
+        setIsEditing(false);
+        if (onDormUpdate) onDormUpdate(updatedUser); // Live update parent
+      } else {
+        throw new Error('Failed to update dorm');
+      }
+    } catch (error) {
+      console.error('Error updating dorm:', error);
+      setUpdateMessage('Failed to update dorm. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setSelectedDorm(currentUser?.dorm || '');
+    setIsEditing(false);
+    setUpdateMessage('');
+  };
+
+  return (
+    <div className="mt-6 pt-4 border-t border-border/30">
+      <div className="flex items-center gap-2 mb-3">
+        <h4 className="font-montserrat text-lg font-bold text-primary">My Dorm</h4>
+        {!isEditing && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="ml-2 flex items-center gap-1 px-3 py-1.5 rounded-full bg-accent1 text-white font-semibold text-xs shadow hover:bg-accent1/90 transition-colors duration-200"
+            aria-label="Change Dorm"
+          >
+            <Icon path="M12 4v16m8-8H4" className="w-4 h-4" /> Change
+          </button>
+        )}
+      </div>
+
+      {updateMessage && (
+        <div className={`mb-3 p-2 rounded text-sm ${
+          updateMessage.includes('successfully') 
+            ? 'bg-green-50 text-green-700 border border-green-200' 
+            : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+          {updateMessage}
+        </div>
+      )}
+
+      {isEditing ? (
+        <div className="space-y-3">
+          <select
+            value={selectedDorm}
+            onChange={(e) => setSelectedDorm(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent1 focus:border-transparent transition-all duration-200 bg-white"
+            disabled={isUpdating}
+          >
+            <option value="">Choose your dorm...</option>
+            {dorms.map(dorm => (
+              <option key={dorm} value={dorm}>{dorm}</option>
+            ))}
+          </select>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleDormUpdate}
+              disabled={isUpdating || !selectedDorm}
+              variant="secondary"
+              className="px-4 py-2 text-sm"
+            >
+              {isUpdating ? 'Updating...' : 'Update'}
+            </Button>
+            <Button
+              onClick={handleCancel}
+              disabled={isUpdating}
+              variant="outline"
+              className="px-4 py-2 text-sm"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <span className="text-text-secondary font-source-serif text-sm">
+            {currentUser?.dorm || 'No dorm selected'}
+          </span>
+        </div>
+      )}
     </div>
   );
 };

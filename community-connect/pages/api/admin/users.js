@@ -26,7 +26,7 @@ async function usersHandler(req, res) { // Renamed original handler
 
     if (req.method === 'POST') {
       // Create new user
-      const { name, email, password } = req.body;
+      const { name, email, password, dorm } = req.body;
 
       if (!name || !email || !password) {
         return res.status(400).json({ error: 'Missing required fields' });
@@ -46,6 +46,7 @@ async function usersHandler(req, res) { // Renamed original handler
         name,
         email,
         password: hashedPassword,
+        dorm: dorm || '',
         commitments: [],
         createdAt: new Date()
       };
@@ -57,7 +58,7 @@ async function usersHandler(req, res) { // Renamed original handler
 
     if (req.method === 'PUT') {
       // Update user
-      const { _id, name, email, password, commitments } = req.body;
+      const { _id, name, email, password, commitments, dorm } = req.body;
 
       if (!_id || !name || !email) {
         return res.status(400).json({ error: 'Missing required fields' });
@@ -66,6 +67,7 @@ async function usersHandler(req, res) { // Renamed original handler
       const updateData = {
         name,
         email,
+        dorm: dorm || '',
         commitments: commitments || []
       };
 

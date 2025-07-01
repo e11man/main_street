@@ -756,6 +756,7 @@ export default function AdminPage() {
       name: editingUser?.name || '',
       email: editingUser?.email || '',
       password: '',
+      dorm: editingUser?.dorm || '',
       commitments: editingUser?.commitments || []
     });
     const [loading, setLoading] = useState(false);
@@ -823,6 +824,22 @@ export default function AdminPage() {
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
                 className="w-full px-3 py-2 border rounded-md"
               />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Dorm</label>
+              <select
+                value={formData.dorm}
+                onChange={(e) => setFormData({...formData, dorm: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                <option value="">Choose dorm...</option>
+                <option value="Berg">Berg</option>
+                <option value="Sammy">Sammy</option>
+                <option value="Wengatz">Wengatz</option>
+                <option value="Olson">Olson</option>
+                <option value="English">English</option>
+                <option value="Brue">Brue</option>
+              </select>
             </div>
             <div className="flex justify-end space-x-2">
               <button
@@ -1297,7 +1314,7 @@ export default function AdminPage() {
                               <p className="text-sm font-medium text-gray-900">{user.name}</p>
                               <p className="text-sm text-gray-500">{user.email}</p>
                               <p className="text-xs text-gray-400">
-                                Commitments: {user.commitments ? user.commitments.length : 0}
+                                Dorm: {user.dorm || 'Not specified'} | Commitments: {user.commitments ? user.commitments.length : 0}
                               </p>
                             </div>
                           </div>
