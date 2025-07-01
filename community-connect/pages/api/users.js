@@ -124,6 +124,7 @@ async function handleTaylorVerify(req, res, usersCollection, taylorVerificationC
       password: verificationData.hashedPassword, // Use the stored hashed password
       name: verificationData.name,
       dorm: verificationData.dorm,
+      role: verificationData.role || 'user',
       commitments: [],
       createdAt: new Date()
     };
@@ -237,6 +238,7 @@ async function handleSignup(req, res, usersCollection) {
       password: hashedPassword,
       name,
       dorm,
+      role: 'user', // Default role is 'user', can be changed to 'pa' by admin
       commitments: [], // Array to store opportunity IDs (max 2)
       createdAt: new Date()
     };
@@ -265,6 +267,7 @@ async function handleSignup(req, res, usersCollection) {
       name,
       dorm,
       hashedPassword,
+      role: 'user', // Default role
       verificationCode,
       codeExpiresAt,
       createdAt: new Date() // For TTL if codeExpiresAt is not directly used for TTL

@@ -82,6 +82,10 @@ const AuthModal = ({ onClose, onSuccess }) => {
         setPendingMessage(data.message || 'Your account is pending admin approval.');
         if (!isLogin) setFormData({ name: '', email: '', password: '' });
       } else {
+        // Store user data in localStorage
+        localStorage.setItem('userData', JSON.stringify(data));
+        // Trigger custom event for header update
+        window.dispatchEvent(new Event('userLogin'));
         onSuccess(data);
         onClose();
       }
@@ -112,6 +116,10 @@ const AuthModal = ({ onClose, onSuccess }) => {
       }
 
       // Verification successful
+      // Store user data in localStorage
+      localStorage.setItem('userData', JSON.stringify(data));
+      // Trigger custom event for header update
+      window.dispatchEvent(new Event('userLogin'));
       onSuccess(data);
       onClose();
       // Reset Taylor specific states

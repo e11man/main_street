@@ -54,6 +54,57 @@ export async function sendVerificationEmail(toEmail, code) {
   }
 }
 
+/**
+ * Sends a notification email when a user is added to an event by a PA.
+ * @param {string} toEmail - The recipient's email address.
+ * @param {string} userName - The user's name.
+ * @param {Object} opportunity - The opportunity/event details.
+ * @param {string} paName - The PA's name who added them.
+ * @returns {Promise<void>}
+ * @throws {Error} If sending email fails.
+ */
+export async function sendEventAddedNotificationEmail(toEmail, userName, opportunity, paName) {
+  const mailOptions = {
+    from: `"Community Connect" <${process.env.EMAIL_USER}>`,
+    to: toEmail,
+    subject: `You've been added to: ${opportunity.title}`,
+    text: `Hello ${userName},\n\nYou've been added to the volunteer opportunity "${opportunity.title}" by ${paName}.\n\nEvent Details:\n- Title: ${opportunity.title}\n- Date: ${opportunity.date}\n- Time: ${opportunity.time}\n- Location: ${opportunity.location}\n- Description: ${opportunity.description}\n\nPlease log into Community Connect to view more details and connect with other volunteers.\n\nBest regards,\nCommunity Connect Team`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h2 style="color: #333;">You've been added to a volunteer opportunity!</h2>
+        <p>Hello ${userName},</p>
+        <p>You've been added to the volunteer opportunity <strong>"${opportunity.title}"</strong> by ${paName}.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #007bff; margin-top: 0;">Event Details:</h3>
+          <p><strong>Title:</strong> ${opportunity.title}</p>
+          <p><strong>Date:</strong> ${opportunity.date}</p>
+          <p><strong>Time:</strong> ${opportunity.time}</p>
+          <p><strong>Location:</strong> ${opportunity.location}</p>
+          <p><strong>Description:</strong> ${opportunity.description}</p>
+        </div>
+        
+        <p>Please log into Community Connect to view more details and connect with other volunteers.</p>
+        
+        <hr style="border: none; border-top: 1px solid #eee;" />
+        <p style="font-size: 0.9em; color: #777;">
+          Best regards,<br />
+          Community Connect Team<br />
+          Connecting volunteers with opportunities.
+        </p>
+      </div>
+    `
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Event notification email sent: %s', info.messageId);
+  } catch (error) {
+    console.error('Error sending event notification email:', error);
+    throw new Error('Failed to send event notification email.');
+  }
+}
+
 // Example usage (for testing purposes, you might run this with node directly):
 // (async () => {
 //   if (process.env.NODE_ENV !== 'production') { // Avoid running in prod

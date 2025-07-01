@@ -405,6 +405,37 @@ export default function AdminPage() {
     }
   };
 
+  const managePARole = async (userId, action) => {
+    const actionText = action === 'assign' ? 'assign PA role to' : 'remove PA role from';
+    const user = users.find(u => u._id === userId);
+    
+    if (!confirm(`Are you sure you want to ${actionText} ${user?.name}?`)) return;
+
+    try {
+      const response = await fetch('/api/admin/manage-pa-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, action }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Update the user in the local state
+        setUsers(users.map(u => 
+          u._id === userId ? { ...u, role: data.user.role } : u
+        ));
+        alert(data.message);
+      } else {
+        alert(data.error || `Failed to ${actionText} user`);
+      }
+    } catch (error) {
+      alert(`Error ${action === 'assign' ? 'assigning' : 'removing'} PA role`);
+    }
+  };
+
   // Search filtering functions
   const handleSearchChange = (tab, value) => {
     setSearchTerms(prev => ({
@@ -1314,7 +1345,7 @@ export default function AdminPage() {
                               <p className="text-sm font-medium text-gray-900">{user.name}</p>
                               <p className="text-sm text-gray-500">{user.email}</p>
                               <p className="text-xs text-gray-400">
-                                Dorm: {user.dorm || 'Not specified'} | Commitments: {user.commitments ? user.commitments.length : 0}
+                                Dorm: {user.dorm || 'Not specified'} | Role: {user.role || 'user'} | Commitments: {user.commitments ? user.commitments.length : 0}
                               </p>
                             </div>
                           </div>
@@ -1326,6 +1357,21 @@ export default function AdminPage() {
                           >
                             Edit
                           </button>
+                          {user.role === 'pa' ? (
+                            <button
+                              onClick={() => managePARole(user._id, 'remove')}
+                              className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-3 rounded text-sm"
+                            >
+                              Remove PA
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => managePARole(user._id, 'assign')}
+                              className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm"
+                            >
+                              Make PA
+                            </button>
+                          )}
                           <button
                             onClick={() => deleteUser(user._id)}
                             className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"

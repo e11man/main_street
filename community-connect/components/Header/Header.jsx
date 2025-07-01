@@ -15,6 +15,37 @@ const NAV_LINKS = [
 
 const Header = ({ openModal }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Check for logged in user
+  useEffect(() => {
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      setCurrentUser(JSON.parse(userData));
+    }
+
+    // Listen for storage changes to update user state
+    const handleStorageChange = () => {
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        setCurrentUser(JSON.parse(userData));
+      } else {
+        setCurrentUser(null);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events
+    window.addEventListener('userLogin', handleStorageChange);
+    window.addEventListener('userLogout', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userLogin', handleStorageChange);
+      window.removeEventListener('userLogout', handleStorageChange);
+    };
+  }, []);
 
   // Lock scroll when mobile nav is open
   useEffect(() => {
@@ -52,6 +83,17 @@ const Header = ({ openModal }) => {
                 </Link>
               </li>
             ))}
+            {currentUser && currentUser.role === 'pa' && (
+              <li>
+                <Link
+                  href="/pa-dashboard"
+                  className="relative px-2 py-1 text-secondary hover:text-accent1 font-medium transition-colors duration-200 after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:bg-accent1 after:transition-all after:duration-300 hover:after:w-full"
+                  style={{ fontFamily: "'Montserrat', sans-serif" }}
+                >
+                  PA Dashboard
+                </Link>
+              </li>
+            )}
           </ul>
           <Button
             onClick={openModal}
