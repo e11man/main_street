@@ -77,10 +77,32 @@ async function handleRemoveCommitment(req, res, usersCollection, opportunitiesCo
     );
     
     // Decrement the spotsFilled count in the opportunity
-    await opportunitiesCollection.updateOne(
-      { id: parseInt(opportunityId) },
-      { $inc: { spotsFilled: -1 } }
-    );
+    // First try to find by numeric id
+    let opportunity = null;
+    if (!isNaN(opportunityIdNum)) {
+      opportunity = await opportunitiesCollection.findOne({ id: opportunityIdNum });
+    }
+    
+    // If not found and opportunityId looks like MongoDB ObjectId, try _id
+    if (!opportunity && ObjectId.isValid(opportunityId)) {
+      opportunity = await opportunitiesCollection.findOne({ _id: new ObjectId(opportunityId) });
+    }
+    
+    if (opportunity) {
+      let updateFilter;
+      if (opportunity.id) {
+        // Old numeric ID format
+        updateFilter = { id: opportunity.id };
+      } else {
+        // New MongoDB ObjectId format
+        updateFilter = { _id: opportunity._id };
+      }
+      
+      await opportunitiesCollection.updateOne(
+        updateFilter,
+        { $inc: { spotsFilled: -1 } }
+      );
+    }
     
     // Return updated user data (excluding password)
     const updatedUser = await usersCollection.findOne({ _id: new ObjectId(userId) });
@@ -381,10 +403,21 @@ async function handleAddCommitment(req, res, usersCollection, opportunitiesColle
       });
     }
     
-    // Find the opportunity
-    const opportunity = await opportunitiesCollection.findOne({ id: opportunityIdNum });
+    // Find the opportunity - handle both old numeric IDs and new MongoDB ObjectIds
+    let opportunity;
+    
+    // First try to find by numeric id (for older opportunities)
+    if (!isNaN(opportunityIdNum)) {
+      opportunity = await opportunitiesCollection.findOne({ id: opportunityIdNum });
+    }
+    
+    // If not found and opportunityId looks like MongoDB ObjectId, try _id
+    if (!opportunity && ObjectId.isValid(opportunityId)) {
+      opportunity = await opportunitiesCollection.findOne({ _id: new ObjectId(opportunityId) });
+    }
+    
     if (!opportunity) {
-      console.log('Opportunity not found:', opportunityIdNum);
+      console.log('Opportunity not found:', { opportunityId, opportunityIdNum });
       return res.status(404).json({ error: 'Opportunity not found' });
     }
     
@@ -398,7 +431,15 @@ async function handleAddCommitment(req, res, usersCollection, opportunitiesColle
     
     // Add commitment to user's commitments array
     const commitments = user.commitments || [];
-    commitments.push(opportunityIdNum); // Store as number for consistency
+    
+    // Store the ID in the same format it came in to maintain consistency
+    if (opportunity.id) {
+      // Old format - store as number
+      commitments.push(opportunity.id);
+    } else {
+      // New format - store as ObjectId string
+      commitments.push(opportunity._id.toString());
+    }
     
     // Update user in database
     await usersCollection.updateOne(
@@ -407,8 +448,17 @@ async function handleAddCommitment(req, res, usersCollection, opportunitiesColle
     );
     
     // Increment the spotsFilled count in the opportunity
+    let updateFilter;
+    if (opportunity.id) {
+      // Old numeric ID format
+      updateFilter = { id: opportunity.id };
+    } else {
+      // New MongoDB ObjectId format
+      updateFilter = { _id: opportunity._id };
+    }
+    
     await opportunitiesCollection.updateOne(
-      { id: parseInt(opportunityId) },
+      updateFilter,
       { $inc: { spotsFilled: 1 } }
     );
     

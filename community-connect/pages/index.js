@@ -255,7 +255,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           userId: currentUser._id,
-          opportunityId: opportunity.id
+          opportunityId: opportunity.id || opportunity._id
         })
       });
       

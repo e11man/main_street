@@ -197,23 +197,27 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
         <div className="flex justify-center mt-auto gap-2 pt-4">
           <Button 
             variant="secondary" 
-            className="py-2.5 px-6 md:px-8 rounded-full bg-accent1 hover:bg-accent1/90 flex-1 max-w-[180px] text-sm md:text-base"
+            className={`py-2.5 rounded-full bg-accent1 hover:bg-accent1/90 text-sm md:text-base font-medium ${
+              isPA && onGroupSignupClick 
+                ? 'px-4 md:px-6 flex-1 min-w-0' 
+                : 'px-6 md:px-8 flex-1 max-w-[180px]'
+            }`}
             onClick={() => onJoinClick(opportunity)}
           >
-            Join Now
+            <span className="truncate">Join Now</span>
           </Button>
           {isPA && onGroupSignupClick && (
             <Button 
               variant="secondary" 
-              className="py-2.5 px-3 md:px-4 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-1 text-sm"
+              className="py-2.5 px-4 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 text-sm font-medium min-w-[85px] justify-center flex-shrink-0"
               onClick={() => onGroupSignupClick(opportunity)}
               title="Sign up multiple people"
             >
               <Icon 
                 path="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
-                className="w-4 h-4" 
+                className="w-4 h-4 flex-shrink-0" 
               />
-              <span className="hidden sm:inline">Group</span>
+              <span className="whitespace-nowrap">Group</span>
             </Button>
           )}
         </div>
