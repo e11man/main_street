@@ -27,10 +27,10 @@ const VolunteerRequestForm = ({ onCancel }) => {
             <span className="text-2xl">🚧</span>
           </div>
           <h3 className="font-montserrat text-xl font-semibold text-text-primary mb-3">
-            We're in Beta!
+            We&apos;re in Beta!
           </h3>
           <p className="text-text-secondary mb-4 leading-relaxed">
-            Community Connect is currently in beta testing. We're only allowing verified companies and organizations to post volunteer opportunities at this time.
+            Community Connect is currently in beta testing. We&apos;re only allowing verified companies and organizations to post volunteer opportunities at this time.
           </p>
           <p className="text-text-secondary mb-6 leading-relaxed">
             Individual volunteer requests will be available soon!
@@ -60,7 +60,7 @@ const VolunteerRequestForm = ({ onCancel }) => {
               Want to be notified when we launch?
             </h4>
             <p className="text-sm text-text-secondary mb-3">
-              Get in touch and we'll let you know when individual requests are available
+              Get in touch and we&apos;ll let you know when individual requests are available
             </p>
             <Button 
               variant="secondary" 

@@ -8,19 +8,20 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (isOpen && currentUser?._id) {
-      fetchFloorUsers();
-    }
-  }, [isOpen, currentUser]);
+  const [showOnlyDorm, setShowOnlyDorm] = useState(false);
+  const [signMyselfUp, setSignMyselfUp] = useState(false);
 
   const fetchFloorUsers = async () => {
     try {
       setLoading(true);
       setError('');
       
-      const response = await fetch(`/api/users/floor-users?userId=${currentUser._id}&search=${searchTerm}`);
+      let url = `/api/users/floor-users?userId=${currentUser._id}&search=${searchTerm}`;
+      if (showOnlyDorm && currentUser.dorm) {
+        url += `&dorm=${encodeURIComponent(currentUser.dorm)}`;
+      }
+      
+      const response = await fetch(url);
       if (response.ok) {
         const users = await response.json();
         setFloorUsers(users);
@@ -36,6 +37,13 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
     }
   };
 
+  useEffect(() => {
+    if (isOpen && currentUser?._id) {
+      fetchFloorUsers();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, currentUser, showOnlyDorm]);
+
   const handleSearch = () => {
     fetchFloorUsers();
   };
@@ -49,8 +57,8 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
   };
 
   const handleGroupSignup = async () => {
-    if (selectedUsers.length === 0) {
-      setError('Please select at least one user to sign up');
+    if (selectedUsers.length === 0 && !signMyselfUp) {
+      setError('Please select at least one user to sign up or check "Sign myself up too"');
       return;
     }
 
@@ -66,7 +74,8 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
         body: JSON.stringify({
           paUserId: currentUser._id,
           opportunityId: opportunity.id,
-          userIds: selectedUsers
+          userIds: selectedUsers,
+          includeSelf: signMyselfUp
         }),
       });
 
@@ -76,6 +85,7 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
         onClose();
         setSelectedUsers([]);
         setSearchTerm('');
+        setSignMyselfUp(false);
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to sign up users');
@@ -89,7 +99,16 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
   };
 
   const availableSpots = opportunity ? ((opportunity.spotsTotal || opportunity.totalSpots || 0) - (opportunity.spotsFilled || 0)) : 0;
-  const canSelectMore = selectedUsers.length < availableSpots;
+  const totalSelections = selectedUsers.length + (signMyselfUp ? 1 : 0);
+  const canSelectMore = totalSelections < availableSpots;
+  
+  // Check if current user is already signed up or has max commitments
+  const currentUserCommitments = currentUser?.commitments || [];
+  const isCurrentUserAlreadySignedUp = opportunity?.id && currentUser && (
+    currentUserCommitments.includes(opportunity.id) || 
+    currentUserCommitments.includes(parseInt(opportunity.id))
+  );
+  const currentUserHasMaxCommitments = currentUserCommitments.length >= 2;
 
   if (!isOpen || !opportunity || !currentUser) return null;
 
@@ -110,7 +129,7 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
             Sign up multiple people for: <strong>{opportunity?.title || 'Event'}</strong>
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            Available spots: {availableSpots} | Selected: {selectedUsers.length}
+            Available spots: {availableSpots} | Selected: {totalSelections} {signMyselfUp && totalSelections > selectedUsers.length && '(including yourself)'}
           </p>
         </div>
 
@@ -121,12 +140,12 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
             </div>
           )}
 
-          {/* Search */}
+          {/* Search and Filter */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Search Users
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-2">
               <input
                 type="text"
                 value={searchTerm}
@@ -143,8 +162,30 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
                 Search
               </Button>
             </div>
+            
+            {/* Filter Toggle */}
+            {currentUser?.dorm && (
+              <div className="mb-2">
+                <label className="flex items-center text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={showOnlyDorm}
+                                         onChange={(e) => setShowOnlyDorm(e.target.checked)}
+                    className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  Show only users from {currentUser?.dorm}
+                </label>
+              </div>
+            )}
+            
             <p className="text-xs text-gray-500 mt-1">
-              {searchTerm ? 'Showing search results' : `Showing users from your floor (${currentUser.dorm || 'your dorm'})`}
+              {searchTerm ? 
+                `Showing search results${showOnlyDorm ? ` from ${currentUser?.dorm}` : ' from all users'}` : 
+                (showOnlyDorm ? 
+                  `Showing users from ${currentUser?.dorm}` : 
+                  `Showing all users (${currentUser?.dorm || 'your dorm'} users listed first)`
+                )
+              }
             </p>
           </div>
 
@@ -154,7 +195,7 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
               <div className="p-4 text-center text-gray-500">Loading users...</div>
             ) : floorUsers.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
-                {searchTerm ? 'No users found matching your search' : 'No users found on your floor'}
+                {searchTerm ? 'No users found matching your search' : 'No users found'}
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
@@ -162,8 +203,9 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
                   const isSelected = selectedUsers.includes(user._id);
                   const isDisabled = !canSelectMore && !isSelected;
                   const hasMaxCommitments = (user.commitments || []).length >= 2;
-                                     const isAlreadyCommitted = opportunity?.id && ((user.commitments || []).includes(opportunity.id) || 
+                  const isAlreadyCommitted = opportunity?.id && ((user.commitments || []).includes(opportunity.id) || 
                                               (user.commitments || []).includes(parseInt(opportunity.id)));
+                  const isFromSameDorm = user.dorm === currentUser?.dorm;
 
                   return (
                     <div
@@ -182,6 +224,7 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
                           <p className="text-sm font-medium text-gray-900 flex items-center">
                             {user.name}
                             {user.isPA && <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">PA</span>}
+                            {isFromSameDorm && <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Your Dorm</span>}
                           </p>
                           <p className="text-xs text-gray-500">{user.email}</p>
                           <p className="text-xs text-gray-400">
@@ -210,10 +253,36 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
             )}
           </div>
 
+          {/* Sign myself up option */}
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <label className="flex items-start text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={signMyselfUp}
+                onChange={(e) => setSignMyselfUp(e.target.checked)}
+                disabled={isCurrentUserAlreadySignedUp || currentUserHasMaxCommitments || (!canSelectMore && !signMyselfUp)}
+                className="mr-3 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <div>
+                <span className="font-medium text-blue-900">Sign myself up too</span>
+                {isCurrentUserAlreadySignedUp && (
+                  <p className="text-xs text-orange-600 mt-1">You&apos;re already signed up for this opportunity</p>
+                )}
+                {currentUserHasMaxCommitments && !isCurrentUserAlreadySignedUp && (
+                  <p className="text-xs text-red-600 mt-1">You&apos;ve reached the maximum of 2 commitments</p>
+                )}
+                {!isCurrentUserAlreadySignedUp && !currentUserHasMaxCommitments && (
+                  <p className="text-xs text-blue-600 mt-1">Include yourself in this group signup</p>
+                )}
+              </div>
+            </label>
+          </div>
+
           {/* Actions */}
           <div className="flex justify-between items-center mt-6">
             <p className="text-sm text-gray-600">
-              {selectedUsers.length} user{selectedUsers.length !== 1 ? 's' : ''} selected
+              {totalSelections} {totalSelections === 1 ? 'person' : 'people'} selected
+              {signMyselfUp && selectedUsers.length > 0 && ' (including yourself)'}
             </p>
             <div className="flex gap-2">
               <Button
@@ -225,10 +294,10 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
               </Button>
               <Button
                 onClick={handleGroupSignup}
-                disabled={loading || selectedUsers.length === 0}
+                disabled={loading || (selectedUsers.length === 0 && !signMyselfUp)}
                 className="bg-green-600 hover:bg-green-700"
               >
-                {loading ? 'Signing Up...' : `Sign Up ${selectedUsers.length} User${selectedUsers.length !== 1 ? 's' : ''}`}
+                {loading ? 'Signing Up...' : `Sign Up ${totalSelections} ${totalSelections === 1 ? 'Person' : 'People'}`}
               </Button>
             </div>
           </div>

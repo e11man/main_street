@@ -136,7 +136,7 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
       {userCommitments.length === 0 ? (
         <div className="text-center py-4">
           <p className="text-text-secondary font-source-serif text-sm leading-relaxed mb-2">
-            You haven't committed to any opportunities yet.
+            You haven&apos;t committed to any opportunities yet.
           </p>
           <p className="text-text-secondary font-source-serif text-sm leading-relaxed">
             Browse below and join up to 2 opportunities.
