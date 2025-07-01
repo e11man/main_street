@@ -21,8 +21,12 @@ const CustomMessageBox = ({ message, onClose }) => {
       className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-lg shadow-xl z-[9999] text-center font-montserrat text-text-primary max-w-md w-11/12
                  opacity-0 animate-fadeInMessageBox"
     >
-      <p className="mb-5 text-base">{message}</p>
-      <Button variant="primary" onClick={onClose} className="w-auto px-5 py-2.5">
+      <p className="mb-6 text-base leading-relaxed">{message}</p>
+      <Button 
+        variant="primary" 
+        onClick={onClose} 
+        className="w-full sm:w-auto min-w-[120px] px-6 py-3 rounded-lg font-semibold text-base transition-all duration-200 hover:scale-105 active:scale-95"
+      >
         OK
       </Button>
     </div>

@@ -119,7 +119,7 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
           </p>
           <Button 
             variant="secondary" 
-            className="py-2.5 px-5 rounded-full bg-accent1 hover:bg-accent1/90"
+            className="py-3 px-6 rounded-full bg-accent1 hover:bg-accent1/90 font-semibold text-base min-w-[120px] transition-all duration-200 hover:scale-105 active:scale-95"
             onClick={onLoginClick}
           >
             Log In
@@ -385,22 +385,22 @@ const CommitmentCard = ({ commitment, spotsTotal, spotsFilled, progress, onDecom
       </div>
       
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-5">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mt-5">
         <Button 
           variant="outline" 
-          className="w-full sm:w-auto py-2 px-4 rounded-full border-red-400 text-red-500 hover:bg-red-50 hover:border-red-500 text-sm font-medium transition-all duration-300"
+          className="w-full sm:w-auto sm:flex-1 py-2.5 px-3 sm:px-4 rounded-full border-red-400 text-red-500 hover:bg-red-50 hover:border-red-500 text-xs sm:text-sm font-medium transition-all duration-300 flex items-center justify-center min-h-[44px] min-w-0"
           onClick={() => onDecommit(commitment)}
         >
-          <Icon path="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" className="w-4 h-4 mr-2" />
-          Cancel Commitment
+          <Icon path="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+          <span className="truncate whitespace-nowrap">Cancel</span>
         </Button>
         <Button
           variant="primary"
-          className="w-full sm:w-auto py-2 px-4 rounded-full bg-accent1 hover:bg-accent1-dark text-sm font-medium transition-all duration-300"
+          className="w-full sm:w-auto sm:flex-1 py-2.5 px-3 sm:px-4 rounded-full bg-accent1 hover:bg-accent1-dark text-xs sm:text-sm font-medium transition-all duration-300 flex items-center justify-center min-h-[44px] min-w-0"
           onClick={() => onOpenChat(commitment)}
         >
-          <Icon path="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" className="w-4 h-4 mr-2" />
-          Open Chat
+          <Icon path="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+          <span className="truncate whitespace-nowrap">Chat</span>
         </Button>
       </div>
     </div>

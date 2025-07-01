@@ -206,11 +206,11 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
             <Button
               type="submit"
               variant="primary"
-              className="rounded-lg h-full px-5 py-2.5 self-end" // Adjusted padding for better alignment with textarea
+              className="rounded-lg h-full px-4 py-2.5 self-end min-w-[80px] flex items-center justify-center" // Better mobile touch target and alignment
               disabled={loading || !newMessage.trim()}
             >
-              <Icon path="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" className="w-5 h-5" />
-              <span className="ml-2 hidden sm:inline">Send</span>
+              <Icon path="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" className="w-4 h-4 flex-shrink-0" />
+              <span className="ml-2 font-medium text-sm">Send</span>
             </Button>
           </div>
           {error && !messages.length && <p className="text-red-500 text-sm mt-2">{error}</p>}
