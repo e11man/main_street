@@ -351,7 +351,7 @@ export default function CompanyDashboard() {
                       <td className="py-3 px-6 text-left">{opportunity.title}</td>
                       <td className="py-3 px-6 text-left">{opportunity.category}</td>
                       <td className="py-3 px-6 text-left">{new Date(opportunity.date).toLocaleDateString()}</td>
-                      <td className="py-3 px-6 text-left">{opportunity.filledSpots || 0} / {opportunity.totalSpots}</td>
+                      <td className="py-3 px-6 text-left">{opportunity.spotsFilled || 0} / {opportunity.spotsTotal || opportunity.totalSpots || 0}</td>
                       <td className="py-3 px-6 text-center">
                         <div className="flex item-center justify-center space-x-2">
                           <button

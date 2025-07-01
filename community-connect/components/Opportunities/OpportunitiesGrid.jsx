@@ -97,11 +97,11 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
         {/* Scrollable Container */}
         <div 
           ref={gridRef} 
-          className="flex overflow-x-auto gap-8 md:gap-10 pb-4 scrollbar-hide scroll-smooth"
+          className="flex overflow-x-auto gap-6 md:gap-10 pb-4 scrollbar-hide scroll-smooth px-4 md:px-0"
           onScroll={checkScrollPosition}
         >
           {sortedOpportunities.map((opportunity, index) => (
-            <div key={opportunity.id} className="flex-shrink-0 w-80 md:w-96">
+            <div key={opportunity.id || opportunity._id} className="flex-shrink-0 w-72 sm:w-80 md:w-96">
               <div className="h-full">
                 <OpportunityCard
                   opportunity={opportunity}

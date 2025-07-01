@@ -28,25 +28,19 @@ const formatTime = (time) => {
   return `${hours}:${minutes} ${period}`;
 };
 
-// Helper function to format phone number with parentheses and dashes
-const formatPhoneNumber = (phone) => {
-  if (!phone) return phone;
+// Helper function to format date as month and day only
+const formatDateShort = (dateStr) => {
+  if (!dateStr) return dateStr;
   
-  // Remove all non-digit characters
-  const digits = phone.replace(/\D/g, '');
-  
-  // Format as (XXX) XXX-XXXX for 10-digit numbers
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  } catch (error) {
+    return dateStr;
   }
-  
-  // Format as +X (XXX) XXX-XXXX for 11-digit numbers starting with 1
-  if (digits.length === 11 && digits[0] === '1') {
-    return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
-  }
-  
-  // Return original if format not recognized
-  return phone;
 };
 
 // Function to dynamically assign priority based on how close the date is
@@ -92,8 +86,8 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
                  transition-all duration-400 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]
                  hover:translate-y-[-8px] hover:scale-[1.02] hover:shadow-xl hover:border-accent1/50 group"
     >
-      <div className="p-6 flex flex-col flex-grow">
-        <div className="flex items-center justify-between mb-5">
+      <div className="p-4 md:p-6 flex flex-col flex-grow">
+        <div className="flex items-center justify-between mb-4">
           <span className="card-category bg-accent2 text-white px-3 py-1.5 rounded-full font-montserrat text-xs font-semibold tracking-wide uppercase shadow-sm">
             {opportunity?.category || 'Event'}
           </span>
@@ -105,52 +99,30 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
             {priority}
           </div>
         </div>
-        <h3 className="font-montserrat text-xl font-bold mb-3 text-primary tracking-tight leading-tight group-hover:text-primary-light transition-all duration-300">
+        
+        <h3 className="font-montserrat text-lg md:text-xl font-bold mb-3 text-primary tracking-tight leading-tight group-hover:text-primary-light transition-all duration-300">
           {opportunity?.title || 'Event Title'}
         </h3>
+        
         <p className="text-text-secondary font-source-serif text-sm leading-relaxed mb-4 line-clamp-3">
           {opportunity?.description || 'Event description'}
         </p>
         
         {/* Company Information */}
-        {(opportunity?.companyName || opportunity?.companyEmail || opportunity?.companyPhone || opportunity?.companyWebsite) && (
+        {opportunity?.companyName && (
           <div className="bg-accent1/5 border border-accent1/20 rounded-lg p-3 mb-4">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-1">
               <Icon 
                 path="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" 
                 className="w-4 h-4 text-accent1" 
               />
               <span className="font-montserrat font-semibold text-primary text-sm">Hosted by</span>
             </div>
-            {opportunity?.companyName && (
-              <p className="font-montserrat font-bold text-accent1 text-sm mb-1">{opportunity.companyName}</p>
-            )}
-            <div className="space-y-1">
-              {opportunity?.companyEmail && (
-                <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-                  <Icon path="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" className="w-3 h-3 text-accent1/70" />
-                  {opportunity.companyEmail}
-                </div>
-              )}
-              {opportunity?.companyPhone && (
-                 <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-                   <Icon path="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" className="w-3 h-3 text-accent1/70" />
-                   {formatPhoneNumber(opportunity.companyPhone)}
-                 </div>
-               )}
-              {opportunity?.companyWebsite && (
-                <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-                  <Icon path="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" className="w-3 h-3 text-accent1/70" />
-                  <a href={opportunity.companyWebsite?.startsWith('http') ? opportunity.companyWebsite : `https://${opportunity.companyWebsite}`} target="_blank" rel="noopener noreferrer" className="hover:text-accent1 transition-colors">
-                    {opportunity.companyWebsite}
-                  </a>
-                </div>
-              )}
-            </div>
+            <p className="font-montserrat font-bold text-accent1 text-sm">{opportunity.companyName}</p>
           </div>
         )}
         
-        {/* Key Details Section */}
+        {/* Essential Details Section - Simplified */}
         <div className="bg-gradient-to-r from-accent1/5 to-accent2/5 border border-accent1/20 rounded-lg p-4 mb-4">
           <h4 className="font-montserrat font-bold text-primary text-sm mb-3 flex items-center gap-2">
             <Icon path="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" className="w-4 h-4 text-accent1" />
@@ -158,46 +130,36 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
           </h4>
           
           <div className="space-y-2">
-            <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-text-secondary">
               <Icon 
                 path="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
                 className="w-4 h-4 text-accent1/70" 
               />
-              <span className="font-semibold text-accent1">Date:</span> {opportunity?.date || 'TBD'}
+              <span className="font-semibold text-accent1">Date:</span> {formatDateShort(opportunity?.date)}
             </div>
             
-            {opportunity?.arrivalTime && (
-              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
-                <Icon 
-                  path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
-                  className="w-4 h-4 text-accent1/70" 
-                />
-                <span className="font-semibold text-accent1">Arrive by:</span> {formatTime(opportunity.arrivalTime)}
-              </div>
-            )}
-            
             {opportunity?.time && (
-              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-text-secondary">
                 <Icon 
                   path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
                   className="w-4 h-4 text-accent1/70" 
                 />
-                <span className="font-semibold text-accent1">Activity starts:</span> {formatTime(opportunity.time)}
+                <span className="font-semibold text-accent1">Start:</span> {formatTime(opportunity.time)}
               </div>
             )}
             
             {opportunity?.departureTime && (
-              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-text-secondary">
                 <Icon 
                   path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
                   className="w-4 h-4 text-accent1/70" 
                 />
-                <span className="font-semibold text-accent1">Expected end:</span> {formatTime(opportunity.departureTime)}
+                <span className="font-semibold text-accent1">End:</span> {formatTime(opportunity.departureTime)}
               </div>
             )}
             
             {opportunity?.location && (
-              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-text-secondary">
                 <Icon 
                   path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
                   className="w-4 h-4 text-accent1/70" 
@@ -207,68 +169,14 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(opportunity.location)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-accent1 transition-colors"
+                  className="underline hover:text-accent1 transition-colors truncate"
                 >
                   {opportunity.location}
                 </a>
               </div>
             )}
-            
-            {opportunity?.meetingPoint && (
-              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
-                <Icon 
-                  path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
-                  className="w-4 h-4 text-accent1/70" 
-                />
-                <span className="font-semibold text-accent1">Meet at:</span> {opportunity.meetingPoint}
-              </div>
-            )}
-            
-            {opportunity?.contactPerson && (
-              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
-                <Icon 
-                  path="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
-                  className="w-4 h-4 text-accent1/70" 
-                />
-                <span className="font-semibold text-accent1">Ask for:</span> {opportunity.contactPerson}
-              </div>
-            )}
-            
-            {opportunity?.contactPhone && (
-              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
-                <Icon 
-                  path="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" 
-                  className="w-4 h-4 text-accent1/70" 
-                />
-                <span className="font-semibold text-accent1">Contact:</span> {formatPhoneNumber(opportunity.contactPhone)}
-              </div>
-            )}
           </div>
         </div>
-
-        {/* Additional Information Section */}
-        {(opportunity?.whatToBring || opportunity?.specialInstructions) && (
-          <div className="bg-surface/50 border border-accent2/20 rounded-lg p-4 mb-4">
-            <h4 className="font-montserrat font-bold text-primary text-sm mb-3 flex items-center gap-2">
-              <Icon path="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" className="w-4 h-4 text-accent2" />
-              Important Info
-            </h4>
-            
-            {opportunity?.whatToBring && (
-              <div className="mb-3">
-                <span className="font-semibold text-accent2 text-xs">What to bring:</span>
-                <p className="text-text-secondary text-xs mt-1 leading-relaxed">{opportunity.whatToBring}</p>
-              </div>
-            )}
-            
-            {opportunity?.specialInstructions && (
-              <div>
-                <span className="font-semibold text-accent2 text-xs">Special instructions:</span>
-                <p className="text-text-secondary text-xs mt-1 leading-relaxed">{opportunity.specialInstructions}</p>
-              </div>
-            )}
-          </div>
-        )}
         
         <div className="card-spots bg-surface/70 p-4 rounded-lg border-2 border-accent1/20 w-full flex flex-col gap-3 transition-all duration-300 group-hover:border-accent1/40 group-hover:shadow-md">
           <div className="flex items-center gap-2 font-montserrat font-bold text-sm text-primary">
@@ -286,26 +194,30 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
           </div>
         </div>
         
-        <div className="flex justify-center mt-auto gap-2">
+        <div className="flex justify-center mt-auto gap-2 pt-4">
           <Button 
             variant="secondary" 
-            className="py-2.5 px-8 rounded-full bg-accent1 hover:bg-accent1/90 flex-1 max-w-[200px]"
+            className={`py-2.5 rounded-full bg-accent1 hover:bg-accent1/90 text-sm md:text-base font-medium ${
+              isPA && onGroupSignupClick 
+                ? 'px-4 md:px-6 flex-1 min-w-0' 
+                : 'px-6 md:px-8 flex-1 max-w-[180px]'
+            }`}
             onClick={() => onJoinClick(opportunity)}
           >
-            Join Now
+            <span className="truncate">Join Now</span>
           </Button>
           {isPA && onGroupSignupClick && (
             <Button 
               variant="secondary" 
-              className="py-2.5 px-4 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
+              className="py-2.5 px-4 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 text-sm font-medium min-w-[85px] justify-center flex-shrink-0"
               onClick={() => onGroupSignupClick(opportunity)}
               title="Sign up multiple people"
             >
               <Icon 
                 path="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
-                className="w-4 h-4" 
+                className="w-4 h-4 flex-shrink-0" 
               />
-              Group
+              <span className="whitespace-nowrap">Group</span>
             </Button>
           )}
         </div>

@@ -36,8 +36,20 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Access denied. Only PAs and admins can perform group signups' });
     }
 
-    // Get the opportunity
-    const opportunity = await opportunitiesCollection.findOne({ id: parseInt(opportunityId) });
+    // Get the opportunity - handle both old numeric IDs and new MongoDB ObjectIds
+    let opportunity;
+    const opportunityIdNum = parseInt(opportunityId);
+    
+    // First try to find by numeric id (for older opportunities)
+    if (!isNaN(opportunityIdNum)) {
+      opportunity = await opportunitiesCollection.findOne({ id: opportunityIdNum });
+    }
+    
+    // If not found and opportunityId looks like MongoDB ObjectId, try _id
+    if (!opportunity && ObjectId.isValid(opportunityId)) {
+      opportunity = await opportunitiesCollection.findOne({ _id: new ObjectId(opportunityId) });
+    }
+    
     if (!opportunity) {
       return res.status(404).json({ error: 'Opportunity not found' });
     }
@@ -74,13 +86,19 @@ export default async function handler(req, res) {
     // Check for existing commitments and commitment limits
     const conflictUsers = [];
     const maxCommitmentUsers = [];
-    const opportunityIdNum = parseInt(opportunityId);
 
     for (const user of allUsersToSignUp) {
       const commitments = user.commitments || [];
       
       // Check if user already committed to this opportunity
-      if (commitments.includes(opportunityIdNum) || commitments.includes(opportunityId)) {
+      // Handle both numeric and ObjectId string formats
+      const committedToThisOpportunity = commitments.some(commitment => {
+        return commitment == opportunityIdNum || 
+               commitment == opportunityId || 
+               commitment.toString() == opportunityId;
+      });
+      
+      if (committedToThisOpportunity) {
         conflictUsers.push(user.name);
       }
       
@@ -111,9 +129,19 @@ export default async function handler(req, res) {
     for (const user of allUsersToSignUp) {
       try {
         // Add commitment to user
+        // Store the ID in the same format as the opportunity
+        let commitmentId;
+        if (opportunity.id) {
+          // Old format - store as number
+          commitmentId = opportunity.id;
+        } else {
+          // New format - store as ObjectId string
+          commitmentId = opportunity._id.toString();
+        }
+        
         await usersCollection.updateOne(
           { _id: new ObjectId(user._id) },
-          { $push: { commitments: opportunityIdNum } }
+          { $push: { commitments: commitmentId } }
         );
 
         // Get updated user info
@@ -139,8 +167,17 @@ export default async function handler(req, res) {
 
     // Update opportunity spots filled
     if (successCount > 0) {
+      let updateFilter;
+      if (opportunity.id) {
+        // Old numeric ID format
+        updateFilter = { id: opportunity.id };
+      } else {
+        // New MongoDB ObjectId format
+        updateFilter = { _id: opportunity._id };
+      }
+      
       await opportunitiesCollection.updateOne(
-        { id: parseInt(opportunityId) },
+        updateFilter,
         { $inc: { spotsFilled: successCount } }
       );
     }
