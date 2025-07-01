@@ -13,6 +13,12 @@
 import clientPromise from '../../lib/mongodb';
 import { hash, compare } from 'bcrypt';
 import { ObjectId } from 'mongodb';
+import { sendVerificationEmail } from '../../lib/emailUtils'; // Assuming this will be created
+
+// Helper function to generate a random 6-digit code
+function generateVerificationCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 async function handleRemoveCommitment(req, res, usersCollection, opportunitiesCollection) {
   const { userId, opportunityId } = req.body;
@@ -86,6 +92,65 @@ async function handleRemoveCommitment(req, res, usersCollection, opportunitiesCo
   }
 }
 
+async function handleTaylorVerify(req, res, usersCollection, taylorVerificationCollection) {
+  const { email, verificationCode } = req.body;
+
+  if (!email || !verificationCode) {
+    return res.status(400).json({ error: 'Missing email or verification code' });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  try {
+    const verificationData = await taylorVerificationCollection.findOne({ email: normalizedEmail });
+
+    if (!verificationData) {
+      return res.status(404).json({ error: 'Verification data not found. Please try signing up again.' });
+    }
+
+    if (new Date() > new Date(verificationData.codeExpiresAt)) {
+      // Optionally delete expired code entry
+      await taylorVerificationCollection.deleteOne({ email: normalizedEmail });
+      return res.status(400).json({ error: 'Verification code has expired. Please try signing up again.' });
+    }
+
+    if (verificationData.verificationCode !== verificationCode) {
+      return res.status(400).json({ error: 'Invalid verification code.' });
+    }
+
+    // Verification successful, create user in main users collection
+    const newUser = {
+      email: normalizedEmail,
+      password: verificationData.hashedPassword, // Use the stored hashed password
+      name: verificationData.name,
+      commitments: [],
+      createdAt: new Date()
+    };
+
+    // Check if user already exists in users collection (should ideally not happen if flow is correct)
+    const existingUser = await usersCollection.findOne({ email: normalizedEmail });
+    if (existingUser) {
+        // User somehow got created, perhaps a race condition or previous incomplete signup.
+        // Decide on behavior: update existing, or error out. For now, error.
+        await taylorVerificationCollection.deleteOne({ email: normalizedEmail }); // Clean up verification data
+        return res.status(409).json({ error: 'User already exists.' });
+    }
+
+    const result = await usersCollection.insertOne(newUser);
+
+    // Delete from taylorVerification collection
+    await taylorVerificationCollection.deleteOne({ email: normalizedEmail });
+
+    // Return user data (excluding password)
+    const { password: _, ...userWithoutPassword } = newUser;
+    return res.status(201).json(userWithoutPassword);
+
+  } catch (error) {
+    console.error('Error during Taylor verification:', error);
+    return res.status(500).json({ error: 'Internal server error during verification.' });
+  }
+}
+
 export default async function handler(req, res) {
   try {
     // Connect to MongoDB
@@ -104,6 +169,8 @@ export default async function handler(req, res) {
         return await handleAddCommitment(req, res, usersCollection, opportunitiesCollection);
       } else if (req.query.removeCommitment === 'true') {
         return await handleRemoveCommitment(req, res, usersCollection, opportunitiesCollection);
+      } else if (req.query.verifyTaylorEmail === 'true') {
+        return await handleTaylorVerify(req, res, usersCollection, db.collection('taylorVerification'));
       } else {
         return res.status(400).json({ error: 'Invalid endpoint' });
       }
@@ -174,12 +241,46 @@ async function handleSignup(req, res, usersCollection) {
   
   // Check if email ends with taylor.edu
   if (normalizedEmail.endsWith('taylor.edu')) {
-    // Taylor.edu emails don't need approval - insert directly into users collection
-    const result = await usersCollection.insertOne(newUser);
-    
-    // Return user data (excluding password)
-    const { password: _, ...userWithoutPassword } = newUser;
-    return res.status(201).json(userWithoutPassword);
+    const verificationCode = generateVerificationCode();
+    const codeExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiration
+
+    const taylorVerificationCollection = db.collection('taylorVerification');
+    // Ensure TTL index exists on createdAt for taylorVerification collection
+    // This should be done once, ideally via a script or MongoDB Atlas UI.
+    // For now, we assume it's set up or will be set up.
+    // await taylorVerificationCollection.createIndex({ createdAt: 1 }, { expireAfterSeconds: 15 * 60 });
+
+
+    // Check if email already pending verification
+    const existingTaylorVerification = await taylorVerificationCollection.findOne({ email: normalizedEmail });
+    if (existingTaylorVerification) {
+      // Potentially re-send code or inform user to check email / wait
+      return res.status(409).json({ error: 'Verification already initiated for this email. Please check your inbox or try again later.' });
+    }
+
+    await taylorVerificationCollection.insertOne({
+      email: normalizedEmail,
+      name,
+      hashedPassword,
+      verificationCode,
+      codeExpiresAt,
+      createdAt: new Date() // For TTL if codeExpiresAt is not directly used for TTL
+    });
+
+    try {
+      await sendVerificationEmail(normalizedEmail, verificationCode);
+      return res.status(202).json({
+        requiresTaylorVerification: true,
+        message: 'Please check your Taylor email for a verification code to complete your signup.'
+      });
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Critical: If email fails, we should probably remove the pending verification
+      // or have a retry mechanism. For now, returning an error.
+      await taylorVerificationCollection.deleteOne({ email: normalizedEmail });
+      return res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
+    }
+
   } else {
     // Non-Taylor emails need admin approval - insert into pendingUsers collection
     const result = await pendingUsersCollection.insertOne(newUser);
