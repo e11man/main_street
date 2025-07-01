@@ -211,7 +211,7 @@ async function handleResendVerificationCode(req, res, taylorVerificationCollecti
       try {
         await sendVerificationEmail(normalizedEmail, newVerificationCode);
         return res.status(200).json({
-          message: 'New verification code sent to your email.'
+          message: 'New verification code sent to your email. Please check your inbox and junk/spam folder.'
         });
       } catch (emailError) {
         console.error('Failed to send verification email:', emailError);
@@ -253,7 +253,7 @@ async function handleResendVerificationCode(req, res, taylorVerificationCollecti
     try {
       await sendVerificationEmail(normalizedEmail, newVerificationCode);
       return res.status(200).json({
-        message: 'New verification code sent to your email.'
+        message: 'New verification code sent to your email. Please check your inbox and junk/spam folder.'
       });
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);
@@ -439,7 +439,7 @@ async function handleSignup(req, res, usersCollection) {
       await sendVerificationEmail(normalizedEmail, verificationCode);
       return res.status(202).json({
         requiresTaylorVerification: true,
-        message: 'Please check your Taylor email for a verification code to complete your signup.'
+        message: 'Please check your Taylor email for a verification code to complete your signup. Don\'t forget to check your junk/spam folder.'
       });
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);
