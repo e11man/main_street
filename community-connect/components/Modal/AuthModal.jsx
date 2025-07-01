@@ -272,6 +272,16 @@ const AuthModal = ({ onClose, onSuccess }) => {
               required
               disabled={isSubmitting}
             />
+            {/* Taylor email password warning - always visible on signup, highlighted if Taylor email */}
+            {!isLogin && (
+              <div className={`mt-2 p-2 rounded text-xs font-bold animate-fadeIn transition-all duration-200 
+                ${/^[^@\s]+@taylor\.edu$/i.test(formData.email) 
+                  ? 'bg-red-50 border border-red-400 text-red-700' 
+                  : 'bg-gray-50 border border-gray-200 text-gray-400'}`}
+              >
+                Do <span className="underline">NOT</span> use the same password as your Taylor account!
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-3 animate-slideUp" style={{ animationDelay: '150ms' }}>
