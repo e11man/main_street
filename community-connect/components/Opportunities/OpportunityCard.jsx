@@ -49,11 +49,25 @@ const formatPhoneNumber = (phone) => {
   return phone;
 };
 
+// Function to dynamically assign priority based on how close the date is
+const getPriority = (dateStr) => {
+  if (!dateStr) return '';
+  const today = new Date('2025-06-30'); // Use current date context
+  const oppDate = new Date(dateStr);
+  const diffDays = Math.ceil((oppDate - today) / (1000 * 60 * 60 * 24));
+  if (diffDays <= 3) return 'High Priority';
+  if (diffDays <= 7) return 'Medium Priority';
+  return 'Low Priority';
+};
+
 const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick }, ref) => {
   // Handle both spotsTotal and totalSpots fields for backward compatibility
   const spotsTotal = opportunity.spotsTotal || opportunity.totalSpots || 0;
   const spotsFilled = opportunity.spotsFilled || 0;
   const progress = spotsTotal === 0 ? 0 : (spotsFilled / spotsTotal) * 100;
+
+  // Get priority based on the opportunity date
+  const priority = getPriority(opportunity.date);
 
   return (
     <div
@@ -69,10 +83,10 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
           </span>
           <div className="card-priority flex items-center gap-1.5 font-montserrat text-xs font-medium text-text-tertiary uppercase tracking-wide transition-all duration-300 group-hover:text-accent1">
             <Icon 
-              path={opportunity.priority === 'High Priority' ? "M13 10V3L4 14h7v7l9-11h-7z" : "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"} 
-              className={`w-4 h-4 ${opportunity.priority === 'High Priority' ? 'text-accent2' : 'text-accent2/80'} transition-all duration-300`} 
+              path={priority === 'High Priority' ? "M13 10V3L4 14h7v7l9-11h-7z" : "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"} 
+              className={`w-4 h-4 ${priority === 'High Priority' ? 'text-accent2' : 'text-accent2/80'} transition-all duration-300`} 
             />
-            {opportunity.priority}
+            {priority}
           </div>
         </div>
         <h3 className="font-montserrat text-xl font-bold mb-3 text-primary tracking-tight leading-tight group-hover:text-primary-light transition-all duration-300">

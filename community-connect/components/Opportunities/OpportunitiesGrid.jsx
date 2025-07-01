@@ -44,6 +44,13 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
     }
   };
 
+  // Sort opportunities by soonest date (closest to today) before rendering
+  const sortedOpportunities = [...opportunities].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateA - dateB;
+  });
+
   return (
     <section className="content max-w-screen-xl mx-auto px-6 md:px-8 pb-24 pt-16 bg-gradient-to-b from-surface/30 to-transparent">
       <div className="text-center mb-16">
@@ -91,7 +98,7 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
           className="flex overflow-x-auto gap-8 md:gap-10 pb-4 scrollbar-hide scroll-smooth"
           onScroll={checkScrollPosition}
         >
-          {opportunities.map((opportunity, index) => (
+          {sortedOpportunities.map((opportunity, index) => (
             <div key={opportunity.id} className="flex-shrink-0 w-80 md:w-96">
               <div className="h-full">
                 <OpportunityCard

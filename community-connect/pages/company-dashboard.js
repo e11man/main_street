@@ -21,7 +21,6 @@ export default function CompanyDashboard() {
     title: '',
     description: '',
     category: '',
-    priority: 'Medium',
     date: '',
     time: '',
     totalSpots: '',
@@ -99,7 +98,6 @@ export default function CompanyDashboard() {
         title: opportunity.title || '',
         description: opportunity.description || '',
         category: opportunity.category || '',
-        priority: opportunity.priority || 'Medium',
         date: opportunity.date || '',
         time: opportunity.time || '',
         totalSpots: opportunity.totalSpots || '',
@@ -136,7 +134,12 @@ export default function CompanyDashboard() {
 
   const handleOpportunitySubmit = async (e) => {
     e.preventDefault();
-    
+
+    if (parseInt(opportunityFormData.totalSpots, 10) < 6) {
+      setError('Required: 6');
+      return;
+    }
+
     try {
       const opportunityData = {
         ...opportunityFormData,
@@ -421,24 +424,6 @@ export default function CompanyDashboard() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="priority">
-                Priority
-              </label>
-              <select
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="priority"
-                name="priority"
-                value={opportunityFormData.priority}
-                onChange={handleOpportunityFormChange}
-                required
-              >
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-              </select>
-            </div>
-
-            <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="date">
                 Date
               </label>
@@ -578,9 +563,10 @@ export default function CompanyDashboard() {
                 name="totalSpots"
                 value={opportunityFormData.totalSpots}
                 onChange={handleOpportunityFormChange}
-                min="1"
+                min="6"
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">Required: 6</p>
             </div>
 
             <div className="mb-4">

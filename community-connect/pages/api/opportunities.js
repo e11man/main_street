@@ -139,33 +139,44 @@ export default asyncHandler(async function handler(req, res) {
   }
 })
 
-// Helper function to clean up opportunities that are 5+ days old
+// Helper function to clean up opportunities that are today or older and remove related data
 async function cleanupOldOpportunities(db) {
   try {
-    const fiveDaysAgo = new Date();
-    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
-    
-    // Delete opportunities where the date is 5 or more days in the past
-    const result = await db.collection('opportunities').deleteMany({
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    // Find all opportunities with date <= today
+    const oldOpportunities = await db.collection('opportunities').find({
       $expr: {
-        $lt: [
+        $lte: [
           {
             $dateFromString: {
               dateString: "$date",
-              onError: new Date(0) // Default to epoch if date parsing fails
+              onError: new Date(0)
             }
           },
-          fiveDaysAgo
+          today
         ]
       }
-    });
-    
-    if (result.deletedCount > 0) {
-      console.log(`Cleaned up ${result.deletedCount} old opportunities`);
-    }
+    }).toArray();
+    if (oldOpportunities.length === 0) return;
+    const oldIds = oldOpportunities.map(opp => opp._id);
+    // Delete opportunities
+    await db.collection('opportunities').deleteMany({ _id: { $in: oldIds } });
+    // Remove commitments from all users
+    await db.collection('users').updateMany(
+      {},
+      { $pull: { commitments: { $in: oldOpportunities.map(opp => opp.id).filter(Boolean) } } }
+    );
+    // Remove chat messages for these opportunities
+    await db.collection('chatMessages').deleteMany({ opportunityId: { $in: oldIds } });
+    // Optionally, remove from company arrays
+    await db.collection('companies').updateMany(
+      {},
+      { $pull: { opportunities: { $in: oldIds } } }
+    );
+    console.log(`Cleaned up ${oldOpportunities.length} old opportunities and related data`);
   } catch (error) {
     console.error('Error cleaning up old opportunities:', error);
-    // Don't throw error to prevent breaking the main functionality
   }
 }
 
@@ -173,19 +184,15 @@ async function cleanupOldOpportunities(db) {
 function filterOutdatedOpportunities(opportunities) {
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Set to start of day for comparison
-  
   return opportunities.filter(opportunity => {
     try {
-      // Parse the opportunity date
       const opportunityDate = new Date(opportunity.date);
-      opportunityDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
-      
-      // Only show opportunities that are today or in the future
-      return opportunityDate >= today;
+      opportunityDate.setHours(0, 0, 0, 0);
+      // Only show opportunities that are after today
+      return opportunityDate > today;
     } catch (error) {
       console.error('Error parsing opportunity date:', opportunity.date, error);
-      // If date parsing fails, include the opportunity to be safe
-      return true;
+      return false;
     }
   });
 }
