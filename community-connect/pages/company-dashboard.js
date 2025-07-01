@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import axios from 'axios';
 import Header from '../components/Header/Header.jsx';
 import Modal from '../components/Modal/Modal.jsx';
+import ChatModal from '../components/Modal/ChatModal.jsx'; // Import ChatModal
 import GooglePlacesAutocomplete from '../components/GooglePlacesAutocomplete';
 
 export default function CompanyDashboard() {
@@ -36,6 +37,8 @@ export default function CompanyDashboard() {
     website: '',
     phone: ''
   });
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [selectedOpportunityForChat, setSelectedOpportunityForChat] = useState(null);
 
   useEffect(() => {
     // Check if company is logged in
@@ -224,6 +227,11 @@ export default function CompanyDashboard() {
     }
   };
 
+  const openChatModal = (opportunity) => {
+    setSelectedOpportunityForChat(opportunity);
+    setIsChatModalOpen(true);
+  };
+
   const openCompanyInfoModal = () => {
     setCompanyFormData({
       name: companyData.name || '',
@@ -320,18 +328,24 @@ export default function CompanyDashboard() {
                       <td className="py-3 px-6 text-left">{new Date(opportunity.date).toLocaleDateString()}</td>
                       <td className="py-3 px-6 text-left">{opportunity.filledSpots || 0} / {opportunity.totalSpots}</td>
                       <td className="py-3 px-6 text-center">
-                        <div className="flex item-center justify-center">
+                        <div className="flex item-center justify-center space-x-2">
                           <button
                             onClick={() => openOpportunityModal(opportunity)}
-                            className="transform hover:text-blue-500 hover:scale-110 transition-all duration-150 mr-4"
+                            className="text-blue-600 hover:text-blue-800 transition-colors duration-150 text-xs font-medium"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteOpportunity(opportunity._id)}
-                            className="transform hover:text-red-500 hover:scale-110 transition-all duration-150"
+                            className="text-red-600 hover:text-red-800 transition-colors duration-150 text-xs font-medium"
                           >
                             Delete
+                          </button>
+                          <button
+                            onClick={() => openChatModal(opportunity)}
+                            className="text-green-600 hover:text-green-800 transition-colors duration-150 text-xs font-medium"
+                          >
+                            Chat
                           </button>
                         </div>
                       </td>
@@ -686,6 +700,20 @@ export default function CompanyDashboard() {
           </form>
         </div>
       </Modal>
+
+      {/* Chat Modal */}
+      {selectedOpportunityForChat && (
+        <ChatModal
+          isOpen={isChatModalOpen}
+          onClose={() => {
+            setIsChatModalOpen(false);
+            setSelectedOpportunityForChat(null);
+          }}
+          opportunity={selectedOpportunityForChat}
+          currentUser={companyData} // Pass companyData as currentUser
+          isCompany={true} // Indicate that the sender is a company
+        />
+      )}
     </div>
   );
 }

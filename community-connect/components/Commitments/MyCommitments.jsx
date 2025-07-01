@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Button from '../ui/Button';
 import Icon from '../ui/Icon';
+import ChatModal from '../Modal/ChatModal'; // Import ChatModal
 
 // Helper function to format time from 24-hour to 12-hour format
 const formatTime = (time) => {
@@ -78,6 +79,13 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
   const [userCommitments, setUserCommitments] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const scrollContainerRef = useRef(null);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [selectedOpportunityForChat, setSelectedOpportunityForChat] = useState(null);
+
+  const openChatModal = (opportunity) => {
+    setSelectedOpportunityForChat(opportunity);
+    setIsChatModalOpen(true);
+  };
 
   useEffect(() => {
     if (currentUser && currentUser.commitments && opportunities.length > 0) {
@@ -151,6 +159,7 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
                 spotsFilled={spotsFilled} 
                 progress={progress} 
                 onDecommit={onDecommit}
+                onOpenChat={openChatModal} // Pass chat handler
               />
             );
           })}
@@ -187,6 +196,7 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
                      spotsFilled={spotsFilled}
                      progress={progress}
                      onDecommit={onDecommit}
+                      onOpenChat={openChatModal} // Pass chat handler
                    />
                  </div>
                );
@@ -227,12 +237,26 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
           You can join {2 - userCommitments.length} more {userCommitments.length === 1 ? 'opportunity' : 'opportunities'}.
         </p>
       )}
+
+      {/* Chat Modal */}
+      {selectedOpportunityForChat && currentUser && (
+        <ChatModal
+          isOpen={isChatModalOpen}
+          onClose={() => {
+            setIsChatModalOpen(false);
+            setSelectedOpportunityForChat(null);
+          }}
+          opportunity={selectedOpportunityForChat}
+          currentUser={currentUser} // Pass the logged-in user
+          isCompany={false} // User is not a company here
+        />
+      )}
     </div>
   );
 };
 
 // Extracted CommitmentCard component for reusability
-const CommitmentCard = ({ commitment, spotsTotal, spotsFilled, progress, onDecommit }) => {
+const CommitmentCard = ({ commitment, spotsTotal, spotsFilled, progress, onDecommit, onOpenChat }) => {
   return (
     <div className="bg-gradient-to-br from-white to-gray-50/30 rounded-xl border border-border/40 p-5 transition-all duration-300 hover:shadow-lg hover:border-accent1/30 hover:-translate-y-0.5">
       {/* Header with Title and Company */}
@@ -361,13 +385,22 @@ const CommitmentCard = ({ commitment, spotsTotal, spotsFilled, progress, onDecom
       </div>
       
       {/* Action Buttons */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-5">
         <Button 
           variant="outline" 
-          className="py-2 px-4 rounded-full border-red-400 text-red-500 hover:bg-red-50 hover:border-red-500 text-sm font-medium transition-all duration-300"
+          className="w-full sm:w-auto py-2 px-4 rounded-full border-red-400 text-red-500 hover:bg-red-50 hover:border-red-500 text-sm font-medium transition-all duration-300"
           onClick={() => onDecommit(commitment)}
         >
+          <Icon path="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" className="w-4 h-4 mr-2" />
           Cancel Commitment
+        </Button>
+        <Button
+          variant="primary"
+          className="w-full sm:w-auto py-2 px-4 rounded-full bg-accent1 hover:bg-accent1-dark text-sm font-medium transition-all duration-300"
+          onClick={() => onOpenChat(commitment)}
+        >
+          <Icon path="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" className="w-4 h-4 mr-2" />
+          Open Chat
         </Button>
       </div>
     </div>
