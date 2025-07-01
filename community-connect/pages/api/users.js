@@ -174,6 +174,98 @@ async function handleTaylorVerify(req, res, usersCollection, taylorVerificationC
   }
 }
 
+async function handleResendVerificationCode(req, res, taylorVerificationCollection) {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Missing email address' });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  try {
+    // Find existing verification data
+    const verificationData = await taylorVerificationCollection.findOne({ email: normalizedEmail });
+
+    if (!verificationData) {
+      return res.status(404).json({ error: 'No pending verification found for this email. Please sign up again.' });
+    }
+
+    // Check if the current code has expired
+    if (new Date() > new Date(verificationData.codeExpiresAt)) {
+      // Code has expired, allow immediate resend
+      const newVerificationCode = generateVerificationCode();
+      const newCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiration
+
+      await taylorVerificationCollection.updateOne(
+        { email: normalizedEmail },
+        { 
+          $set: { 
+            verificationCode: newVerificationCode,
+            codeExpiresAt: newCodeExpiresAt,
+            lastCodeSentAt: new Date()
+          }
+        }
+      );
+
+      try {
+        await sendVerificationEmail(normalizedEmail, newVerificationCode);
+        return res.status(200).json({
+          message: 'New verification code sent to your email.'
+        });
+      } catch (emailError) {
+        console.error('Failed to send verification email:', emailError);
+        return res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
+      }
+    }
+
+    // Check 2-minute rate limit
+    const lastCodeSentAt = verificationData.lastCodeSentAt;
+    if (lastCodeSentAt) {
+      const timeSinceLastCode = new Date() - new Date(lastCodeSentAt);
+      const twoMinutesInMs = 2 * 60 * 1000; // 2 minutes in milliseconds
+
+      if (timeSinceLastCode < twoMinutesInMs) {
+        const remainingTime = Math.ceil((twoMinutesInMs - timeSinceLastCode) / 1000); // seconds
+        return res.status(429).json({ 
+          error: `Please wait ${remainingTime} seconds before requesting a new code.`,
+          remainingTime: remainingTime
+        });
+      }
+    }
+
+    // Generate new verification code
+    const newVerificationCode = generateVerificationCode();
+    const newCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiration
+
+    // Update verification data with new code and timestamp
+    await taylorVerificationCollection.updateOne(
+      { email: normalizedEmail },
+      { 
+        $set: { 
+          verificationCode: newVerificationCode,
+          codeExpiresAt: newCodeExpiresAt,
+          lastCodeSentAt: new Date()
+        }
+      }
+    );
+
+    try {
+      await sendVerificationEmail(normalizedEmail, newVerificationCode);
+      return res.status(200).json({
+        message: 'New verification code sent to your email.'
+      });
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      return res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
+    }
+
+  } catch (error) {
+    console.error('Error during code resend:', error);
+    return res.status(500).json({ error: 'Internal server error during code resend.' });
+  }
+}
+
 export default async function handler(req, res) {
   try {
     // Connect to MongoDB
@@ -194,6 +286,8 @@ export default async function handler(req, res) {
         return await handleRemoveCommitment(req, res, usersCollection, opportunitiesCollection);
       } else if (req.query.verifyTaylorEmail === 'true') {
         return await handleTaylorVerify(req, res, usersCollection, db.collection('taylorVerification'));
+      } else if (req.query.resendCode === 'true') {
+        return await handleResendVerificationCode(req, res, db.collection('taylorVerification'));
       } else {
         return res.status(400).json({ error: 'Invalid endpoint' });
       }
@@ -278,8 +372,56 @@ async function handleSignup(req, res, usersCollection) {
     // Check if email already pending verification
     const existingTaylorVerification = await taylorVerificationCollection.findOne({ email: normalizedEmail });
     if (existingTaylorVerification) {
-      // Potentially re-send code or inform user to check email / wait
-      return res.status(409).json({ error: 'Verification already initiated for this email. Please check your inbox or try again later.' });
+      // Check if code has expired
+      if (new Date() > new Date(existingTaylorVerification.codeExpiresAt)) {
+        // Code expired, allow new signup by deleting old verification
+        await taylorVerificationCollection.deleteOne({ email: normalizedEmail });
+      } else {
+        // Check 2-minute rate limit for resending
+        const lastCodeSentAt = existingTaylorVerification.lastCodeSentAt;
+        if (lastCodeSentAt) {
+          const timeSinceLastCode = new Date() - new Date(lastCodeSentAt);
+          const twoMinutesInMs = 2 * 60 * 1000;
+          
+          if (timeSinceLastCode < twoMinutesInMs) {
+            const remainingTime = Math.ceil((twoMinutesInMs - timeSinceLastCode) / 1000);
+            return res.status(429).json({ 
+              error: `Verification already initiated. Please wait ${remainingTime} seconds before requesting a new code.`,
+              remainingTime: remainingTime
+            });
+          }
+        }
+        
+        // Generate new code and update existing verification
+        const newVerificationCode = generateVerificationCode();
+        const newCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+        
+        await taylorVerificationCollection.updateOne(
+          { email: normalizedEmail },
+          { 
+            $set: { 
+              verificationCode: newVerificationCode,
+              codeExpiresAt: newCodeExpiresAt,
+              lastCodeSentAt: new Date(),
+              // Update other fields in case user changed them
+              name,
+              dorm,
+              hashedPassword
+            }
+          }
+        );
+        
+        try {
+          await sendVerificationEmail(normalizedEmail, newVerificationCode);
+          return res.status(202).json({
+            requiresTaylorVerification: true,
+            message: 'New verification code sent to your Taylor email.'
+          });
+        } catch (emailError) {
+          console.error('Failed to send verification email:', emailError);
+          return res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
+        }
+      }
     }
 
     await taylorVerificationCollection.insertOne({
@@ -289,6 +431,7 @@ async function handleSignup(req, res, usersCollection) {
       hashedPassword,
       verificationCode,
       codeExpiresAt,
+      lastCodeSentAt: new Date(), // Track when code was sent for rate limiting
       createdAt: new Date() // For TTL if codeExpiresAt is not directly used for TTL
     });
 
