@@ -390,10 +390,15 @@ export default function CompanyDashboard() {
         title={currentOpportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
       >
         <div className="p-4">
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <span className="text-red-500">*</span> indicates required fields
+            </p>
+          </div>
           <form onSubmit={handleOpportunitySubmit}>
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
-                Title
+                Title <span className="text-red-500">*</span>
               </label>
               <input
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -409,7 +414,7 @@ export default function CompanyDashboard() {
 
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
-                Description
+                Description <span className="text-red-500">*</span>
               </label>
               <textarea
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -425,7 +430,7 @@ export default function CompanyDashboard() {
 
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
-                Category
+                Category <span className="text-red-500">*</span>
               </label>
               <select
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -447,7 +452,7 @@ export default function CompanyDashboard() {
 
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="date">
-                Date
+                Date <span className="text-red-500">*</span>
               </label>
               <input
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -462,7 +467,7 @@ export default function CompanyDashboard() {
 
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="time">
-                Start Time
+                Start Time <span className="text-red-500">*</span>
               </label>
               <input
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -608,7 +613,7 @@ export default function CompanyDashboard() {
 
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="totalSpots">
-                Total Volunteer Spots
+                Total Volunteer Spots <span className="text-red-500">*</span>
               </label>
               <input
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
