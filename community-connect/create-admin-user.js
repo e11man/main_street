@@ -1,5 +1,5 @@
-const bcrypt = require('bcryptjs');
 const { MongoClient } = require('mongodb');
+const bcrypt = require('bcryptjs');
 require('dotenv').config({ path: '.env.local' });
 
 async function createAdmin() {
@@ -8,7 +8,7 @@ async function createAdmin() {
     await client.connect();
     console.log('Connected to MongoDB');
     
-    const db = client.db('community-connect');
+    const db = client.db('mainStreetOpportunities');
     
     // Hash the password
     const hashedPassword = await bcrypt.hash('admin123', 10);

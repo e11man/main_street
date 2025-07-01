@@ -72,9 +72,15 @@
  */
 
 import clientPromise from '../../lib/mongodb';
+import { asyncHandler, AppError, ErrorTypes, handleDatabaseError } from '../../lib/errorHandler';
 
-export default async function handler(req, res) {
+export default asyncHandler(async function handler(req, res) {
   try {
+    // Only handle GET requests
+    if (req.method !== 'GET') {
+      throw new AppError('Method not allowed', ErrorTypes.VALIDATION, 405);
+    }
+
     // Connect to the MongoDB client
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
@@ -108,13 +114,30 @@ export default async function handler(req, res) {
     // Filter out outdated opportunities (past their date)
     const currentOpportunities = filterOutdatedOpportunities(filteredOpportunities);
     
+    // Ensure we always return an array
+    const result = Array.isArray(currentOpportunities) ? currentOpportunities : [];
+    
     // Return the filtered data as JSON
-    res.status(200).json(currentOpportunities);
+    return res.status(200).json(result);
   } catch (error) {
-    console.error('Error fetching opportunities from MongoDB:', error);
-    res.status(500).json({ error: 'Failed to load opportunities data' });
+    // If this is already an AppError, re-throw it
+    if (error instanceof AppError) {
+      throw error;
+    }
+    
+    // Handle database-specific errors
+    if (error.name?.includes('Mongo')) {
+      throw handleDatabaseError(error);
+    }
+    
+    // Handle any other unexpected errors
+    throw new AppError(
+      'Failed to fetch opportunities',
+      ErrorTypes.INTERNAL,
+      500
+    );
   }
-}
+})
 
 // Helper function to clean up opportunities that are 5+ days old
 async function cleanupOldOpportunities(db) {

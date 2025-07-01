@@ -3,7 +3,12 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1d'; // Default to 1 day
 
+// More graceful error handling for missing JWT_SECRET
 if (!JWT_SECRET) {
+  if (process.env.NODE_ENV === 'development') {
+    console.error('❌ JWT_SECRET is not defined in .env.local');
+    console.error('Please add JWT_SECRET=your-secret-key to your .env.local file');
+  }
   throw new Error('Please define the JWT_SECRET environment variable in .env.local');
 }
 
@@ -14,16 +19,26 @@ if (!JWT_SECRET) {
  * @returns {string} The generated JWT.
  */
 export const generateToken = (payload, expiresIn = JWT_EXPIRES_IN) => {
-  if (typeof payload !== 'object' || payload === null) {
-    throw new Error('Payload must be a non-null object.');
+  try {
+    if (typeof payload !== 'object' || payload === null) {
+      throw new Error('Payload must be a non-null object.');
+    }
+    if (!payload.userId && !payload.companyId && !payload.adminId) { // Ensure some identifier is present
+      console.warn('JWT payload does not contain userId, companyId, or adminId. This might be unintentional.');
+    }
+    if (!payload.role) {
+      console.warn('JWT payload does not contain a role. This is highly recommended for authorization.');
+    }
+    
+    if (!JWT_SECRET) {
+      throw new Error('JWT_SECRET is not available');
+    }
+    
+    return jwt.sign(payload, JWT_SECRET, { expiresIn });
+  } catch (error) {
+    console.error('Error generating JWT token:', error.message);
+    throw error;
   }
-  if (!payload.userId && !payload.companyId && !payload.adminId) { // Ensure some identifier is present
-    console.warn('JWT payload does not contain userId, companyId, or adminId. This might be unintentional.');
-  }
-  if (!payload.role) {
-    console.warn('JWT payload does not contain a role. This is highly recommended for authorization.');
-  }
-  return jwt.sign(payload, JWT_SECRET, { expiresIn });
 };
 
 /**
@@ -59,29 +74,55 @@ export const verifyToken = (token) => {
  */
 export const protectRoute = (handler, requiredRoles = []) => {
   return async (req, res) => {
-    const token = req.cookies.authToken; // Assuming token is stored in a cookie named 'authToken'
+    try {
+      // Check if cookies exist
+      if (!req.cookies) {
+        return res.status(401).json({ error: 'Unauthorized: No cookies available' });
+      }
 
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized: No token provided' });
+      const token = req.cookies.authToken; // Assuming token is stored in a cookie named 'authToken'
+
+      if (!token) {
+        return res.status(401).json({ error: 'Unauthorized: No token provided' });
+      }
+
+      const decoded = verifyToken(token);
+
+      if (!decoded) {
+        // Clear invalid cookie
+        const isProduction = process.env.NODE_ENV === 'production';
+        const clearCookieOptions = [
+          'authToken=',
+          'HttpOnly',
+          'Path=/',
+          'Max-Age=0',
+          'SameSite=Lax',
+          isProduction ? 'Secure' : ''
+        ].filter(Boolean).join('; ');
+        
+        res.setHeader('Set-Cookie', clearCookieOptions);
+        return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+      }
+
+      // Validate decoded token structure
+      if (!decoded.role) {
+        console.warn('Token missing role information');
+        return res.status(401).json({ error: 'Unauthorized: Invalid token structure' });
+      }
+
+      // Attach user information to the request object
+      req.user = decoded; // e.g., req.user.userId, req.user.role
+
+      // Role-based authorization
+      if (requiredRoles.length > 0 && !requiredRoles.includes(decoded.role)) {
+        return res.status(403).json({ error: 'Forbidden: Insufficient permissions' });
+      }
+
+      return handler(req, res);
+    } catch (error) {
+      console.error('Error in protectRoute middleware:', error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-
-    const decoded = verifyToken(token);
-
-    if (!decoded) {
-      // Clear invalid cookie
-      res.setHeader('Set-Cookie', 'authToken=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax' + (process.env.NODE_ENV === 'production' ? '; Secure' : ''));
-      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
-    }
-
-    // Attach user information to the request object
-    req.user = decoded; // e.g., req.user.userId, req.user.role
-
-    // Role-based authorization
-    if (requiredRoles.length > 0 && !requiredRoles.includes(decoded.role)) {
-      return res.status(403).json({ error: 'Forbidden: Insufficient permissions' });
-    }
-
-    return handler(req, res);
   };
 };
 

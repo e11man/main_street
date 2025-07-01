@@ -132,7 +132,13 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
               if (msg.senderType === 'user' && isFromCurrentViewer) {
                 senderDisplayName = 'You';
               } else if (msg.senderType === 'organization') {
-                senderDisplayName = opportunity?.companyName || 'Organization';
+                // Distinguish between admin and organization
+                if (msg.actualSenderId && msg.actualSenderId !== msg.senderId) {
+                  // Sent by admin as organization
+                  senderDisplayName = 'Main Street Admin';
+                } else {
+                  senderDisplayName = opportunity?.companyName || 'Organization';
+                }
               } else { // Other users, though not typical in this setup yet
                 senderDisplayName = 'Volunteer';
               }
@@ -147,7 +153,7 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
             } else { // viewerIs === 'admin'
               if (msg.senderType === 'organization' && isFromCurrentViewer) {
                 // Admin sent this message acting as the host company
-                senderDisplayName = `You (as ${opportunity?.companyName || 'Host'})`;
+                senderDisplayName = 'Main Street Admin';
               } else if (msg.senderType === 'organization') {
                 // Message from another organization (not the admin acting as host)
                 senderDisplayName = opportunity?.companyName || 'Organization';

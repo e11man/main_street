@@ -153,7 +153,14 @@ export default function Home() {
     try {
       const response = await fetch('/api/opportunities');
       const data = await response.json();
-      setOpportunities(data);
+      
+      // Check if the response is successful and data is an array
+      if (response.ok && Array.isArray(data)) {
+        setOpportunities(data);
+      } else {
+        console.error('API returned error or invalid data:', data);
+        setOpportunities([]);
+      }
     } catch (error) {
       console.error('Error fetching opportunities:', error);
       // Fallback to empty array if fetch fails

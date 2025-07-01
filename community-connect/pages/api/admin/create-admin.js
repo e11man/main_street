@@ -16,12 +16,21 @@ export default async function handler(req, res) {
     // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
-    const adminsCollection = db.collection('admins');
+    const usersCollection = db.collection('users');
 
     // Check if admin already exists
-    const existingAdmin = await adminsCollection.findOne({ username });
+    const existingAdmin = await usersCollection.findOne({ 
+      email: 'admin@admin.com',
+      isAdmin: true 
+    });
     if (existingAdmin) {
-      return res.status(200).json({ message: 'Admin user already exists' });
+      // Update existing admin password
+      const hashedPassword = await hash(password, 10);
+      await usersCollection.updateOne(
+        { email: 'admin@admin.com', isAdmin: true },
+        { $set: { password: hashedPassword } }
+      );
+      return res.status(200).json({ message: 'Admin user password updated successfully' });
     }
 
     // Hash the password
@@ -29,12 +38,15 @@ export default async function handler(req, res) {
 
     // Create admin user
     const adminUser = {
-      username,
+      name: 'Admin',
+      email: 'admin@admin.com',
       password: hashedPassword,
+      role: 'admin',
+      isAdmin: true,
       createdAt: new Date()
     };
 
-    const result = await adminsCollection.insertOne(adminUser);
+    const result = await usersCollection.insertOne(adminUser);
     return res.status(201).json({ 
       message: 'Admin user created successfully',
       id: result.insertedId 

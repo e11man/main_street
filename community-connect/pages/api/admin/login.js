@@ -1,21 +1,19 @@
-import { compare } from 'bcryptjs'; // Removed hash as it's not used here
+import { compare } from 'bcryptjs'; // Import bcrypt for password comparison
 import clientPromise from '../../../lib/mongodb';
 import { generateToken } from '../../../lib/authUtils'; // Import JWT utility
-// ObjectId is not used in this specific file after changes.
+import { asyncHandler, AppError, ErrorTypes } from '../../../lib/errorHandler';
 
-export default async function handler(req, res) {
+export default asyncHandler(async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    throw new AppError('Method not allowed', ErrorTypes.VALIDATION, 405);
   }
 
   const { username, password } = req.body;
 
   // Validate input
   if (!username || !password) {
-    return res.status(400).json({ error: 'Missing username or password' });
+    throw new AppError('Username and password are required', ErrorTypes.VALIDATION, 400);
   }
-
-  try {
     // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
@@ -30,13 +28,13 @@ export default async function handler(req, res) {
     });
     
     if (!admin) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      throw new AppError('Invalid credentials', ErrorTypes.AUTHENTICATION, 401);
     }
 
     // Compare passwords
     const passwordMatch = await compare(password, admin.password);
     if (!passwordMatch) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      throw new AppError('Invalid credentials', ErrorTypes.AUTHENTICATION, 401);
     }
 
     // Generate JWT
@@ -48,8 +46,17 @@ export default async function handler(req, res) {
     const token = generateToken(tokenPayload);
 
     // Set token in an HttpOnly cookie
-    res.setHeader('Set-Cookie', `authToken=${token}; HttpOnly; Path=/; Max-Age=${60 * 60 * 24}; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`);
-    // Max-Age is 1 day (in seconds), adjust as needed. SameSite=Lax is a good default. Secure only in prod.
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = [
+      'authToken=' + token,
+      'HttpOnly',
+      'Path=/',
+      'Max-Age=86400', // 1 day in seconds
+      'SameSite=Lax',
+      isProduction ? 'Secure' : ''
+    ].filter(Boolean).join('; ');
+    
+    res.setHeader('Set-Cookie', cookieOptions);
 
     // Return success, optionally include some non-sensitive admin info if needed by client
     return res.status(200).json({
@@ -59,9 +66,4 @@ export default async function handler(req, res) {
         name: admin.name || 'Admin' // if admin has a name field
       }
     });
-
-  } catch (error) {
-    console.error('Admin login error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-}
+})

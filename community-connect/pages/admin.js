@@ -118,6 +118,39 @@ export default function AdminPage() {
     setIsChatModalOpen(true);
   };
 
+  const viewChatHistory = async (opportunity) => {
+    try {
+      const response = await fetch(`/api/chat/history/${opportunity.id || opportunity._id}`);
+      if (response.ok) {
+        const chatHistory = await response.json();
+        // For now, show an alert with basic info. In a real app, you'd open a detailed modal
+        alert(`Chat History for "${opportunity.title}":\n\nTotal Messages: ${chatHistory.messages?.length || 0}\nParticipants: ${chatHistory.participants?.length || 0}\nLast Activity: ${chatHistory.lastActivity ? new Date(chatHistory.lastActivity).toLocaleString() : 'No activity'}`);
+      } else {
+        alert('Failed to fetch chat history');
+      }
+    } catch (error) {
+      console.error('Error fetching chat history:', error);
+      alert('Error fetching chat history');
+    }
+  };
+
+  const manageChatParticipants = async (opportunity) => {
+    try {
+      const response = await fetch(`/api/chat/participants/${opportunity.id || opportunity._id}`);
+      if (response.ok) {
+        const participants = await response.json();
+        // For now, show an alert with participant info. In a real app, you'd open a management modal
+        const participantList = participants.map(p => `${p.name} (${p.email})`).join('\n');
+        alert(`Chat Participants for "${opportunity.title}":\n\n${participantList || 'No participants yet'}`);
+      } else {
+        alert('Failed to fetch chat participants');
+      }
+    } catch (error) {
+      console.error('Error fetching chat participants:', error);
+      alert('Error fetching chat participants');
+    }
+  };
+
   const fetchData = async () => {
     try {
       // Fetch users
@@ -1282,12 +1315,6 @@ export default function AdminPage() {
                           >
                             Delete
                           </button>
-                          <button
-                            onClick={() => openChatModalForAdmin(opportunity)}
-                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Chat
-                          </button>
                         </div>
                       </div>
                     </li>
@@ -1311,7 +1338,14 @@ export default function AdminPage() {
           {activeTab === 'opportunities' && (
             <div>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Opportunities Management</h2>
+                <div>
+                  <h2 className="text-xl font-semibold">Opportunities & Chat Management</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    💬 Total Active Chats: {opportunities.filter(o => (o.chatParticipants || 0) > 0).length} | 
+                    📊 Total Messages: {opportunities.reduce((sum, o) => sum + (o.messageCount || 0), 0)} | 
+                    👥 Total Chat Participants: {opportunities.reduce((sum, o) => sum + (o.chatParticipants || 0), 0)}
+                  </p>
+                </div>
                 <button
                   onClick={() => setShowAddOpportunity(true)}
                   className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
@@ -1348,6 +1382,19 @@ export default function AdminPage() {
                               <p className="text-xs text-gray-400">
                                 {opportunity.spotsFilled || 0}/{opportunity.totalSpots} spots filled
                               </p>
+                              <p className="text-xs text-blue-600 font-medium">
+                                💬 Chat Participants: {opportunity.chatParticipants || 0} | Messages: {opportunity.messageCount || 0}
+                              </p>
+                              {opportunity.location && (
+                                <p className="text-xs text-gray-400">
+                                  📍 {opportunity.location}
+                                </p>
+                              )}
+                              {opportunity.priority && (
+                                <p className="text-xs text-gray-400">
+                                  Priority: {opportunity.priority}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1363,6 +1410,12 @@ export default function AdminPage() {
                             className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
                           >
                             Delete
+                          </button>
+                          <button
+                            onClick={() => openChatModalForAdmin(opportunity)}
+                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm"
+                          >
+                            Chat
                           </button>
                         </div>
                       </div>
