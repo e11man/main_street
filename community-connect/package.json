@@ -10,7 +10,8 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "seed": "node scripts/seed-db.js"
+        "seed": "node scripts/seed-db.js",
+        "check-cancellations": "node scripts/check-cancellations.js"
     },
     "keywords": [],
     "author": "",
