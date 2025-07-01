@@ -38,7 +38,23 @@ export default function Home() {
     // Check if company is logged in from localStorage
     const storedCompanyData = localStorage.getItem('companyData');
     if (storedCompanyData) {
-      setCurrentCompany(JSON.parse(storedCompanyData));
+      try {
+        setCurrentCompany(JSON.parse(storedCompanyData));
+      } catch (error) {
+        console.error('Error parsing stored company data:', error);
+        localStorage.removeItem('companyData');
+      }
+    }
+
+    // Check if user is logged in from localStorage
+    const storedUserData = localStorage.getItem('userData');
+    if (storedUserData) {
+      try {
+        setCurrentUser(JSON.parse(storedUserData));
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('userData');
+      }
     }
   }, []);
 
@@ -175,7 +191,7 @@ export default function Home() {
     await fetchOpportunities();
     
     setMessageBox({
-      message: `Successfully signed up ${data.results.filter(r => r.success).length} users for "${selectedOpportunityForGroup.title}"!`,
+      message: `Successfully signed up ${data.results.filter(r => r.success).length} users for "${selectedOpportunityForGroup?.title || 'the event'}"!`,
       callback: () => setMessageBox(null)
     });
   };

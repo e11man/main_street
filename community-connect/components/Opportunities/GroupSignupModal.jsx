@@ -88,10 +88,10 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
     }
   };
 
-  const availableSpots = (opportunity.spotsTotal || opportunity.totalSpots || 0) - (opportunity.spotsFilled || 0);
+  const availableSpots = opportunity ? ((opportunity.spotsTotal || opportunity.totalSpots || 0) - (opportunity.spotsFilled || 0)) : 0;
   const canSelectMore = selectedUsers.length < availableSpots;
 
-  if (!isOpen) return null;
+  if (!isOpen || !opportunity || !currentUser) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -107,7 +107,7 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
             </button>
           </div>
           <p className="text-gray-600 mt-2">
-            Sign up multiple people for: <strong>{opportunity.title}</strong>
+            Sign up multiple people for: <strong>{opportunity?.title || 'Event'}</strong>
           </p>
           <p className="text-sm text-gray-500 mt-1">
             Available spots: {availableSpots} | Selected: {selectedUsers.length}
@@ -162,8 +162,8 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
                   const isSelected = selectedUsers.includes(user._id);
                   const isDisabled = !canSelectMore && !isSelected;
                   const hasMaxCommitments = (user.commitments || []).length >= 2;
-                  const isAlreadyCommitted = (user.commitments || []).includes(opportunity.id) || 
-                                             (user.commitments || []).includes(parseInt(opportunity.id));
+                                     const isAlreadyCommitted = opportunity?.id && ((user.commitments || []).includes(opportunity.id) || 
+                                              (user.commitments || []).includes(parseInt(opportunity.id)));
 
                   return (
                     <div
