@@ -12,6 +12,7 @@ import VolunteerRequestForm from '../components/Modal/VolunteerRequestForm.jsx';
 import AuthModal from '../components/Modal/AuthModal.jsx';
 import CompanyAuthModal from '../components/CompanyAuthModal.jsx';
 import CustomMessageBox from '../components/Modal/CustomMessageBox.jsx';
+import GroupSignupModal from '../components/Opportunities/GroupSignupModal.jsx';
 import { useScrollTriggeredAnimation, useSmoothScroll, useParallaxEffect } from '../lib/hooks.js';
 
 export default function Home() {
@@ -27,6 +28,8 @@ export default function Home() {
   const [currentCompany, setCurrentCompany] = useState(null);
   const [isCompanyInfoModalOpen, setIsCompanyInfoModalOpen] = useState(false);
   const [selectedCompanyInfo, setSelectedCompanyInfo] = useState(null);
+  const [isGroupSignupModalOpen, setIsGroupSignupModalOpen] = useState(false);
+  const [selectedOpportunityForGroup, setSelectedOpportunityForGroup] = useState(null);
 
   useEffect(() => {
     // Fetch opportunities on component mount
@@ -35,7 +38,23 @@ export default function Home() {
     // Check if company is logged in from localStorage
     const storedCompanyData = localStorage.getItem('companyData');
     if (storedCompanyData) {
-      setCurrentCompany(JSON.parse(storedCompanyData));
+      try {
+        setCurrentCompany(JSON.parse(storedCompanyData));
+      } catch (error) {
+        console.error('Error parsing stored company data:', error);
+        localStorage.removeItem('companyData');
+      }
+    }
+
+    // Check if user is logged in from localStorage
+    const storedUserData = localStorage.getItem('userData');
+    if (storedUserData) {
+      try {
+        setCurrentUser(JSON.parse(storedUserData));
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('userData');
+      }
     }
   }, []);
 
@@ -139,6 +158,42 @@ export default function Home() {
     setIsCompanyInfoModalOpen(false);
     setSelectedCompanyInfo(null);
     document.body.style.overflow = '';
+  };
+
+  // Handle group signup modal
+  const handleGroupSignupClick = (opportunity) => {
+    if (!currentUser) {
+      openAuthModal(opportunity);
+      return;
+    }
+
+    if (!currentUser.isPA && !currentUser.isAdmin) {
+      setMessageBox({
+        message: 'Only Peer Advisors (PAs) can sign up multiple people for opportunities.',
+        callback: () => setMessageBox(null)
+      });
+      return;
+    }
+
+    setSelectedOpportunityForGroup(opportunity);
+    setIsGroupSignupModalOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeGroupSignupModal = () => {
+    setIsGroupSignupModalOpen(false);
+    setSelectedOpportunityForGroup(null);
+    document.body.style.overflow = '';
+  };
+
+  const handleGroupSignupSuccess = async (data) => {
+    // Refetch opportunities to show updated counts
+    await fetchOpportunities();
+    
+    setMessageBox({
+      message: `Successfully signed up ${data.results.filter(r => r.success).length} users for "${selectedOpportunityForGroup?.title || 'the event'}"!`,
+      callback: () => setMessageBox(null)
+    });
   };
   
   // Handle updating user state (for commitment removal)
@@ -299,6 +354,8 @@ export default function Home() {
             opportunityRefs={opportunityRefs}
             onJoinClick={handleJoinOpportunity}
             onLearnMoreClick={handleLearnMoreClick}
+            onGroupSignupClick={handleGroupSignupClick}
+            currentUser={currentUser}
           />
         </div>
         <TestimonialsSection testimonialRefs={testimonialRefs} />
@@ -386,6 +443,15 @@ export default function Home() {
         )}
       </Modal>
       
+      {/* Group Signup Modal */}
+      <GroupSignupModal
+        isOpen={isGroupSignupModalOpen}
+        onClose={closeGroupSignupModal}
+        opportunity={selectedOpportunityForGroup}
+        currentUser={currentUser}
+        onGroupSignup={handleGroupSignupSuccess}
+      />
+
       {/* Message box for notifications */}
       {messageBox && !isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-[3000]">

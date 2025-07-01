@@ -405,6 +405,38 @@ export default function AdminPage() {
     }
   };
 
+  const promoteUser = async (userId, newRole) => {
+    if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/promote-user', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, role: newRole }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update the user in the local state
+        setUsers(users.map(user => 
+          user._id === userId ? data.user : user
+        ));
+        alert(data.message);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to promote user');
+      }
+    } catch (error) {
+      console.error('Error promoting user:', error);
+      alert('Error promoting user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Search filtering functions
   const handleSearchChange = (tab, value) => {
     setSearchTerms(prev => ({
@@ -1311,15 +1343,31 @@ export default function AdminPage() {
                         <div className="flex-1">
                           <div className="flex items-center">
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                              <p className="text-sm font-medium text-gray-900">
+                                {user.name}
+                                {user.isPA && <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">PA</span>}
+                                {user.isAdmin && <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">ADMIN</span>}
+                              </p>
                               <p className="text-sm text-gray-500">{user.email}</p>
                               <p className="text-xs text-gray-400">
                                 Dorm: {user.dorm || 'Not specified'} | Commitments: {user.commitments ? user.commitments.length : 0}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                Role: {user.role || 'user'} | Created: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
                               </p>
                             </div>
                           </div>
                         </div>
                         <div className="flex space-x-2">
+                          <select
+                            value={user.role || 'user'}
+                            onChange={(e) => promoteUser(user._id, e.target.value)}
+                            className="px-2 py-1 text-xs border rounded"
+                          >
+                            <option value="user">User</option>
+                            <option value="PA">PA</option>
+                            <option value="admin">Admin</option>
+                          </select>
                           <button
                             onClick={() => setEditingUser(user)}
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm"

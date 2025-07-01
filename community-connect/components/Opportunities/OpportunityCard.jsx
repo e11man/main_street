@@ -51,16 +51,29 @@ const formatPhoneNumber = (phone) => {
 
 // Function to dynamically assign priority based on how close the date is
 const getPriority = (dateStr) => {
-  if (!dateStr) return '';
-  const today = new Date('2025-06-30'); // Use current date context
-  const oppDate = new Date(dateStr);
-  const diffDays = Math.ceil((oppDate - today) / (1000 * 60 * 60 * 24));
-  if (diffDays <= 3) return 'High Priority';
-  if (diffDays <= 7) return 'Medium Priority';
-  return 'Low Priority';
+  if (!dateStr) return 'Low Priority';
+  try {
+    const today = new Date(); // Use actual current date
+    const oppDate = new Date(dateStr);
+    
+    // Check if date is valid
+    if (isNaN(oppDate.getTime())) return 'Low Priority';
+    
+    const diffDays = Math.ceil((oppDate - today) / (1000 * 60 * 60 * 24));
+    if (diffDays <= 3) return 'High Priority';
+    if (diffDays <= 7) return 'Medium Priority';
+    return 'Low Priority';
+  } catch (error) {
+    return 'Low Priority';
+  }
 };
 
-const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick }, ref) => {
+const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick, onGroupSignupClick, currentUser }, ref) => {
+  // Early return if opportunity is null or undefined
+  if (!opportunity) {
+    return null;
+  }
+
   // Handle both spotsTotal and totalSpots fields for backward compatibility
   const spotsTotal = opportunity.spotsTotal || opportunity.totalSpots || 0;
   const spotsFilled = opportunity.spotsFilled || 0;
@@ -68,6 +81,9 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
 
   // Get priority based on the opportunity date
   const priority = getPriority(opportunity.date);
+
+  // Check if current user is PA
+  const isPA = currentUser?.isPA || currentUser?.isAdmin;
 
   return (
     <div
@@ -79,7 +95,7 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
       <div className="p-6 flex flex-col flex-grow">
         <div className="flex items-center justify-between mb-5">
           <span className="card-category bg-accent2 text-white px-3 py-1.5 rounded-full font-montserrat text-xs font-semibold tracking-wide uppercase shadow-sm">
-            {opportunity.category}
+            {opportunity?.category || 'Event'}
           </span>
           <div className="card-priority flex items-center gap-1.5 font-montserrat text-xs font-medium text-text-tertiary uppercase tracking-wide transition-all duration-300 group-hover:text-accent1">
             <Icon 
@@ -90,14 +106,14 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
           </div>
         </div>
         <h3 className="font-montserrat text-xl font-bold mb-3 text-primary tracking-tight leading-tight group-hover:text-primary-light transition-all duration-300">
-          {opportunity.title}
+          {opportunity?.title || 'Event Title'}
         </h3>
         <p className="text-text-secondary font-source-serif text-sm leading-relaxed mb-4 line-clamp-3">
-          {opportunity.description}
+          {opportunity?.description || 'Event description'}
         </p>
         
         {/* Company Information */}
-        {(opportunity.companyName || opportunity.companyEmail || opportunity.companyPhone || opportunity.companyWebsite) && (
+        {(opportunity?.companyName || opportunity?.companyEmail || opportunity?.companyPhone || opportunity?.companyWebsite) && (
           <div className="bg-accent1/5 border border-accent1/20 rounded-lg p-3 mb-4">
             <div className="flex items-center gap-2 mb-2">
               <Icon 
@@ -106,26 +122,26 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
               />
               <span className="font-montserrat font-semibold text-primary text-sm">Hosted by</span>
             </div>
-            {opportunity.companyName && (
+            {opportunity?.companyName && (
               <p className="font-montserrat font-bold text-accent1 text-sm mb-1">{opportunity.companyName}</p>
             )}
             <div className="space-y-1">
-              {opportunity.companyEmail && (
+              {opportunity?.companyEmail && (
                 <div className="flex items-center gap-1.5 text-xs text-text-secondary">
                   <Icon path="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" className="w-3 h-3 text-accent1/70" />
                   {opportunity.companyEmail}
                 </div>
               )}
-              {opportunity.companyPhone && (
+              {opportunity?.companyPhone && (
                  <div className="flex items-center gap-1.5 text-xs text-text-secondary">
                    <Icon path="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" className="w-3 h-3 text-accent1/70" />
                    {formatPhoneNumber(opportunity.companyPhone)}
                  </div>
                )}
-              {opportunity.companyWebsite && (
+              {opportunity?.companyWebsite && (
                 <div className="flex items-center gap-1.5 text-xs text-text-secondary">
                   <Icon path="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" className="w-3 h-3 text-accent1/70" />
-                  <a href={opportunity.companyWebsite.startsWith('http') ? opportunity.companyWebsite : `https://${opportunity.companyWebsite}`} target="_blank" rel="noopener noreferrer" className="hover:text-accent1 transition-colors">
+                  <a href={opportunity.companyWebsite?.startsWith('http') ? opportunity.companyWebsite : `https://${opportunity.companyWebsite}`} target="_blank" rel="noopener noreferrer" className="hover:text-accent1 transition-colors">
                     {opportunity.companyWebsite}
                   </a>
                 </div>
@@ -140,9 +156,9 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
               path="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
               className="w-4 h-4 text-accent1/70 group-hover:text-accent1 transition-all duration-300" 
             />
-            {opportunity.date}
+            {opportunity?.date || 'TBD'}
           </div>
-          {opportunity.time && (
+          {opportunity?.time && (
             <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary transition-all duration-300 group-hover:text-accent1">
               <Icon 
                 path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
@@ -151,7 +167,7 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
               {formatTime(opportunity.time)}
             </div>
           )}
-          {opportunity.location && (
+          {opportunity?.location && (
             <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary transition-all duration-300 group-hover:text-accent1">
               <Icon 
                 path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
@@ -183,14 +199,28 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
             </div>
           </div>
         </div>
-        <div className="flex justify-center mt-auto">
+        <div className="flex justify-center mt-auto gap-2">
           <Button 
             variant="secondary" 
-            className="py-2.5 px-8 rounded-full bg-accent1 hover:bg-accent1/90 w-full max-w-[200px]"
+            className="py-2.5 px-8 rounded-full bg-accent1 hover:bg-accent1/90 flex-1 max-w-[200px]"
             onClick={() => onJoinClick(opportunity)}
           >
             Join Now
           </Button>
+          {isPA && onGroupSignupClick && (
+            <Button 
+              variant="secondary" 
+              className="py-2.5 px-4 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
+              onClick={() => onGroupSignupClick(opportunity)}
+              title="Sign up multiple people"
+            >
+              <Icon 
+                path="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
+                className="w-4 h-4" 
+              />
+              Group
+            </Button>
+          )}
         </div>
       </div>
     </div>

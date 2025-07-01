@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import OpportunityCard from './OpportunityCard';
 import Icon from '../ui/Icon';
 
-const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLearnMoreClick }) => {
+const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLearnMoreClick, onGroupSignupClick, currentUser }) => {
   const gridRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -45,9 +45,11 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
   };
 
   // Sort opportunities by soonest date (closest to today) before rendering
-  const sortedOpportunities = [...opportunities].sort((a, b) => {
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
+  // Add null checks to prevent errors during static generation
+  const validOpportunities = Array.isArray(opportunities) ? opportunities.filter(Boolean) : [];
+  const sortedOpportunities = [...validOpportunities].sort((a, b) => {
+    const dateA = new Date(a?.date || '');
+    const dateB = new Date(b?.date || '');
     return dateA - dateB;
   });
 
@@ -106,6 +108,8 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
                   ref={el => opportunityRefs.current[index] = el}
                   onJoinClick={onJoinClick}
                   onLearnMoreClick={onLearnMoreClick}
+                  onGroupSignupClick={onGroupSignupClick}
+                  currentUser={currentUser}
                 />
               </div>
             </div>
@@ -120,9 +124,9 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
           </div>
           {/* Scroll Progress Indicator */}
           <div className="flex gap-1">
-            {Array.from({ length: Math.ceil(opportunities.length / 3) }, (_, i) => {
+            {validOpportunities.length > 0 && Array.from({ length: Math.ceil(validOpportunities.length / 3) }, (_, i) => {
               const isActive = gridRef.current ? 
-                Math.floor(gridRef.current.scrollLeft / (gridRef.current.scrollWidth / Math.ceil(opportunities.length / 3))) === i :
+                Math.floor(gridRef.current.scrollLeft / (gridRef.current.scrollWidth / Math.ceil(validOpportunities.length / 3))) === i :
                 i === 0;
               return (
                 <div 
