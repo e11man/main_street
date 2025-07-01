@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import OpportunityCard from './OpportunityCard';
 import Icon from '../ui/Icon';
 
-const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLearnMoreClick }) => {
+const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLearnMoreClick, onGroupSignupClick, currentUser }) => {
   const gridRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -106,6 +106,8 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
                   ref={el => opportunityRefs.current[index] = el}
                   onJoinClick={onJoinClick}
                   onLearnMoreClick={onLearnMoreClick}
+                  onGroupSignupClick={onGroupSignupClick}
+                  currentUser={currentUser}
                 />
               </div>
             </div>
