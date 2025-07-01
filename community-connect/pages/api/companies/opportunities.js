@@ -54,8 +54,15 @@ export default async function handler(req, res) {
         priority, 
         date, 
         time,
+        arrivalTime,
+        departureTime,
         totalSpots, 
         location, 
+        meetingPoint,
+        contactPerson,
+        contactPhone,
+        whatToBring,
+        specialInstructions,
         companyId,
         isRecurring,
         recurringFrequency,
@@ -63,7 +70,7 @@ export default async function handler(req, res) {
       } = req.body;
 
       // Validate required fields
-      if (!title || !description || !category || !priority || !date || !time || !totalSpots || !location || !companyId) {
+      if (!title || !description || !category || !date || !time || !arrivalTime || !totalSpots || !location || !companyId) {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
@@ -86,11 +93,18 @@ export default async function handler(req, res) {
         title,
         description,
         category,
-        priority,
+        priority: priority || 'Medium', // Default priority if not provided
         spotsTotal: parseInt(totalSpots),
         spotsFilled: 0,
         location,
         time,
+        arrivalTime,
+        departureTime,
+        meetingPoint,
+        contactPerson,
+        contactPhone,
+        whatToBring,
+        specialInstructions,
         companyId: companyObject._id, // Store companyId as ObjectId, from the fetched company
         companyName: companyObject.name, // Use already fetched company name
         createdAt: new Date(),
@@ -185,15 +199,22 @@ export default async function handler(req, res) {
         priority, 
         date, 
         time,
+        arrivalTime,
+        departureTime,
         totalSpots, 
         location, 
+        meetingPoint,
+        contactPerson,
+        contactPhone,
+        whatToBring,
+        specialInstructions,
         companyId,
         isRecurring,
         recurringFrequency,
         recurringDays
       } = req.body;
 
-      if (!id || !title || !description || !category || !priority || !date || !time || !totalSpots || !location || !companyId) {
+      if (!id || !title || !description || !category || !date || !time || !arrivalTime || !totalSpots || !location || !companyId) {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
@@ -222,11 +243,18 @@ export default async function handler(req, res) {
         title,
         description,
         category,
-        priority,
+        priority: priority || 'Medium',
         date,
         time,
+        arrivalTime,
+        departureTime,
         spotsTotal: parseInt(totalSpots),
-        location
+        location,
+        meetingPoint,
+        contactPerson,
+        contactPhone,
+        whatToBring,
+        specialInstructions
       };
       
       let unsetData = null;

@@ -45,8 +45,8 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
   };
 
   // Sort opportunities by soonest date (closest to today) before rendering
-  // Add null checks to prevent errors during static generation
-  const validOpportunities = Array.isArray(opportunities) ? opportunities.filter(Boolean) : [];
+  // Add null checks to prevent errors during static generation and filter out cancelled opportunities
+  const validOpportunities = Array.isArray(opportunities) ? opportunities.filter(opp => opp && !opp.cancelled) : [];
   const sortedOpportunities = [...validOpportunities].sort((a, b) => {
     const dateA = new Date(a?.date || '');
     const dateB = new Date(b?.date || '');

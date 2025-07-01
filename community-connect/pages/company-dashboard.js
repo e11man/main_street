@@ -23,8 +23,15 @@ export default function CompanyDashboard() {
     category: '',
     date: '',
     time: '',
+    arrivalTime: '',
+    departureTime: '',
     totalSpots: '',
     location: '',
+    specialInstructions: '',
+    whatToBring: '',
+    meetingPoint: '',
+    contactPerson: '',
+    contactPhone: '',
     isRecurring: false,
     recurringFrequency: 'daily',
     recurringDays: []
@@ -100,8 +107,15 @@ export default function CompanyDashboard() {
         category: opportunity.category || '',
         date: opportunity.date || '',
         time: opportunity.time || '',
+        arrivalTime: opportunity.arrivalTime || '',
+        departureTime: opportunity.departureTime || '',
         totalSpots: opportunity.totalSpots || '',
         location: opportunity.location || '',
+        specialInstructions: opportunity.specialInstructions || '',
+        whatToBring: opportunity.whatToBring || '',
+        meetingPoint: opportunity.meetingPoint || '',
+        contactPerson: opportunity.contactPerson || '',
+        contactPhone: opportunity.contactPhone || '',
         isRecurring: opportunity.isRecurring || false,
         recurringFrequency: opportunity.recurringFrequency || 'daily',
         recurringDays: opportunity.recurringDays || []
@@ -112,10 +126,17 @@ export default function CompanyDashboard() {
         title: '',
         description: '',
         category: '',
-        priority: 'Medium',
         date: '',
+        time: '',
+        arrivalTime: '',
+        departureTime: '',
         totalSpots: '',
         location: '',
+        specialInstructions: '',
+        whatToBring: '',
+        meetingPoint: '',
+        contactPerson: '',
+        contactPhone: '',
         isRecurring: false,
         recurringFrequency: 'daily',
         recurringDays: []
@@ -135,8 +156,9 @@ export default function CompanyDashboard() {
   const handleOpportunitySubmit = async (e) => {
     e.preventDefault();
 
-    if (parseInt(opportunityFormData.totalSpots, 10) < 6) {
-      setError('Required: 6');
+    // Remove the minimum 6 students validation
+    if (parseInt(opportunityFormData.totalSpots, 10) < 1) {
+      setError('Please specify at least 1 volunteer spot');
       return;
     }
 
@@ -440,7 +462,7 @@ export default function CompanyDashboard() {
 
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="time">
-                Time
+                Start Time
               </label>
               <input
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -451,6 +473,38 @@ export default function CompanyDashboard() {
                 onChange={handleOpportunityFormChange}
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">When does the volunteer activity begin?</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="arrivalTime">
+                Arrival Time <span className="text-red-500">*</span>
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="arrivalTime"
+                type="time"
+                name="arrivalTime"
+                value={opportunityFormData.arrivalTime}
+                onChange={handleOpportunityFormChange}
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">What time should volunteers arrive? (e.g., "Arrive by 12:00 PM")</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="departureTime">
+                Expected End Time
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="departureTime"
+                type="time"
+                name="departureTime"
+                value={opportunityFormData.departureTime}
+                onChange={handleOpportunityFormChange}
+              />
+              <p className="text-xs text-gray-500 mt-1">When will the volunteers be done? (Optional but helpful)</p>
             </div>
 
             <div className="mb-4">
@@ -563,15 +617,15 @@ export default function CompanyDashboard() {
                 name="totalSpots"
                 value={opportunityFormData.totalSpots}
                 onChange={handleOpportunityFormChange}
-                min="6"
+                min="1"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">Required: 6</p>
+              <p className="text-xs text-gray-500 mt-1">Required: 1</p>
             </div>
 
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="location">
-                Location
+                Location Address <span className="text-red-500">*</span>
               </label>
               <GooglePlacesAutocomplete
                 value={opportunityFormData.location}
@@ -579,6 +633,87 @@ export default function CompanyDashboard() {
                 onSelect={address => setOpportunityFormData(prev => ({ ...prev, location: address }))}
                 placeholder="Search for a valid address"
               />
+              <p className="text-xs text-gray-500 mt-1">The main address where volunteers will be working</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="meetingPoint">
+                Meeting Point
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="meetingPoint"
+                type="text"
+                name="meetingPoint"
+                value={opportunityFormData.meetingPoint}
+                onChange={handleOpportunityFormChange}
+                placeholder="Where exactly should volunteers meet? (e.g., Main entrance, Room 101, etc.)"
+              />
+              <p className="text-xs text-gray-500 mt-1">Specific meeting spot at the location (Optional but recommended)</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="contactPerson">
+                Contact Person
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="contactPerson"
+                type="text"
+                name="contactPerson"
+                value={opportunityFormData.contactPerson}
+                onChange={handleOpportunityFormChange}
+                placeholder="Name of person volunteers should ask for on arrival"
+              />
+              <p className="text-xs text-gray-500 mt-1">Who should volunteers ask for when they arrive?</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="contactPhone">
+                Contact Phone Number
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="contactPhone"
+                type="tel"
+                name="contactPhone"
+                value={opportunityFormData.contactPhone}
+                onChange={handleOpportunityFormChange}
+                placeholder="Phone number for day-of questions"
+              />
+              <p className="text-xs text-gray-500 mt-1">Phone number volunteers can call if they're lost or running late</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="whatToBring">
+                What to Bring
+              </label>
+              <textarea
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="whatToBring"
+                name="whatToBring"
+                value={opportunityFormData.whatToBring}
+                onChange={handleOpportunityFormChange}
+                placeholder="What should volunteers bring? (e.g., Work gloves, water bottle, closed-toe shoes, etc.)"
+                rows="3"
+              />
+              <p className="text-xs text-gray-500 mt-1">List any specific items volunteers should bring</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="specialInstructions">
+                Special Instructions & Important Details
+              </label>
+              <textarea
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="specialInstructions"
+                name="specialInstructions"
+                value={opportunityFormData.specialInstructions}
+                onChange={handleOpportunityFormChange}
+                placeholder="Any special instructions, parking info, dress code, or other important details volunteers should know"
+                rows="4"
+              />
+              <p className="text-xs text-gray-500 mt-1">Include parking instructions, dress code, safety requirements, etc.</p>
             </div>
 
             {error && (

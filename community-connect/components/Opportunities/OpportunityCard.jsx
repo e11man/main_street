@@ -150,40 +150,127 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
           </div>
         )}
         
-        <div className="flex items-center gap-4 mb-5 flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary transition-all duration-300 group-hover:text-accent1">
-            <Icon 
-              path="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
-              className="w-4 h-4 text-accent1/70 group-hover:text-accent1 transition-all duration-300" 
-            />
-            {opportunity?.date || 'TBD'}
+        {/* Key Details Section */}
+        <div className="bg-gradient-to-r from-accent1/5 to-accent2/5 border border-accent1/20 rounded-lg p-4 mb-4">
+          <h4 className="font-montserrat font-bold text-primary text-sm mb-3 flex items-center gap-2">
+            <Icon path="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" className="w-4 h-4 text-accent1" />
+            Key Details
+          </h4>
+          
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+              <Icon 
+                path="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                className="w-4 h-4 text-accent1/70" 
+              />
+              <span className="font-semibold text-accent1">Date:</span> {opportunity?.date || 'TBD'}
+            </div>
+            
+            {opportunity?.arrivalTime && (
+              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+                <Icon 
+                  path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  className="w-4 h-4 text-accent1/70" 
+                />
+                <span className="font-semibold text-accent1">Arrive by:</span> {formatTime(opportunity.arrivalTime)}
+              </div>
+            )}
+            
+            {opportunity?.time && (
+              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+                <Icon 
+                  path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  className="w-4 h-4 text-accent1/70" 
+                />
+                <span className="font-semibold text-accent1">Activity starts:</span> {formatTime(opportunity.time)}
+              </div>
+            )}
+            
+            {opportunity?.departureTime && (
+              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+                <Icon 
+                  path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  className="w-4 h-4 text-accent1/70" 
+                />
+                <span className="font-semibold text-accent1">Expected end:</span> {formatTime(opportunity.departureTime)}
+              </div>
+            )}
+            
+            {opportunity?.location && (
+              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+                <Icon 
+                  path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
+                  className="w-4 h-4 text-accent1/70" 
+                />
+                <span className="font-semibold text-accent1">Location:</span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(opportunity.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-accent1 transition-colors"
+                >
+                  {opportunity.location}
+                </a>
+              </div>
+            )}
+            
+            {opportunity?.meetingPoint && (
+              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+                <Icon 
+                  path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
+                  className="w-4 h-4 text-accent1/70" 
+                />
+                <span className="font-semibold text-accent1">Meet at:</span> {opportunity.meetingPoint}
+              </div>
+            )}
+            
+            {opportunity?.contactPerson && (
+              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+                <Icon 
+                  path="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
+                  className="w-4 h-4 text-accent1/70" 
+                />
+                <span className="font-semibold text-accent1">Ask for:</span> {opportunity.contactPerson}
+              </div>
+            )}
+            
+            {opportunity?.contactPhone && (
+              <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary">
+                <Icon 
+                  path="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" 
+                  className="w-4 h-4 text-accent1/70" 
+                />
+                <span className="font-semibold text-accent1">Contact:</span> {formatPhoneNumber(opportunity.contactPhone)}
+              </div>
+            )}
           </div>
-          {opportunity?.time && (
-            <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary transition-all duration-300 group-hover:text-accent1">
-              <Icon 
-                path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
-                className="w-4 h-4 text-accent1/70 group-hover:text-accent1 transition-all duration-300" 
-              />
-              {formatTime(opportunity.time)}
-            </div>
-          )}
-          {opportunity?.location && (
-            <div className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-text-secondary transition-all duration-300 group-hover:text-accent1">
-              <Icon 
-                path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
-                className="w-4 h-4 text-accent1/70 group-hover:text-accent1 transition-all duration-300" 
-              />
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(opportunity.location)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="truncate max-w-[120px] underline hover:text-accent1"
-              >
-                {opportunity.location}
-              </a>
-            </div>
-          )}
-          <div className="card-spots bg-surface/70 p-4 rounded-lg border-2 border-accent1/20 w-full flex flex-col gap-3 transition-all duration-300 group-hover:border-accent1/40 group-hover:shadow-md">
+        </div>
+
+        {/* Additional Information Section */}
+        {(opportunity?.whatToBring || opportunity?.specialInstructions) && (
+          <div className="bg-surface/50 border border-accent2/20 rounded-lg p-4 mb-4">
+            <h4 className="font-montserrat font-bold text-primary text-sm mb-3 flex items-center gap-2">
+              <Icon path="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" className="w-4 h-4 text-accent2" />
+              Important Info
+            </h4>
+            
+            {opportunity?.whatToBring && (
+              <div className="mb-3">
+                <span className="font-semibold text-accent2 text-xs">What to bring:</span>
+                <p className="text-text-secondary text-xs mt-1 leading-relaxed">{opportunity.whatToBring}</p>
+              </div>
+            )}
+            
+            {opportunity?.specialInstructions && (
+              <div>
+                <span className="font-semibold text-accent2 text-xs">Special instructions:</span>
+                <p className="text-text-secondary text-xs mt-1 leading-relaxed">{opportunity.specialInstructions}</p>
+              </div>
+            )}
+          </div>
+        )}
+        
+        <div className="card-spots bg-surface/70 p-4 rounded-lg border-2 border-accent1/20 w-full flex flex-col gap-3 transition-all duration-300 group-hover:border-accent1/40 group-hover:shadow-md">
             <div className="flex items-center gap-2 font-montserrat font-bold text-sm text-primary">
               <div className="bg-accent1/10 p-1.5 rounded-full">
                 <Icon 
