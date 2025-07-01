@@ -271,21 +271,21 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
         )}
         
         <div className="card-spots bg-surface/70 p-4 rounded-lg border-2 border-accent1/20 w-full flex flex-col gap-3 transition-all duration-300 group-hover:border-accent1/40 group-hover:shadow-md">
-            <div className="flex items-center gap-2 font-montserrat font-bold text-sm text-primary">
-              <div className="bg-accent1/10 p-1.5 rounded-full">
-                <Icon 
-                  path="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
-                  className="w-5 h-5 text-accent1 transition-all duration-300" 
-                />
-              </div>
-              <span className="text-lg text-accent1 font-bold">{spotsFilled}</span>{spotsTotal > 0 && ` / ${spotsTotal}`}
+          <div className="flex items-center gap-2 font-montserrat font-bold text-sm text-primary">
+            <div className="bg-accent1/10 p-1.5 rounded-full">
+              <Icon 
+                path="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
+                className="w-5 h-5 text-accent1 transition-all duration-300" 
+              />
             </div>
-            <ProgressBar progress={progress} />
-            <div className="font-montserrat text-xs font-medium text-accent1/80 uppercase tracking-wider">
-              Volunteers Signed Up
-            </div>
+            <span className="text-lg text-accent1 font-bold">{spotsFilled}</span>{spotsTotal > 0 && ` / ${spotsTotal}`}
+          </div>
+          <ProgressBar progress={progress} />
+          <div className="font-montserrat text-xs font-medium text-accent1/80 uppercase tracking-wider">
+            Volunteers Signed Up
           </div>
         </div>
+        
         <div className="flex justify-center mt-auto gap-2">
           <Button 
             variant="secondary" 

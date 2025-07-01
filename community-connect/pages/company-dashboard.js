@@ -77,7 +77,7 @@ export default function CompanyDashboard() {
     
     // Fetch company opportunities
     fetchOpportunities(parsedCompanyData._id);
-  }, []);
+  }, [router]);
 
   const fetchOpportunities = async (companyId) => {
     try {
@@ -489,7 +489,7 @@ export default function CompanyDashboard() {
                 onChange={handleOpportunityFormChange}
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">What time should volunteers arrive? (e.g., "Arrive by 12:00 PM")</p>
+              <p className="text-xs text-gray-500 mt-1">What time should volunteers arrive? (e.g., &quot;Arrive by 12:00 PM&quot;)</p>
             </div>
 
             <div className="mb-4">
@@ -681,7 +681,7 @@ export default function CompanyDashboard() {
                 onChange={handleOpportunityFormChange}
                 placeholder="Phone number for day-of questions"
               />
-              <p className="text-xs text-gray-500 mt-1">Phone number volunteers can call if they're lost or running late</p>
+              <p className="text-xs text-gray-500 mt-1">Phone number volunteers can call if they&apos;re lost or running late</p>
             </div>
 
             <div className="mb-4">
