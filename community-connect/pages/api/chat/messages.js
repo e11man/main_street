@@ -1,5 +1,6 @@
 import clientPromise from '../../../lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { sendChatNotifications } from '../../../lib/emailUtils';
 
 export default async function handler(req, res) {
   try {
@@ -53,6 +54,57 @@ export default async function handler(req, res) {
       // or construct it. For now, let's assume `result.ops[0]` works or adjust if needed.
       // A more robust way:
       const insertedMessage = await chatCollection.findOne({ _id: result.insertedId });
+
+      // Send email notifications to all participants (excluding the sender)
+      try {
+        // Get sender information for email notifications
+        let senderEmail = '';
+        let senderName = '';
+
+        if (senderType === 'user') {
+          const usersCollection = db.collection('users');
+          const sender = await usersCollection.findOne({ _id: finalSenderId });
+          if (sender) {
+            senderEmail = sender.email;
+            senderName = sender.name;
+          }
+        } else if (senderType === 'organization' || senderType === 'admin_as_host') {
+          const companiesCollection = db.collection('companies');
+          const sender = await companiesCollection.findOne({ _id: finalSenderId });
+          if (sender) {
+            senderEmail = sender.email;
+            senderName = sender.name;
+          }
+          
+          // If admin is sending as host, use admin's name but company's email context
+          if (senderType === 'admin_as_host') {
+            senderName = 'Admin (on behalf of ' + senderName + ')';
+          }
+        }
+
+        // Send email notifications if we have sender information
+        if (senderEmail && senderName) {
+          const emailResults = await sendChatNotifications(
+            opportunityId, 
+            senderEmail, 
+            senderName, 
+            message
+          );
+          
+          console.log('Chat email notifications result:', emailResults);
+          
+          // Add email notification results to the response (optional - for debugging/monitoring)
+          insertedMessage.emailNotificationResults = emailResults;
+        } else {
+          console.warn('Could not determine sender information for email notifications');
+        }
+      } catch (emailError) {
+        // Email notifications should not fail the chat message posting
+        console.error('Error sending chat email notifications:', emailError);
+        // Optionally add error info to response for debugging
+        insertedMessage.emailNotificationError = emailError.message;
+      }
+
       res.status(201).json(insertedMessage);
     } else if (req.method === 'GET') {
       const { opportunityId } = req.query;
