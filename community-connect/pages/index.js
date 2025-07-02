@@ -30,6 +30,7 @@ export default function Home() {
   const [selectedCompanyInfo, setSelectedCompanyInfo] = useState(null);
   const [isGroupSignupModalOpen, setIsGroupSignupModalOpen] = useState(false);
   const [selectedOpportunityForGroup, setSelectedOpportunityForGroup] = useState(null);
+  const [isGroupSignupRequested, setIsGroupSignupRequested] = useState(false);
 
   useEffect(() => {
     // Fetch opportunities on component mount
@@ -90,6 +91,8 @@ export default function Home() {
   const closeAuthModal = () => {
     setIsAuthModalOpen(false);
     document.body.style.overflow = ''; // Restore body scroll
+    setIsGroupSignupRequested(false); // Reset the flag when modal is closed
+    setCurrentOpportunity(null); // Clear the opportunity
   };
   
   // Handle company auth modal open/close
@@ -114,7 +117,26 @@ export default function Home() {
     
     // If user was trying to join an opportunity, handle that
     if (currentOpportunity) {
-      handleJoinOpportunity(currentOpportunity);
+      // Check if the user was trying to access group signup
+      if (isGroupSignupRequested && (userData.isPA || userData.isAdmin)) {
+        // Open group signup modal for PA/Admin users
+        setSelectedOpportunityForGroup(currentOpportunity);
+        setIsGroupSignupModalOpen(true);
+        document.body.style.overflow = 'hidden';
+        setCurrentOpportunity(null); // Clear the opportunity
+        setIsGroupSignupRequested(false); // Reset the flag
+      } else if (isGroupSignupRequested && (!userData.isPA && !userData.isAdmin)) {
+        // User authenticated but is not PA/Admin
+        setMessageBox({
+          message: 'Only Peer Advisors (PAs) can sign up multiple people for opportunities.',
+          callback: () => setMessageBox(null)
+        });
+        setCurrentOpportunity(null); // Clear the opportunity
+        setIsGroupSignupRequested(false); // Reset the flag
+      } else {
+        // Regular join opportunity flow
+        handleJoinOpportunity(currentOpportunity);
+      }
     }
   };
   
@@ -163,6 +185,7 @@ export default function Home() {
   // Handle group signup modal
   const handleGroupSignupClick = (opportunity) => {
     if (!currentUser) {
+      setIsGroupSignupRequested(true);
       openAuthModal(opportunity);
       return;
     }
@@ -184,6 +207,7 @@ export default function Home() {
     setIsGroupSignupModalOpen(false);
     setSelectedOpportunityForGroup(null);
     document.body.style.overflow = '';
+    setIsGroupSignupRequested(false); // Reset the flag when modal is closed
   };
 
   const handleGroupSignupSuccess = async (data) => {
@@ -194,6 +218,9 @@ export default function Home() {
       message: `Successfully signed up ${data.results.filter(r => r.success).length} users for "${selectedOpportunityForGroup?.title || 'the event'}"!`,
       callback: () => setMessageBox(null)
     });
+    
+    // Close the modal and reset state
+    closeGroupSignupModal();
   };
   
   // Handle updating user state (for commitment removal)
