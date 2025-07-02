@@ -11,7 +11,8 @@
         "start": "next start",
         "lint": "next lint",
         "seed": "node scripts/seed-db.js",
-        "check-cancellations": "node scripts/check-cancellations.js"
+        "check-cancellations": "node scripts/check-cancellations.js",
+        "setup-email-notifications": "node scripts/setup-email-notifications.js"
     },
     "keywords": [],
     "author": "",
