@@ -104,9 +104,10 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
   
   // Check if current user is already signed up or has max commitments
   const currentUserCommitments = currentUser?.commitments || [];
-  const isCurrentUserAlreadySignedUp = opportunity?.id && currentUser && (
-    currentUserCommitments.includes(opportunity.id) || 
-    currentUserCommitments.includes(parseInt(opportunity.id))
+  const opportunityId = opportunity?.id || opportunity?._id;
+  const isCurrentUserAlreadySignedUp = opportunityId && currentUser && (
+    currentUserCommitments.includes(opportunityId) || 
+    currentUserCommitments.includes(parseInt(opportunityId))
   );
   const currentUserHasMaxCommitments = currentUserCommitments.length >= 2;
 
@@ -114,6 +115,7 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[2500] p-2 sm:p-4">
+
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -203,8 +205,9 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
                   const isSelected = selectedUsers.includes(user._id);
                   const isDisabled = !canSelectMore && !isSelected;
                   const hasMaxCommitments = (user.commitments || []).length >= 2;
-                  const isAlreadyCommitted = opportunity?.id && ((user.commitments || []).includes(opportunity.id) || 
-                                              (user.commitments || []).includes(parseInt(opportunity.id)));
+                  const oppId = opportunity?.id || opportunity?._id;
+                  const isAlreadyCommitted = oppId && ((user.commitments || []).includes(oppId) || 
+                                              (user.commitments || []).includes(parseInt(oppId)));
                   const isFromSameDorm = user.dorm === currentUser?.dorm;
 
                   return (
