@@ -209,11 +209,12 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
           {isPA && onGroupSignupClick && (
             <Button 
               variant="secondary" 
-              className="py-2.5 px-4 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 text-sm font-medium min-w-[85px] justify-center flex-shrink-0"
+              className="py-2.5 px-4 rounded-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium min-w-[85px] justify-center flex-shrink-0"
               onClick={() => onGroupSignupClick(opportunity)}
               title="Sign up multiple people"
             >
               <span className="whitespace-nowrap">Group</span>
+
             </Button>
           )}
         </div>
