@@ -214,6 +214,7 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
               title="Sign up multiple people"
             >
               <span className="whitespace-nowrap">Group</span>
+
             </Button>
           )}
         </div>
