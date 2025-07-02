@@ -332,7 +332,7 @@ export default function About() {
               isVisible.whatWeDo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}
             style={{ transitionDelay: '600ms' }}>
-              <div className="text-center mb-12">
+              <div className="text-center mb-8">
                 <h3 className="font-montserrat text-2xl md:text-3xl font-bold mb-4 text-primary">
                   Community Outreach Programs
                 </h3>
@@ -341,7 +341,7 @@ export default function About() {
                 </p>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-white rounded-xl border border-border/80 shadow-md overflow-hidden">
                 {[
                   { 
                     name: "Basics", 
@@ -376,23 +376,25 @@ export default function About() {
                 ].map((program, index) => (
                   <div 
                     key={index}
-                    className="group bg-white rounded-xl border border-border/80 p-6 shadow-md
-                             transition-all duration-400 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]
-                             hover:translate-y-[-4px] hover:scale-[1.02] hover:shadow-lg hover:border-accent1/50"
+                    className={`group flex items-center p-4 transition-all duration-300 hover:bg-surface/50 ${
+                      index !== 5 ? 'border-b border-border/50' : ''
+                    }`}
                     style={{ transitionDelay: `${index * 100}ms` }}
                   >
-                    <div className="bg-accent1/10 w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all duration-300 group-hover:bg-accent1/20 group-hover:scale-110">
+                    <div className="bg-accent1/10 w-12 h-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0 transition-all duration-300 group-hover:bg-accent1/20 group-hover:scale-105">
                       <Icon 
                         path={program.iconPath} 
-                        className="w-6 h-6 text-accent1 transition-all duration-300" 
+                        className="w-5 h-5 text-accent1 transition-all duration-300" 
                       />
                     </div>
-                    <h4 className="font-montserrat font-bold text-primary mb-3 group-hover:text-primary-light transition-all duration-300">
-                      {program.name}
-                    </h4>
-                    <p className="font-source-serif text-sm text-text-secondary leading-relaxed group-hover:text-text-primary transition-all duration-300">
-                      {program.description}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-montserrat font-bold text-primary mb-1 group-hover:text-primary-light transition-all duration-300">
+                        {program.name}
+                      </h4>
+                      <p className="font-source-serif text-sm text-text-secondary leading-relaxed group-hover:text-text-primary transition-all duration-300 pr-4">
+                        {program.description}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
