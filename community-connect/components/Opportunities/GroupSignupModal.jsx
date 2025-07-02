@@ -73,7 +73,7 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
         },
         body: JSON.stringify({
           paUserId: currentUser._id,
-          opportunityId: opportunity.id,
+          opportunityId: opportunity.id || opportunity._id,
           userIds: selectedUsers,
           includeSelf: signMyselfUp
         }),
@@ -104,9 +104,10 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
   
   // Check if current user is already signed up or has max commitments
   const currentUserCommitments = currentUser?.commitments || [];
-  const isCurrentUserAlreadySignedUp = opportunity?.id && currentUser && (
-    currentUserCommitments.includes(opportunity.id) || 
-    currentUserCommitments.includes(parseInt(opportunity.id))
+  const opportunityId = opportunity?.id || opportunity?._id;
+  const isCurrentUserAlreadySignedUp = opportunityId && currentUser && (
+    currentUserCommitments.includes(opportunityId) || 
+    currentUserCommitments.includes(parseInt(opportunityId))
   );
   const currentUserHasMaxCommitments = currentUserCommitments.length >= 2;
 
@@ -203,8 +204,9 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
                   const isSelected = selectedUsers.includes(user._id);
                   const isDisabled = !canSelectMore && !isSelected;
                   const hasMaxCommitments = (user.commitments || []).length >= 2;
-                  const isAlreadyCommitted = opportunity?.id && ((user.commitments || []).includes(opportunity.id) || 
-                                              (user.commitments || []).includes(parseInt(opportunity.id)));
+                  const oppId = opportunity?.id || opportunity?._id;
+                  const isAlreadyCommitted = oppId && ((user.commitments || []).includes(oppId) || 
+                                              (user.commitments || []).includes(parseInt(oppId)));
                   const isFromSameDorm = user.dorm === currentUser?.dorm;
 
                   return (
