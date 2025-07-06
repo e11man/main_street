@@ -50,7 +50,7 @@ async function promoteUserHandler(req, res) {
 
     return res.status(200).json({
       message: `User successfully promoted to ${role}`,
-      user: userWithoutPassword
+      user: { ...userWithoutPassword, _id: userWithoutPassword._id.toString() }
     });
 
   } catch (error) {
