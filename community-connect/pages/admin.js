@@ -154,42 +154,56 @@ export default function AdminPage() {
   const fetchData = async () => {
     try {
       // Fetch users
-      const usersResponse = await fetch('/api/admin/users');
+      const usersResponse = await fetch('/api/admin/users', {
+        credentials: 'include'
+      });
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
         setUsers(usersData);
+      } else {
+        console.error('Failed to fetch users:', usersResponse.status, usersResponse.statusText);
       }
 
       // Fetch companies
-      const companiesResponse = await fetch('/api/companies');
+      const companiesResponse = await fetch('/api/companies', {
+        credentials: 'include'
+      });
       if (companiesResponse.ok) {
         const companiesData = await companiesResponse.json();
         setCompanies(companiesData);
       }
 
       // Fetch opportunities
-      const opportunitiesResponse = await fetch('/api/opportunities');
+      const opportunitiesResponse = await fetch('/api/opportunities', {
+        credentials: 'include'
+      });
       if (opportunitiesResponse.ok) {
         const opportunitiesData = await opportunitiesResponse.json();
         setOpportunities(opportunitiesData);
       }
 
       // Fetch blocked emails
-      const blockedEmailsResponse = await fetch('/api/admin/blocked-emails');
+      const blockedEmailsResponse = await fetch('/api/admin/blocked-emails', {
+        credentials: 'include'
+      });
       if (blockedEmailsResponse.ok) {
         const blockedEmailsData = await blockedEmailsResponse.json();
         setBlockedEmails(blockedEmailsData);
       }
 
       // Fetch pending users
-      const pendingUsersResponse = await fetch('/api/admin/pending-users');
+      const pendingUsersResponse = await fetch('/api/admin/pending-users', {
+        credentials: 'include'
+      });
       if (pendingUsersResponse.ok) {
         const pendingUsersData = await pendingUsersResponse.json();
         setPendingUsers(pendingUsersData);
       }
 
       // Fetch pending companies
-      const pendingCompaniesResponse = await fetch('/api/admin/pending-companies');
+      const pendingCompaniesResponse = await fetch('/api/admin/pending-companies', {
+        credentials: 'include'
+      });
       if (pendingCompaniesResponse.ok) {
         const pendingCompaniesData = await pendingCompaniesResponse.json();
         setPendingCompanies(pendingCompaniesData);
@@ -205,6 +219,7 @@ export default function AdminPage() {
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -224,6 +239,7 @@ export default function AdminPage() {
       setLoading(true);
       const response = await fetch(`/api/admin/opportunities/${opportunityId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -248,6 +264,7 @@ export default function AdminPage() {
       setLoading(true);
       const response = await fetch(`/api/admin/companies/${companyId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -273,6 +290,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ email }),
       });
 
@@ -300,6 +318,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ id }),
       });
 
@@ -322,6 +341,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ userId }),
       });
 
@@ -346,6 +366,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ userId }),
       });
 
@@ -368,6 +389,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ companyId }),
       });
 
@@ -392,6 +414,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ companyId }),
       });
 
@@ -415,6 +438,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ userId, role: newRole }),
       });
 
@@ -559,6 +583,7 @@ export default function AdminPage() {
         const response = await fetch('/api/admin/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(formData)
         });
         if (response.ok) {
@@ -648,6 +673,7 @@ export default function AdminPage() {
         const response = await fetch('/api/admin/opportunities', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(formData)
         });
         if (response.ok) {
@@ -806,6 +832,7 @@ export default function AdminPage() {
         const response = await fetch(`/api/admin/users/${formData._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(updateData)
         });
 
@@ -916,6 +943,7 @@ export default function AdminPage() {
         const response = await fetch(`/api/admin/opportunities/${editingOpportunity.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(formData)
         });
 
@@ -1067,6 +1095,7 @@ export default function AdminPage() {
         const response = await fetch(`/api/admin/companies/${formData._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(formData)
         });
 
