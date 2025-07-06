@@ -16,10 +16,10 @@ async function usersHandler(req, res) { // Renamed original handler
     if (req.method === 'GET') {
       // Get all users
       const users = await usersCollection.find({}).toArray();
-      // Remove passwords from response
+      // Remove passwords from response and convert _id to string for frontend compatibility
       const usersWithoutPasswords = users.map(user => {
         const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
+        return { ...userWithoutPassword, _id: user._id.toString() };
       });
       return res.status(200).json(usersWithoutPasswords);
     }
@@ -53,7 +53,7 @@ async function usersHandler(req, res) { // Renamed original handler
 
       const result = await usersCollection.insertOne(newUser);
       const { password: _, ...userWithoutPassword } = newUser;
-      return res.status(201).json({ ...userWithoutPassword, _id: result.insertedId });
+      return res.status(201).json({ ...userWithoutPassword, _id: result.insertedId.toString() });
     }
 
     if (req.method === 'PUT') {
@@ -83,7 +83,7 @@ async function usersHandler(req, res) { // Renamed original handler
 
       const updatedUser = await usersCollection.findOne({ _id: new ObjectId(_id) });
       const { password: _, ...userWithoutPassword } = updatedUser;
-      return res.status(200).json(userWithoutPassword);
+      return res.status(200).json({ ...userWithoutPassword, _id: userWithoutPassword._id.toString() });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

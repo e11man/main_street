@@ -52,7 +52,7 @@ export default async function handler(req, res) {
 
       const updatedUser = await usersCollection.findOne({ _id: new ObjectId(id) });
       const { password: _, ...userWithoutPassword } = updatedUser;
-      return res.status(200).json(userWithoutPassword);
+      return res.status(200).json({ ...userWithoutPassword, _id: userWithoutPassword._id.toString() });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
