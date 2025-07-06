@@ -3,13 +3,62 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Icon from '../ui/Icon';
 
+// Organized dorm data with cascading structure
+const DORM_DATA = {
+  "Away From Campus": ["Upland (abroad)"],
+  "Bergwall Hall": ["1st Bergwall", "2nd Bergwall", "3rd Bergwall", "4th Bergwall"],
+  "Breuninger Hall": ["1st Breuninger", "2nd Breuninger", "3rd Breuninger"],
+  "Brolund Hall": ["Residential Village Wing 6"],
+  "Campbell Hall": ["Univ Apts-Campbell Hall-1st Fl", "Univ Apts-Campbell Hall-2nd Fl"],
+  "Chiu Hall": ["Residential Village Wing 1"],
+  "Commuter": ["Commuter Married", "Commuter Single"],
+  "Corner House": ["Corner House Wing"],
+  "Delta Apts": ["Delta Wing"],
+  "English Hall": [
+    "1st North English", "1st South English", "2nd Center English", 
+    "2nd North English", "2nd South English", "3rd Center English", 
+    "3rd North English", "3rd South English", "English Hall - Cellar"
+  ],
+  "Flanigan Hall": ["Residential Village Wing 3"],
+  "Gerig Hall": ["2nd Gerig", "3rd Gerig", "4th Gerig"],
+  "Gygi Hall": ["Residential Village Wing 2"],
+  "Haven on 2nd": ["Second South Street", "West Spencer Avenue"],
+  "Jacobsen Hall": ["Residential Village Wing 7"],
+  "Kerlin Hall": ["Residential Village Wing 5"],
+  "Off-Campus Housing": [],
+  "Olson Hall": [
+    "1st East Olson", "1st West Olson", "2nd Center Olson", 
+    "2nd East Olson", "2nd West Olson", "3rd Center Olson", 
+    "3rd East Olson", "3rd West Olson"
+  ],
+  "Robbins Hall": ["Residential Village Wing 4"],
+  "Sammy Morris Hall": [
+    "1st Morris Center", "1st Morris North", "1st Morris South", 
+    "2nd Morris Center", "2nd Morris North", "2nd Morris South", 
+    "3rd Morris Center", "3rd Morris North", "3rd Morris South", 
+    "4th Morris Center", "4th Morris North", "4th Morris South"
+  ],
+  "Swallow Robin Hall": ["1st Swallow", "2nd Swallow", "3rd Swallow"],
+  "The Flats Apartments": ["Casa Wing"],
+  "Wengatz Hall": [
+    "1st East Wengatz", "1st West Wengatz", "2nd Center Wengatz", 
+    "2nd East Wengatz", "2nd West Wengatz", "3rd Center Wengatz", 
+    "3rd East Wengatz", "3rd West Wengatz"
+  ],
+  "Wolgemuth Hall": [
+    "Univ Apt-Wolgemuth Hall-1st Fl", "Univ Apt-Wolgemuth Hall-2nd Fl", 
+    "Univ Apt-Wolgemuth Hall-3rd Fl"
+  ]
+};
+
 const AuthModal = ({ onClose, onSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    dorm: ''
+    dorm: '',
+    wing: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -20,10 +69,16 @@ const AuthModal = ({ onClose, onSuccess }) => {
   const [verificationCode, setVerificationCode] = useState('');
   const [taylorUserEmail, setTaylorUserEmail] = useState('');
 
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [name]: value };
+      // Reset wing selection when dorm changes
+      if (name === 'dorm') {
+        newData.wing = '';
+      }
+      return newData;
+    });
   };
 
   const toggleAuthMode = () => {
@@ -59,7 +114,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
 
       if (data.blocked) {
         setPendingMessage('Your account has been created and is pending admin approval. You will be notified when your account is approved.');
-        if (!isLogin) setFormData({ name: '', email: '', password: '' });
+        if (!isLogin) setFormData({ name: '', email: '', password: '', dorm: '', wing: '' });
         setIsSubmitting(false);
         return;
       }
@@ -80,7 +135,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
 
       if (response.status === 202 && data.pending) {
         setPendingMessage(data.message || 'Your account is pending admin approval.');
-        if (!isLogin) setFormData({ name: '', email: '', password: '' });
+        if (!isLogin) setFormData({ name: '', email: '', password: '', dorm: '', wing: '' });
       } else {
         onSuccess(data);
         onClose();
@@ -126,6 +181,11 @@ const AuthModal = ({ onClose, onSuccess }) => {
     }
   };
 
+  // Get available wings for selected dorm
+  const getAvailableWings = () => {
+    if (!formData.dorm || !DORM_DATA[formData.dorm]) return [];
+    return DORM_DATA[formData.dorm];
+  };
 
   return (
     <>
@@ -248,29 +308,50 @@ const AuthModal = ({ onClose, onSuccess }) => {
           {!isLogin && (
             <div className="mb-4 animate-slideUp" style={{ animationDelay: '25ms' }}>
               <label htmlFor="dorm" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
-                Select Your Dorm *
+                Select Your Wing/Floor (optional)
               </label>
               <select
                 id="dorm"
                 name="dorm"
                 value={formData.dorm}
                 onChange={handleChange}
-                required={!isLogin}
                 disabled={isSubmitting}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent1 focus:border-transparent transition-all duration-200 bg-white"
               >
-                <option value="">Choose your dorm...</option>
-                <option value="Berg">Berg</option>
-                <option value="Sammy">Sammy</option>
-                <option value="Wengatz">Wengatz</option>
-                <option value="Olson">Olson</option>
-                <option value="English">English</option>
-                <option value="Brue">Brue</option>
+                <option value="">Choose your dorm/building...</option>
+                {Object.keys(DORM_DATA).sort().map((dorm) => (
+                  <option key={dorm} value={dorm}>
+                    {dorm}
+                  </option>
+                ))}
               </select>
             </div>
           )}
 
-          <div className="mb-4 animate-slideUp" style={{ animationDelay: '50ms' }}>
+          {!isLogin && formData.dorm && getAvailableWings().length > 0 && (
+            <div className="mb-4 animate-slideUp" style={{ animationDelay: '50ms' }}>
+              <label htmlFor="wing" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
+                Select Your Specific Wing/Floor
+              </label>
+              <select
+                id="wing"
+                name="wing"
+                value={formData.wing}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent1 focus:border-transparent transition-all duration-200 bg-white"
+              >
+                <option value="">Choose your wing/floor...</option>
+                {getAvailableWings().map((wing) => (
+                  <option key={wing} value={wing}>
+                    {wing}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="mb-4 animate-slideUp" style={{ animationDelay: '75ms' }}>
             <label htmlFor="email" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
               Email Address *
             </label>

@@ -146,6 +146,7 @@ async function handleTaylorVerify(req, res, usersCollection, taylorVerificationC
       password: verificationData.hashedPassword, // Use the stored hashed password
       name: verificationData.name,
       dorm: verificationData.dorm,
+      wing: verificationData.wing,
       commitments: [],
       createdAt: new Date()
     };
@@ -306,10 +307,10 @@ export default async function handler(req, res) {
 }
 
 async function handleSignup(req, res, usersCollection) {
-  const { email, password, name, dorm } = req.body;
+  const { email, password, name, dorm, wing } = req.body;
   
   // Validate input
-  if (!email || !password || !name || !dorm) {
+  if (!email || !password || !name) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   
@@ -353,6 +354,7 @@ async function handleSignup(req, res, usersCollection) {
       password: hashedPassword,
       name,
       dorm,
+      wing,
       commitments: [], // Array to store opportunity IDs (max 2)
       createdAt: new Date()
     };
@@ -406,6 +408,7 @@ async function handleSignup(req, res, usersCollection) {
               // Update other fields in case user changed them
               name,
               dorm,
+              wing,
               hashedPassword
             }
           }
@@ -428,6 +431,7 @@ async function handleSignup(req, res, usersCollection) {
       email: normalizedEmail,
       name,
       dorm,
+      wing,
       hashedPassword,
       verificationCode,
       codeExpiresAt,
