@@ -231,7 +231,7 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
                           </p>
                           <p className="text-xs text-gray-500">{user.email}</p>
                           <p className="text-xs text-gray-400">
-                            {user.dorm} | Commitments: {(user.commitments || []).length}/2
+                            {user.dorm && user.wing ? `${user.dorm} - ${user.wing}` : user.dorm || 'No dorm/wing'} | Commitments: {(user.commitments || []).length}/2
                           </p>
                           {hasMaxCommitments && (
                             <p className="text-xs text-red-500">Maximum commitments reached</p>
