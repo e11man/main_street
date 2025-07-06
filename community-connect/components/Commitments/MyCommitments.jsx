@@ -496,13 +496,66 @@ const CommitmentCard = ({ commitment, spotsTotal, spotsFilled, progress, onDecom
 const DormManagement = ({ currentUser, onDormUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedDorm, setSelectedDorm] = useState(currentUser?.dorm || '');
+  const [selectedWing, setSelectedWing] = useState(currentUser?.wing || '');
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState('');
 
-  const dorms = ['Berg', 'Sammy', 'Wengatz', 'Olson', 'English', 'Brue'];
+  // Organized dorm data with cascading structure
+  const DORM_DATA = {
+    "Away From Campus": ["Upland (abroad)"],
+    "Bergwall Hall": ["1st Bergwall", "2nd Bergwall", "3rd Bergwall", "4th Bergwall"],
+    "Breuninger Hall": ["1st Breuninger", "2nd Breuninger", "3rd Breuninger"],
+    "Brolund Hall": ["Residential Village Wing 6"],
+    "Campbell Hall": ["Univ Apts-Campbell Hall-1st Fl", "Univ Apts-Campbell Hall-2nd Fl"],
+    "Chiu Hall": ["Residential Village Wing 1"],
+    "Commuter": ["Commuter Married", "Commuter Single"],
+    "Corner House": ["Corner House Wing"],
+    "Delta Apts": ["Delta Wing"],
+    "English Hall": [
+      "1st North English", "1st South English", "2nd Center English", 
+      "2nd North English", "2nd South English", "3rd Center English", 
+      "3rd North English", "3rd South English", "English Hall - Cellar"
+    ],
+    "Flanigan Hall": ["Residential Village Wing 3"],
+    "Gerig Hall": ["2nd Gerig", "3rd Gerig", "4th Gerig"],
+    "Gygi Hall": ["Residential Village Wing 2"],
+    "Haven on 2nd": ["Second South Street", "West Spencer Avenue"],
+    "Jacobsen Hall": ["Residential Village Wing 7"],
+    "Kerlin Hall": ["Residential Village Wing 5"],
+    "Off-Campus Housing": [],
+    "Olson Hall": [
+      "1st East Olson", "1st West Olson", "2nd Center Olson", 
+      "2nd East Olson", "2nd West Olson", "3rd Center Olson", 
+      "3rd East Olson", "3rd West Olson"
+    ],
+    "Robbins Hall": ["Residential Village Wing 4"],
+    "Sammy Morris Hall": [
+      "1st Morris Center", "1st Morris North", "1st Morris South", 
+      "2nd Morris Center", "2nd Morris North", "2nd Morris South", 
+      "3rd Morris Center", "3rd Morris North", "3rd Morris South", 
+      "4th Morris Center", "4th Morris North", "4th Morris South"
+    ],
+    "Swallow Robin Hall": ["1st Swallow", "2nd Swallow", "3rd Swallow"],
+    "The Flats Apartments": ["Casa Wing"],
+    "Wengatz Hall": [
+      "1st East Wengatz", "1st West Wengatz", "2nd Center Wengatz", 
+      "2nd East Wengatz", "2nd West Wengatz", "3rd Center Wengatz", 
+      "3rd East Wengatz", "3rd West Wengatz"
+    ],
+    "Wolgemuth Hall": [
+      "Univ Apt-Wolgemuth Hall-1st Fl", "Univ Apt-Wolgemuth Hall-2nd Fl", 
+      "Univ Apt-Wolgemuth Hall-3rd Fl"
+    ]
+  };
+
+  // Get available wings for selected dorm
+  const getAvailableWings = () => {
+    if (!selectedDorm || !DORM_DATA[selectedDorm]) return [];
+    return DORM_DATA[selectedDorm];
+  };
 
   const handleDormUpdate = async () => {
-    if (!selectedDorm || selectedDorm === currentUser.dorm) {
+    if (selectedDorm === currentUser.dorm && selectedWing === currentUser.wing) {
       setIsEditing(false);
       return;
     }
@@ -518,21 +571,22 @@ const DormManagement = ({ currentUser, onDormUpdate }) => {
         },
         body: JSON.stringify({
           ...currentUser,
-          dorm: selectedDorm
+          dorm: selectedDorm,
+          wing: selectedWing
         }),
       });
 
       if (response.ok) {
         const updatedUser = await response.json();
-        setUpdateMessage('Dorm updated successfully!');
+        setUpdateMessage('Dorm/Wing updated successfully!');
         setIsEditing(false);
         if (onDormUpdate) onDormUpdate(updatedUser); // Live update parent
       } else {
-        throw new Error('Failed to update dorm');
+        throw new Error('Failed to update dorm/wing');
       }
     } catch (error) {
-      console.error('Error updating dorm:', error);
-      setUpdateMessage('Failed to update dorm. Please try again.');
+      console.error('Error updating dorm/wing:', error);
+      setUpdateMessage('Failed to update dorm/wing. Please try again.');
     } finally {
       setIsUpdating(false);
     }
@@ -540,19 +594,25 @@ const DormManagement = ({ currentUser, onDormUpdate }) => {
 
   const handleCancel = () => {
     setSelectedDorm(currentUser?.dorm || '');
+    setSelectedWing(currentUser?.wing || '');
     setIsEditing(false);
     setUpdateMessage('');
+  };
+
+  const handleDormChange = (e) => {
+    setSelectedDorm(e.target.value);
+    setSelectedWing(''); // Reset wing when dorm changes
   };
 
   return (
     <div className="mt-6 pt-4 border-t border-border/30">
       <div className="flex items-center gap-2 mb-3">
-        <h4 className="font-montserrat text-lg font-bold text-primary">My Dorm</h4>
+        <h4 className="font-montserrat text-lg font-bold text-primary">My Dorm/Wing</h4>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
             className="ml-2 flex items-center gap-1 px-3 py-1.5 rounded-full bg-accent1 text-white font-semibold text-xs shadow hover:bg-accent1/90 transition-colors duration-200"
-            aria-label="Change Dorm"
+            aria-label="Change Dorm/Wing"
           >
             <Icon path="M12 4v16m8-8H4" className="w-4 h-4" /> Change
           </button>
@@ -571,21 +631,50 @@ const DormManagement = ({ currentUser, onDormUpdate }) => {
 
       {isEditing ? (
         <div className="space-y-3">
-          <select
-            value={selectedDorm}
-            onChange={(e) => setSelectedDorm(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent1 focus:border-transparent transition-all duration-200 bg-white"
-            disabled={isUpdating}
-          >
-            <option value="">Choose your dorm...</option>
-            {dorms.map(dorm => (
-              <option key={dorm} value={dorm}>{dorm}</option>
-            ))}
-          </select>
+          <div>
+            <label className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
+              Select Your Dorm/Building (optional)
+            </label>
+            <select
+              value={selectedDorm}
+              onChange={handleDormChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent1 focus:border-transparent transition-all duration-200 bg-white"
+              disabled={isUpdating}
+            >
+              <option value="">Choose your dorm/building...</option>
+              {Object.keys(DORM_DATA).sort().map((dorm) => (
+                <option key={dorm} value={dorm}>
+                  {dorm}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {selectedDorm && getAvailableWings().length > 0 && (
+            <div>
+              <label className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
+                Select Your Specific Wing/Floor
+              </label>
+              <select
+                value={selectedWing}
+                onChange={(e) => setSelectedWing(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent1 focus:border-transparent transition-all duration-200 bg-white"
+                disabled={isUpdating}
+              >
+                <option value="">Choose your wing/floor...</option>
+                {getAvailableWings().map((wing) => (
+                  <option key={wing} value={wing}>
+                    {wing}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          
           <div className="flex gap-2">
             <Button
               onClick={handleDormUpdate}
-              disabled={isUpdating || !selectedDorm}
+              disabled={isUpdating}
               variant="secondary"
               className="px-4 py-2 text-sm"
             >
@@ -604,7 +693,14 @@ const DormManagement = ({ currentUser, onDormUpdate }) => {
       ) : (
         <div className="flex items-center gap-2">
           <span className="text-text-secondary font-source-serif text-sm">
-            {currentUser?.dorm || 'No dorm selected'}
+            {currentUser?.dorm ? (
+              <>
+                {currentUser.dorm}
+                {currentUser.wing && ` - ${currentUser.wing}`}
+              </>
+            ) : (
+              'No dorm/wing selected'
+            )}
           </span>
         </div>
       )}
