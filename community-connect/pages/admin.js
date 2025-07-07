@@ -39,21 +39,36 @@ export default function AdminPage() {
 
   // Check if already authenticated on page load
   useEffect(() => {
+    console.log('🚀 Admin page loaded, checking authentication...');
+    
     const adminAuth = localStorage.getItem('adminAuth');
+    console.log('🔑 Admin auth from localStorage:', adminAuth);
+    
     if (adminAuth === 'true') {
-      // Potentially fetch admin user details here or set a generic admin object
-      // For ChatModal, currentUser needs an _id and isAdmin flag.
-      // Let's assume the admin's ID is stored or can be fetched upon login.
-      // For now, we'll set a placeholder and update it on successful login.
-      const storedAdminUser = JSON.parse(localStorage.getItem('adminUser'));
+      console.log('✅ Found admin auth in localStorage');
+      
+      const storedAdminUser = localStorage.getItem('adminUser');
+      console.log('👤 Stored admin user:', storedAdminUser);
+      
       if (storedAdminUser) {
-        setAdminUser(storedAdminUser);
+        try {
+          const parsedAdminUser = JSON.parse(storedAdminUser);
+          console.log('👤 Parsed admin user:', parsedAdminUser);
+          setAdminUser(parsedAdminUser);
+        } catch (e) {
+          console.error('❌ Failed to parse stored admin user:', e);
+          setAdminUser({ _id: 'admin_user_id_placeholder', name: 'Admin', isAdmin: true });
+        }
       } else {
-        // Fallback if not in localStorage, though ideally it should be set on login
+        console.log('⚠️ No stored admin user, using fallback');
         setAdminUser({ _id: 'admin_user_id_placeholder', name: 'Admin', isAdmin: true });
       }
+      
       setIsAuthenticated(true);
+      console.log('📊 Starting initial data fetch...');
       fetchData();
+    } else {
+      console.log('❌ No admin auth found, user needs to login');
     }
   }, []);
 
@@ -63,32 +78,58 @@ export default function AdminPage() {
     setError('');
 
     try {
+      console.log('🔐 Attempting admin login...');
+      console.log('📧 Username:', username);
+      
       const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important for cookies
         body: JSON.stringify({ username, password }),
       });
 
+      console.log('📊 Login response status:', response.status);
+      console.log('📊 Login response headers:', Object.fromEntries(response.headers.entries()));
+
       if (response.ok) {
-        const adminData = await response.json(); // Assuming login returns admin user data
+        const adminData = await response.json();
+        console.log('✅ Login successful, admin data:', adminData);
+        
         const adminUserDetails = {
-           _id: adminData.id || adminData._id || 'default_admin_id', // Use a proper ID from response
-           name: adminData.username || 'Admin',
+           _id: adminData.admin?.id || adminData.admin?._id || adminData.id || adminData._id || 'default_admin_id',
+           name: adminData.admin?.name || adminData.name || adminData.username || 'Admin',
+           email: adminData.admin?.email || adminData.email || username,
            isAdmin: true
         };
+        
+        console.log('👤 Setting admin user details:', adminUserDetails);
         setAdminUser(adminUserDetails);
         localStorage.setItem('adminUser', JSON.stringify(adminUserDetails));
         setIsAuthenticated(true);
         localStorage.setItem('adminAuth', 'true');
+        
+        console.log('🔄 Starting data fetch after login...');
         fetchData();
       } else {
-        const data = await response.json();
-        setError(data.error || 'Invalid credentials');
+        const errorText = await response.text();
+        console.error('❌ Login failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        
+        try {
+          const data = JSON.parse(errorText);
+          setError(data.error || 'Invalid credentials');
+        } catch {
+          setError(`Login failed: ${response.status} ${response.statusText}`);
+        }
       }
     } catch (error) {
-      setError('Login failed. Please try again.');
+      console.error('💥 Login error:', error);
+      setError('Network error during login. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -153,15 +194,30 @@ export default function AdminPage() {
 
   const fetchData = async () => {
     try {
+      console.log('🔍 Starting fetchData...');
+      
       // Fetch users
+      console.log('📡 Fetching users from /api/admin/users...');
       const usersResponse = await fetch('/api/admin/users', {
         credentials: 'include'
       });
+      
+      console.log('📊 Users response status:', usersResponse.status);
+      console.log('📊 Users response headers:', Object.fromEntries(usersResponse.headers.entries()));
+      
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
+        console.log('✅ Users data received:', usersData.length, 'users');
+        console.log('👥 Users data:', usersData);
         setUsers(usersData);
       } else {
-        console.error('Failed to fetch users:', usersResponse.status, usersResponse.statusText);
+        const errorText = await usersResponse.text();
+        console.error('❌ Failed to fetch users:', {
+          status: usersResponse.status,
+          statusText: usersResponse.statusText,
+          errorBody: errorText
+        });
+        setError(`Failed to fetch users: ${usersResponse.status} ${usersResponse.statusText}`);
       }
 
       // Fetch companies
@@ -209,7 +265,8 @@ export default function AdminPage() {
         setPendingCompanies(pendingCompaniesData);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('💥 Error in fetchData:', error);
+      setError(`Network error: ${error.message}`);
     }
   };
 
@@ -1335,6 +1392,31 @@ export default function AdminPage() {
               </button>
             </nav>
           </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+              <strong className="font-bold">Error: </strong>
+              <span className="block sm:inline">{error}</span>
+              <button
+                onClick={() => setError('')}
+                className="absolute top-0 bottom-0 right-0 px-4 py-3"
+              >
+                <span className="sr-only">Close</span>
+                ×
+              </button>
+            </div>
+          )}
+
+          {/* Debug Info - Remove in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-6 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
+              <p><strong>Debug Info:</strong></p>
+              <p>Users count: {users.length} | Companies: {companies.length} | Opportunities: {opportunities.length}</p>
+              <p>Auth: {isAuthenticated ? '✅' : '❌'} | Admin User: {adminUser ? '✅' : '❌'}</p>
+              <p>Active Tab: {activeTab}</p>
+            </div>
+          )}
 
           {/* Users Tab */}
           {activeTab === 'users' && (
