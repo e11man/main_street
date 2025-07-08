@@ -111,7 +111,6 @@ select:focus {
 }
 
 /* Custom headers pseudo-elements */
-.hero-title::after,
 .feed-title::after,
 .testimonials h2::after,
 .newsletter h2::after {
@@ -121,12 +120,6 @@ select:focus {
   left: 50%;
   transform: translateX(-50%);
   border-radius: 3px;
-}
-
-.hero-title::after {
-  width: 60px;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary), var(--accent1));
 }
 
 .feed-title::after,
