@@ -118,9 +118,10 @@ async function recordEmailNotificationSent(opportunityId, recipientEmail) {
  * Gets all participants for a specific chat opportunity
  * @param {string} opportunityId - The opportunity ID
  * @param {string} senderEmail - The sender's email (to exclude from notifications)
+ * @param {string} senderType - The type of the sender (e.g., 'user', 'organization')
  * @returns {Promise<Array>} - Array of participants with their email addresses
  */
-async function getChatParticipants(opportunityId, senderEmail) {
+async function getChatParticipants(opportunityId, senderEmail, senderType) {
   try {
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
@@ -140,7 +141,7 @@ async function getChatParticipants(opportunityId, senderEmail) {
     const companiesCollection = db.collection('companies');
     const company = await companiesCollection.findOne({ _id: new ObjectId(opportunity.companyId) });
     
-    if (company && company.email && company.email.toLowerCase().trim() !== senderEmail.toLowerCase().trim()) {
+    if (company && company.email && (company.email.toLowerCase().trim() !== senderEmail.toLowerCase().trim() || senderType === 'organization')) {
       participants.push({
         email: company.email,
         name: company.name,
@@ -180,59 +181,48 @@ async function getChatParticipants(opportunityId, senderEmail) {
  * @returns {Promise<boolean>} - True if email was sent successfully
  */
 async function sendChatNotificationEmail(participant, opportunity, senderName, messagePreview) {
+  const isCompanyRecipient = participant.type === 'company';
+
+  const plainBodyLines = [
+    `Hi ${participant.name},`,
+    '',
+    `You have a new message in the chat for "${opportunity.title}"${isCompanyRecipient ? '' : ` from ${senderName}`}.`,
+  ];
+
+  if (!isCompanyRecipient) {
+    plainBodyLines.push('', `Message: ${messagePreview}${messagePreview.length >= 100 ? '...' : ''}`);
+  }
+
+  plainBodyLines.push('', 'Login to Community Connect to view the full conversation and reply.', '', 'Best regards,', 'Community Connect Team');
+
+  const textBody = plainBodyLines.join('\n');
+
+  // HTML Version – mirrors the verification-code e-mail style
+  let htmlContent = `<div style="font-family: Arial, sans-serif; line-height: 1.6;">`;
+  htmlContent += `<h2 style=\"color: #333;\">New Chat Message</h2>`;
+  htmlContent += `<p>Hi ${participant.name},</p>`;
+  htmlContent += `<p>You have a new message in the chat for <strong>\"${opportunity.title}\"</strong>${isCompanyRecipient ? '' : ` from <strong>${senderName}</strong>`}.</p>`;
+
+  if (!isCompanyRecipient) {
+    htmlContent += `<p style=\"font-style: italic; color: #555;\">\"${messagePreview}${messagePreview.length >= 100 ? '...' : ''}\"</p>`;
+  }
+
+  htmlContent += `<p>Please log in to Community Connect to view and reply.</p>`;
+  htmlContent += `<hr style=\"border: none; border-top: 1px solid #eee;\" />`;
+  htmlContent += `<p style=\"font-size: 0.9em; color: #777;\">Community Connect<br />Connecting volunteers with opportunities.</p>`;
+
+  if (!isCompanyRecipient) {
+    htmlContent += `<p style=\"font-size: 0.8em; color: #999;\">Note: To prevent spam, you'll only receive one email notification every 30 minutes per chat.</p>`;
+  }
+
+  htmlContent += `</div>`;
+
   const mailOptions = {
     from: `"Community Connect" <${process.env.EMAIL_USER}>`,
     to: participant.email,
     subject: `New Message in ${opportunity.title} Chat`,
-    text: `Hi ${participant.name},\n\nYou have a new message in the chat for "${opportunity.title}" from ${senderName}.\n\nMessage: ${messagePreview}\n\nLogin to Community Connect to view the full conversation and reply.\n\nBest regards,\nCommunity Connect Team`,
-    html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-          <h1 style="margin: 0; font-size: 24px;">💬 New Chat Message</h1>
-          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Community Connect</p>
-        </div>
-        
-        <div style="background: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-          <h2 style="color: #333; margin-top: 0;">Hi ${participant.name}!</h2>
-          
-          <p style="color: #666; line-height: 1.6; font-size: 16px;">
-            You have a new message in the chat for <strong>"${opportunity.title}"</strong> from <strong>${senderName}</strong>.
-          </p>
-          
-          <div style="background: #f8f9fa; border-left: 4px solid #667eea; padding: 20px; margin: 25px 0; border-radius: 5px;">
-            <h3 style="color: #333; margin-top: 0; margin-bottom: 10px;">📝 Message Preview</h3>
-            <p style="color: #555; font-style: italic; margin: 0;">"${messagePreview}${messagePreview.length >= 100 ? '...' : ''}"</p>
-          </div>
-          
-          <div style="background: #e8f4f8; padding: 20px; border-radius: 8px; margin: 25px 0;">
-            <h3 style="color: #333; margin-top: 0; margin-bottom: 15px;">📅 Opportunity Details</h3>
-            <p style="margin: 5px 0; color: #555;"><strong>Event:</strong> ${opportunity.title}</p>
-            ${opportunity.date ? `<p style="margin: 5px 0; color: #555;"><strong>Date:</strong> ${new Date(opportunity.date).toLocaleDateString()}</p>` : ''}
-            ${opportunity.location ? `<p style="margin: 5px 0; color: #555;"><strong>Location:</strong> ${opportunity.location}</p>` : ''}
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <p style="color: #666; margin-bottom: 20px;">Login to Community Connect to view the full conversation and reply.</p>
-            <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}" 
-               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
-              View Chat 💬
-            </a>
-          </div>
-          
-          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-          
-          <p style="font-size: 0.9em; color: #777; text-align: center; margin: 0;">
-            <strong>Community Connect</strong><br />
-            Connecting volunteers with opportunities.<br />
-            <em>You're receiving this because you're participating in this opportunity's chat.</em>
-          </p>
-          
-          <p style="font-size: 0.8em; color: #999; text-align: center; margin: 15px 0 0 0;">
-            Note: To prevent spam, you'll only receive one email notification every 30 minutes per chat.
-          </p>
-        </div>
-      </div>
-    `
+    text: textBody,
+    html: htmlContent
   };
 
   try {
@@ -251,9 +241,10 @@ async function sendChatNotificationEmail(participant, opportunity, senderName, m
  * @param {string} senderEmail - The sender's email (to exclude from notifications)
  * @param {string} senderName - The sender's name
  * @param {string} message - The message content
+ * @param {string} senderType - The type of the sender (e.g., 'user', 'organization')
  * @returns {Promise<Object>} - Results of email sending
  */
-export async function sendChatNotifications(opportunityId, senderEmail, senderName, message) {
+export async function sendChatNotifications(opportunityId, senderEmail, senderName, message, senderType) {
   try {
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
@@ -268,7 +259,7 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
     }
 
     // Get all participants
-    const participants = await getChatParticipants(opportunityId, senderEmail);
+    const participants = await getChatParticipants(opportunityId, senderEmail, senderType);
     
     if (participants.length === 0) {
       console.log('No participants found for chat notifications');

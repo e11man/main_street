@@ -88,7 +88,8 @@ export default async function handler(req, res) {
             opportunityId, 
             senderEmail, 
             senderName, 
-            message
+            message,
+            senderType // pass senderType for participant logic
           );
           
           console.log('Chat email notifications result:', emailResults);

@@ -129,6 +129,7 @@ describe('Chat Email Notifications', () => {
     });
 
     it('should exclude sender from email notifications', async () => {
+      // UPDATED: company sender will now also receive email
       const mockOpportunity = {
         _id: new ObjectId(mockOpportunityId),
         title: 'Test Opportunity',
@@ -164,14 +165,16 @@ describe('Chat Email Notifications', () => {
         mockOpportunityId,
         mockSenderEmail,
         mockSenderName,
-        mockMessage
+        mockMessage,
+        'organization'
       );
 
-      // Should only send to the user, not the company (sender)
+      // Should now send to both the company (sender) and the user
       expect(result.success).toBe(true);
-      expect(result.emailsSent).toBe(1);
-      expect(result.participants).toHaveLength(1);
-      expect(result.participants[0].email).toBe('user1@example.com');
+      expect(result.emailsSent).toBe(2);
+      expect(result.participants).toHaveLength(2);
+      const companyParticipant = result.participants.find(p => p.email === mockSenderEmail);
+      expect(companyParticipant).toBeDefined();
     });
 
     it('should respect rate limiting (30 minutes)', async () => {
