@@ -1550,68 +1550,69 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <ul className="divide-y divide-gray-200">
-                  {filteredOpportunities.map((opportunity) => (
-                    <li key={opportunity.id} className="px-6 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{opportunity.title}</p>
-                              <p className="text-sm text-gray-500">{opportunity.category}</p>
-                              <p className="text-xs text-gray-400">
-                                {opportunity.spotsFilled || 0}/{opportunity.totalSpots} spots filled
-                              </p>
-                              <p className="text-xs text-blue-600 font-medium">
-                                💬 Chat Participants: {opportunity.chatParticipants || 0} | Messages: {opportunity.messageCount || 0}
-                              </p>
-                              {opportunity.location && (
-                                <p className="text-xs text-gray-400">
-                                  📍 {opportunity.location}
-                                </p>
-                              )}
-                              {opportunity.priority && (
-                                <p className="text-xs text-gray-400">
-                                  Priority: {opportunity.priority}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => setEditingOpportunity(opportunity)}
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => deleteOpportunity(opportunity.id)}
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Delete
-                          </button>
-                          <button
-                            onClick={() => openChatModalForAdmin(opportunity)}
-                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Chat
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                  {filteredOpportunities.length === 0 && opportunities.length > 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No opportunities found matching your search
-                    </li>
-                  )}
-                  {opportunities.length === 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No opportunities found
-                    </li>
-                  )}
-                </ul>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spots</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chat</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredOpportunities.map(opportunity => (
+                        <tr key={opportunity.id} className="hover:bg-gray-50">
+                          {/* Title & description tooltip */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 max-w-xs truncate" title={opportunity.description}>
+                            {opportunity.title}
+                            {opportunity.priority && <span className="ml-1 text-xs text-gray-400">({opportunity.priority})</span>}
+                          </td>
+                          {/* Company */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{opportunity.companyName || '—'}</td>
+                          {/* Date */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{opportunity.date}</td>
+                          {/* Spots */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{(opportunity.spotsFilled || 0)} / {opportunity.totalSpots}</td>
+                          {/* Chat stats */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            👥 {opportunity.chatParticipants || 0} / 💬 {opportunity.messageCount || 0}
+                          </td>
+                          {/* Actions */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2 min-w-[140px]">
+                            <button
+                              onClick={() => setEditingOpportunity(opportunity)}
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deleteOpportunity(opportunity.id)}
+                              className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Delete
+                            </button>
+                            <button
+                              onClick={() => openChatModalForAdmin(opportunity)}
+                              className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Chat
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredOpportunities.length === 0 && (
+                        <tr>
+                          <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                            {opportunities.length ? 'No opportunities found matching your search' : 'No opportunities found'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
