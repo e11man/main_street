@@ -1639,49 +1639,48 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <ul className="divide-y divide-gray-200">
-                  {filteredPendingUsers.map((user) => (
-                    <li key={user._id} className="px-6 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                              <p className="text-sm text-gray-500">{user.email}</p>
-                              <p className="text-xs text-gray-400">
-                                Requested on: {new Date(user.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => approveUser(user._id)}
-                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => rejectUser(user._id)}
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                  {filteredPendingUsers.length === 0 && pendingUsers.length > 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No pending users found matching your search
-                    </li>
-                  )}
-                  {pendingUsers.length === 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No pending users found
-                    </li>
-                  )}
-                </ul>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested</th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredPendingUsers.map(user => (
+                        <tr key={user._id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(user.createdAt).toLocaleDateString()}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2 min-w-[120px]">
+                            <button
+                              onClick={() => approveUser(user._id)}
+                              className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => rejectUser(user._id)}
+                              className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Reject
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredPendingUsers.length === 0 && (
+                        <tr>
+                          <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                            {pendingUsers.length ? 'No pending users found matching your search' : 'No pending users found'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
