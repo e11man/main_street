@@ -28,7 +28,7 @@ const Header = ({ openModal }) => {
 
   return (
     <header
-      className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 font-montserrat"
+      className="sticky top-0 z-50 w-full bg-background border-b border-border font-montserrat"
       style={{ fontFamily: "'Montserrat', sans-serif" }}
     >
       <div className="max-w-screen-xl mx-auto flex items-center justify-between h-16 px-4 md:px-8">
@@ -45,7 +45,7 @@ const Header = ({ openModal }) => {
               <li key={link.name}>
                 <Link
                   href={link.href}
-                  className="relative px-2 py-1 text-secondary hover:text-accent1 font-medium transition-colors duration-200 after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:bg-accent1 after:transition-all after:duration-300 hover:after:w-full"
+                  className="relative px-2 py-1 text-text-secondary hover:text-accent1 font-medium transition-colors duration-200 after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:bg-accent1 after:transition-all after:duration-300 hover:after:w-full"
                   style={{ fontFamily: "'Montserrat', sans-serif" }}
                 >
                   {link.name}

@@ -418,23 +418,23 @@ export default function Home() {
       <Modal isOpen={isCompanyInfoModalOpen} onClose={closeCompanyInfoModal}>
         {selectedCompanyInfo && (
           <div className="p-6 max-w-md mx-auto">
-            <h2 className="text-2xl font-bold mb-4 text-primary">{selectedCompanyInfo.name}</h2>
+            <h2 className="text-2xl font-bold mb-4 text-primary font-montserrat">{selectedCompanyInfo.name}</h2>
             
             {selectedCompanyInfo.description && (
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2 text-gray-700">About</h3>
-                <p className="text-gray-600 leading-relaxed">{selectedCompanyInfo.description}</p>
+                <h3 className="text-lg font-semibold mb-2 text-text-secondary font-montserrat">About</h3>
+                <p className="text-text-primary leading-relaxed font-source-serif">{selectedCompanyInfo.description}</p>
               </div>
             )}
             
             {selectedCompanyInfo.website && (
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2 text-gray-700">Website</h3>
+                <h3 className="text-lg font-semibold mb-2 text-text-secondary font-montserrat">Website</h3>
                 <a 
                   href={selectedCompanyInfo.website.startsWith('http') ? selectedCompanyInfo.website : `https://${selectedCompanyInfo.website}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-accent1 hover:text-accent1/80 transition-colors duration-200"
+                  className="text-accent1 hover:text-accent1-dark transition-colors duration-200 font-source-serif"
                 >
                   {selectedCompanyInfo.website}
                 </a>
@@ -443,17 +443,17 @@ export default function Home() {
             
             {selectedCompanyInfo.phone && (
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2 text-gray-700">Phone</h3>
-                <p className="text-gray-600">{selectedCompanyInfo.phone}</p>
+                <h3 className="text-lg font-semibold mb-2 text-text-secondary font-montserrat">Phone</h3>
+                <p className="text-text-primary font-source-serif">{selectedCompanyInfo.phone}</p>
               </div>
             )}
             
             {selectedCompanyInfo.email && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2 text-gray-700">Contact</h3>
+                <h3 className="text-lg font-semibold mb-2 text-text-secondary font-montserrat">Contact</h3>
                 <a 
                   href={`mailto:${selectedCompanyInfo.email}`}
-                  className="text-accent1 hover:text-accent1/80 transition-colors duration-200"
+                  className="text-accent1 hover:text-accent1-dark transition-colors duration-200 font-source-serif"
                 >
                   {selectedCompanyInfo.email}
                 </a>
@@ -462,7 +462,7 @@ export default function Home() {
             
             <button
               onClick={closeCompanyInfoModal}
-              className="w-full bg-accent1 hover:bg-accent1/90 text-white font-bold py-2 px-4 rounded transition-colors duration-200"
+              className="w-full bg-accent1 hover:bg-accent1-light text-white font-bold py-2 px-4 rounded transition-colors duration-200 font-montserrat"
             >
               Close
             </button>

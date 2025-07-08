@@ -121,23 +121,23 @@ const CompanyLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-grow flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
+      <main className="flex-grow flex items-center justify-center bg-surface py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 bg-background p-8 rounded-lg shadow-md border border-border">
           <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-primary font-montserrat">
               {isLogin ? 'Company Login' : 'Company Registration'}
             </h2>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             {!isLogin && (
               <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+                <label className="block text-text-primary text-sm font-bold mb-2 font-montserrat" htmlFor="name">
                   Company Name
                 </label>
                 <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="shadow appearance-none border border-border rounded w-full py-2 px-3 text-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-accent1 bg-background font-source-serif"
                   id="name"
                   type="text"
                   name="name"
@@ -149,11 +149,11 @@ const CompanyLogin = () => {
             )}
 
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+              <label className="block text-text-primary text-sm font-bold mb-2 font-montserrat" htmlFor="email">
                 Email
               </label>
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="shadow appearance-none border border-border rounded w-full py-2 px-3 text-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-accent1 bg-background font-source-serif"
                 id="email"
                 type="email"
                 name="email"
@@ -164,11 +164,11 @@ const CompanyLogin = () => {
             </div>
 
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+              <label className="block text-text-primary text-sm font-bold mb-2 font-montserrat" htmlFor="password">
                 Password
               </label>
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="shadow appearance-none border border-border rounded w-full py-2 px-3 text-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-accent1 bg-background font-source-serif"
                 id="password"
                 type="password"
                 name="password"
@@ -250,14 +250,14 @@ const CompanyLogin = () => {
 
             <div className="flex items-center justify-between">
               <button
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                className="bg-accent1 hover:bg-accent1-dark text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-accent1-light font-montserrat"
                 type="submit"
                 disabled={loading}
               >
                 {loading ? 'Processing...' : isLogin ? 'Login' : 'Register'}
               </button>
               <button
-                className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+                className="inline-block align-baseline font-bold text-sm text-accent1 hover:text-accent1-dark font-montserrat"
                 type="button"
                 onClick={toggleAuthMode}
               >

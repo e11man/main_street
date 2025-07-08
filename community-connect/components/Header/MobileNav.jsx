@@ -64,13 +64,13 @@ const MobileNav = ({ isOpen, navLinks, closeMenu, openModal }) => {
       />
       {/* Drawer */}
       <nav
-        className={`absolute top-0 right-0 h-full w-4/5 max-w-xs shadow-2xl flex flex-col pt-8 pb-10 px-7 transition-transform duration-300 rounded-l-2xl bg-white ${
+        className={`absolute top-0 right-0 h-full w-4/5 max-w-xs shadow-2xl flex flex-col pt-8 pb-10 px-7 transition-transform duration-300 rounded-l-2xl bg-background border-l border-border ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Close button */}
         <button
-          className="self-end mb-6 p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition shadow"
+          className="self-end mb-6 p-3 rounded-full bg-surface hover:bg-surface-hover transition shadow"
           aria-label="Close menu"
           onClick={closeMenu}
           tabIndex={isOpen ? 0 : -1}
@@ -95,7 +95,7 @@ const MobileNav = ({ isOpen, navLinks, closeMenu, openModal }) => {
             <li key={link.name}>
               <Link
                 href={link.href}
-                className="block px-4 py-3 rounded-xl font-medium text-base transition-colors duration-200 text-secondary hover:bg-gray-100 focus:bg-gray-200 focus:outline-none"
+                className="block px-4 py-3 rounded-xl font-medium text-base transition-colors duration-200 text-text-secondary hover:bg-surface focus:bg-surface-hover focus:outline-none"
                 onClick={closeMenu}
                 tabIndex={isOpen ? 0 : -1}
               >
@@ -118,7 +118,7 @@ const MobileNav = ({ isOpen, navLinks, closeMenu, openModal }) => {
         </Button>
         <div className="flex-1" />
         {/* Footer */}
-        <div className="mt-10 text-xs text-gray-400 text-center">
+        <div className="mt-10 text-xs text-text-tertiary text-center">
           &copy; {new Date().getFullYear()} Community Connect
         </div>
       </nav>
