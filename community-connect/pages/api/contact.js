@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { asyncHandler, AppError, ErrorTypes } from '../../lib/errorHandler';
+import clientPromise from '../../lib/mongodb';
 
 export default asyncHandler(async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -22,6 +23,18 @@ export default asyncHandler(async function handler(req, res) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     throw new AppError('Email service not configured', ErrorTypes.INTERNAL, 500);
   }
+
+  // Get contact settings to determine recipient
+  const client = await clientPromise;
+  const db = client.db('mainStreetOpportunities');
+  const contactSettingsCollection = db.collection('contactSettings');
+  
+  const contactSettings = await contactSettingsCollection.findOne({ isActive: true });
+  const recipientEmail = contactSettings?.recipientEmail || 'joshuae0316@icloud.com'; // Fallback to original
+  const recipientName = contactSettings?.recipientName || 'Contact Form Recipient';
+
+  console.log(`📧 Sending contact form email to: ${recipientEmail} (${recipientName})`);
+
     // Create transporter using Gmail SMTP
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -34,7 +47,7 @@ export default asyncHandler(async function handler(req, res) {
     // Email content
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: 'joshuae0316@icloud.com',
+      to: recipientEmail,
       subject: `New Contact Form Submission from ${name}`,
       html: `
         <h2>New Contact Form Submission</h2>
@@ -44,6 +57,7 @@ export default asyncHandler(async function handler(req, res) {
         <p>${message.replace(/\n/g, '<br>')}</p>
         <hr>
         <p><em>This message was sent from the Community Connect contact form.</em></p>
+        <p><em>Delivered to: ${recipientName} (${recipientEmail})</em></p>
       `
     };
 

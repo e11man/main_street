@@ -85,6 +85,12 @@ export default function AdminPage() {
   const [showAddTheme, setShowAddTheme] = useState(false);
   const [editingTheme, setEditingTheme] = useState(null);
   
+  // Contact settings management states
+  const [contactSettings, setContactSettings] = useState([]);
+  const [activeContactSettings, setActiveContactSettings] = useState(null);
+  const [showAddContactSettings, setShowAddContactSettings] = useState(false);
+  const [editingContactSettings, setEditingContactSettings] = useState(null);
+  
   // Search states
   const [searchTerms, setSearchTerms] = useState({
     users: '',
@@ -93,7 +99,8 @@ export default function AdminPage() {
     pendingCompanies: '',
     opportunities: '',
     blockedEmails: '',
-    themes: ''
+    themes: '',
+    contactSettings: ''
   });
   const router = useRouter();
 
@@ -583,6 +590,20 @@ export default function AdminPage() {
         return;
       }
 
+      // Fetch contact settings
+      const contactSettingsResponse = await fetch('/api/admin/contact-settings', {
+        credentials: 'include'
+      });
+      if (contactSettingsResponse.ok) {
+        const contactSettingsData = await contactSettingsResponse.json();
+        setActiveContactSettings(contactSettingsData);
+        setContactSettings([contactSettingsData]); // For now, we only have one active setting
+      } else if (contactSettingsResponse.status === 401) {
+        console.log('❌ 401 error fetching contact settings - token expired');
+        handleTokenExpiration();
+        return;
+      }
+
       console.log('✅ All data fetched successfully');
     } catch (error) {
       console.error('💥 Error in fetchData:', error);
@@ -997,6 +1018,75 @@ export default function AdminPage() {
     }
   };
 
+  // Contact settings management functions
+  const createContactSettings = async (settingsData) => {
+    try {
+      console.log('📧 Admin: Creating contact settings...', settingsData);
+      setLoading(true);
+      const response = await makeAuthenticatedRequest('/api/admin/contact-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settingsData)
+      });
+
+      if (response.ok) {
+        const newSettings = await response.json();
+        console.log('✅ Admin: Contact settings created successfully', newSettings);
+        
+        setActiveContactSettings(newSettings);
+        setContactSettings([newSettings]);
+        setShowAddContactSettings(false);
+        
+        alert('Contact settings created and activated successfully!');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Admin: Failed to create contact settings:', errorData);
+        alert(errorData.error || 'Failed to create contact settings');
+      }
+    } catch (error) {
+      console.error('❌ Admin: Error creating contact settings:', error);
+      if (error.message !== 'Session expired') {
+        alert('Error creating contact settings');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateContactSettings = async (settingsData) => {
+    try {
+      console.log('📧 Admin: Updating contact settings...', settingsData);
+      setLoading(true);
+      const response = await makeAuthenticatedRequest('/api/admin/contact-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settingsData)
+      });
+
+      if (response.ok) {
+        const updatedSettings = await response.json();
+        console.log('✅ Admin: Contact settings updated successfully', updatedSettings);
+        
+        setActiveContactSettings(updatedSettings);
+        setContactSettings([updatedSettings]);
+        setEditingContactSettings(null);
+        
+        alert('Contact settings updated successfully!');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Admin: Failed to update contact settings:', errorData);
+        alert(errorData.error || 'Failed to update contact settings');
+      }
+    } catch (error) {
+      console.error('❌ Admin: Error updating contact settings:', error);
+      if (error.message !== 'Session expired') {
+        alert('Error updating contact settings');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Search filtering functions
   const handleSearchChange = (tab, value) => {
     setSearchTerms(prev => ({
@@ -1056,6 +1146,16 @@ export default function AdminPage() {
     );
   };
 
+  const filterContactSettings = (settingsList, searchTerm) => {
+    if (!searchTerm.trim()) return settingsList;
+    const term = searchTerm.toLowerCase();
+    return settingsList.filter(settings => 
+      settings.recipientEmail?.toLowerCase().includes(term) ||
+      settings.recipientName?.toLowerCase().includes(term) ||
+      settings.description?.toLowerCase().includes(term)
+    );
+  };
+
   // Get filtered data
   const filteredUsers = filterUsers(users, searchTerms.users);
   const filteredPendingUsers = filterUsers(pendingUsers, searchTerms.pendingUsers);
@@ -1064,6 +1164,7 @@ export default function AdminPage() {
   const filteredOpportunities = filterOpportunities(opportunities, searchTerms.opportunities);
   const filteredBlockedEmails = filterBlockedEmails(blockedEmails, searchTerms.blockedEmails);
   const filteredThemes = filterThemes(themes, searchTerms.themes);
+  const filteredContactSettings = filterContactSettings(contactSettings, searchTerms.contactSettings);
 
   if (!isAuthenticated) {
     return (
@@ -2346,6 +2447,157 @@ export default function AdminPage() {
     );
   };
 
+  // Add Contact Settings Modal
+  const AddContactSettingsModal = () => {
+    const [formData, setFormData] = useState({
+      recipientEmail: '',
+      recipientName: '',
+      description: ''
+    });
+    const [modalLoading, setModalLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setModalLoading(true);
+      await createContactSettings(formData);
+      setModalLoading(false);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg w-96">
+          <h3 className="text-lg font-semibold mb-4">Add Contact Settings</h3>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Recipient Email *</label>
+              <input
+                type="email"
+                value={formData.recipientEmail}
+                onChange={(e) => setFormData({...formData, recipientEmail: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+                placeholder="contact@example.com"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Recipient Name *</label>
+              <input
+                type="text"
+                value={formData.recipientName}
+                onChange={(e) => setFormData({...formData, recipientName: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+                placeholder="Contact Form Manager"
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                rows="3"
+                placeholder="Optional description for this contact recipient"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={() => setShowAddContactSettings(false)}
+                className="px-4 py-2 text-gray-600 border rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={modalLoading}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50"
+              >
+                {modalLoading ? 'Creating...' : 'Create & Activate'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // Edit Contact Settings Modal
+  const EditContactSettingsModal = () => {
+    const [formData, setFormData] = useState({
+      _id: editingContactSettings?._id || '',
+      recipientEmail: editingContactSettings?.recipientEmail || '',
+      recipientName: editingContactSettings?.recipientName || '',
+      description: editingContactSettings?.description || ''
+    });
+    const [modalLoading, setModalLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setModalLoading(true);
+      await updateContactSettings(formData);
+      setModalLoading(false);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg w-96">
+          <h3 className="text-lg font-semibold mb-4">Edit Contact Settings</h3>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Recipient Email *</label>
+              <input
+                type="email"
+                value={formData.recipientEmail}
+                onChange={(e) => setFormData({...formData, recipientEmail: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+                placeholder="contact@example.com"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Recipient Name *</label>
+              <input
+                type="text"
+                value={formData.recipientName}
+                onChange={(e) => setFormData({...formData, recipientName: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+                placeholder="Contact Form Manager"
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+                rows="3"
+                placeholder="Optional description for this contact recipient"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={() => setEditingContactSettings(null)}
+                className="px-4 py-2 text-gray-600 border rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={modalLoading}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50"
+              >
+                {modalLoading ? 'Updating...' : 'Update Settings'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <Head>
@@ -2439,6 +2691,16 @@ export default function AdminPage() {
                 }`}
               >
                 Themes
+              </button>
+              <button
+                onClick={() => setActiveTab('contactSettings')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'contactSettings'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Contact Settings
               </button>
             </nav>
           </div>
@@ -3132,6 +3394,139 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* Contact Settings Tab */}
+          {activeTab === 'contactSettings' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold">Contact Form Settings</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    📧 Configure who receives contact form submissions from the website
+                    {activeContactSettings && <span className="ml-2 text-green-600">• Current: {activeContactSettings.recipientEmail}</span>}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAddContactSettings(true)}
+                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  Update Recipient
+                </button>
+              </div>
+              
+              {/* Current Settings Display */}
+              {activeContactSettings && (
+                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="text-lg font-medium text-blue-900 mb-2">Current Contact Form Settings</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-blue-700">Recipient Email:</label>
+                      <p className="text-blue-900 font-mono">{activeContactSettings.recipientEmail}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-blue-700">Recipient Name:</label>
+                      <p className="text-blue-900">{activeContactSettings.recipientName}</p>
+                    </div>
+                    {activeContactSettings.description && (
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-blue-700">Description:</label>
+                        <p className="text-blue-900">{activeContactSettings.description}</p>
+                      </div>
+                    )}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-blue-700">Last Updated:</label>
+                      <p className="text-blue-900">{new Date(activeContactSettings.updatedAt).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <button
+                      onClick={() => setEditingContactSettings(activeContactSettings)}
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                      Edit Current Settings
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Instructions */}
+              <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-yellow-900 mb-2">📋 How Contact Form Email Routing Works</h3>
+                <ul className="list-disc list-inside text-yellow-800 space-y-1">
+                  <li>All contact form submissions from the website are automatically sent to the configured recipient email</li>
+                  <li>Only one recipient can be active at a time</li>
+                  <li>Changes take effect immediately for new contact form submissions</li>
+                  <li>The system will fallback to 'joshuae0316@icloud.com' if no settings are configured</li>
+                  <li>Email validation ensures only valid email addresses can be configured</li>
+                </ul>
+              </div>
+
+              {/* Settings Table */}
+              <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900">Contact Settings History</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient Email</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {contactSettings.map((settings, index) => (
+                        <tr key={settings._id || index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {settings.isActive ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                ● Active
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                ○ Inactive
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {settings.recipientEmail}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {settings.recipientName}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                            {settings.description || '—'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(settings.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2 min-w-[120px]">
+                            <button
+                              onClick={() => setEditingContactSettings(settings)}
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Edit
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {contactSettings.length === 0 && (
+                        <tr>
+                          <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                            No contact settings found - click "Update Recipient" to configure
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Modals */}
@@ -3143,6 +3538,8 @@ export default function AdminPage() {
         {showAddBlockedEmail && <AddBlockedEmailModal />}
         {showAddTheme && <AddThemeModal />}
         {editingTheme && <EditThemeModal />}
+        {showAddContactSettings && <AddContactSettingsModal />}
+        {editingContactSettings && <EditContactSettingsModal />}
 
         {/* Chat Modal for Admin */}
         {selectedOpportunityForChat && adminUser && (
