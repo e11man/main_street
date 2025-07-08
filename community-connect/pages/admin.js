@@ -1708,67 +1708,66 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <ul className="divide-y divide-gray-200">
-                  {filteredCompanies.map((company) => (
-                    <li key={company._id} className="px-6 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{company.name}</p>
-                              <p className="text-sm text-gray-500">{company.email}</p>
-                              <p className="text-xs text-gray-400">
-                                Registered on: {new Date(company.createdAt).toLocaleDateString()}
-                              </p>
-                              {company.website && (
-                                <p className="text-xs text-gray-400">
-                                  Website: {company.website}
-                                </p>
-                              )}
-                              {company.phone && (
-                                <p className="text-xs text-gray-400">
-                                  Phone: {company.phone}
-                                </p>
-                              )}
-                              {company.description && (
-                                <p className="text-xs text-gray-400 mt-1">
-                                  Description: {company.description}
-                                </p>
-                              )}
-                              <p className="text-xs text-gray-400">
-                                Opportunities: {company.opportunities ? company.opportunities.length : 0}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => setEditingCompany(company)}
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => deleteCompany(company._id)}
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                  {filteredCompanies.length === 0 && companies.length > 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No companies found matching your search
-                    </li>
-                  )}
-                  {companies.length === 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No companies found
-                    </li>
-                  )}
-                </ul>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Website</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredCompanies.map(company => (
+                        <tr key={company._id} className="hover:bg-gray-50">
+                          {/* Name */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {company.name}
+                            <div className="text-xs text-gray-400">Registered: {new Date(company.createdAt).toLocaleDateString()}</div>
+                          </td>
+                          {/* Description */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate">
+                            {company.description || '—'}
+                          </td>
+                          {/* Website */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 underline">
+                            {company.website ? (
+                              <a href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer">
+                                {company.website}
+                              </a>
+                            ) : '—'}
+                          </td>
+                          {/* Phone */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{company.phone || '—'}</td>
+                          {/* Actions */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2 min-w-[120px]">
+                            <button
+                              onClick={() => setEditingCompany(company)}
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deleteCompany(company._id)}
+                              className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredCompanies.length === 0 && (
+                        <tr>
+                          <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                            {companies.length ? 'No companies found matching your search' : 'No companies found'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
