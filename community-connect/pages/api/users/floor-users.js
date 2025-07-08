@@ -29,7 +29,10 @@ export default async function handler(req, res) {
     }
 
     // Build query for users
-    let query = { _id: { $ne: new ObjectId(userId) } }; // Always exclude the requesting user
+    let query = { 
+      _id: { $ne: new ObjectId(userId) }, // Always exclude the requesting user
+      isOriginalAdmin: { $ne: true } // Exclude the original admin from group signup
+    };
     
     // Add search functionality if provided
     if (search && search.trim()) {
