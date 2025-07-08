@@ -110,23 +110,4 @@ select:focus {
   }
 }
 
-/* Custom headers pseudo-elements */
-.feed-title::after,
-.testimonials h2::after,
-.newsletter h2::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-radius: 3px;
-}
-
-.feed-title::after,
-.testimonials h2::after,
-.newsletter h2::after {
-  width: 40px;
-  height: 3px;
-  background: linear-gradient(90deg, var(--taylor-purple), var(--legacy-gold));
-}
-
+  

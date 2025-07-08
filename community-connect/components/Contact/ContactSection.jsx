@@ -56,8 +56,9 @@ const ContactSection = () => {
   return (
     <section className="bg-white text-text-primary py-16 md:py-20 text-center">
       <div className="max-w-xl mx-auto px-6 md:px-8">
-        <h2 className="contact h2 font-montserrat text-3xl md:text-4xl font-bold mb-4 text-primary">
+        <h2 className="contact h2 font-montserrat text-3xl md:text-4xl font-bold mb-4 text-primary relative inline-block">
           Get In Touch
+          <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
         </h2>
         <p className="font-source-serif text-base text-text-secondary mb-8">
           Have questions or want to learn more about our volunteer opportunities? Send us a message and we&apos;ll get back to you soon.
