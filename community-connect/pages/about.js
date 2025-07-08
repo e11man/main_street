@@ -116,7 +116,7 @@ export default function About() {
             }`}>
               <h1 className="hero-title relative font-montserrat text-clamp-36-64 font-extrabold mb-8 md:mb-10 tracking-[-0.025em] text-white leading-tight inline-block">
                 Make the Connection
-                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-accent1 to-accent2 rounded-full"></span>
+                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h1>
               
               <p className="font-source-serif text-clamp-18-24 font-normal text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -154,8 +154,9 @@ export default function About() {
             <div className={`text-center transition-all duration-1000 ease-out transform ${
               isVisible.mission ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
-              <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary">
+              <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary relative inline-block">
                 Our Mission
+                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
               <p className="font-source-serif text-lg text-text-secondary max-w-4xl mx-auto leading-relaxed">
                 Community Connect is dedicated to fostering meaningful relationships between passionate volunteers and impactful opportunities. We believe that when individuals come together with shared purpose, they can create transformative change that extends far beyond individual efforts. Our platform serves as a bridge, connecting hearts and hands to build stronger, more resilient upland through collective action.
@@ -173,8 +174,9 @@ export default function About() {
             <div className={`text-center mb-16 transition-all duration-1000 ease-out transform ${
               isVisible.impact ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
-              <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary">
+              <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary relative inline-block">
                 Our Impact
+                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
             </div>
             
@@ -412,8 +414,9 @@ export default function About() {
             <div className={`text-center transition-all duration-1000 ease-out transform ${
               isVisible.contact ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
-              <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary">
+              <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary relative inline-block">
                 Get In Touch
+                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
               <p className="font-source-serif text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed mb-8">
                 Have questions or want to learn more about how you can get involved? We&apos;d love to hear from you and help you find the perfect opportunity to make a difference.
