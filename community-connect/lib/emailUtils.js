@@ -118,9 +118,10 @@ async function recordEmailNotificationSent(opportunityId, recipientEmail) {
  * Gets all participants for a specific chat opportunity
  * @param {string} opportunityId - The opportunity ID
  * @param {string} senderEmail - The sender's email (to exclude from notifications)
+ * @param {string} senderType - The type of the sender (e.g., 'user', 'organization')
  * @returns {Promise<Array>} - Array of participants with their email addresses
  */
-async function getChatParticipants(opportunityId, senderEmail) {
+async function getChatParticipants(opportunityId, senderEmail, senderType) {
   try {
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
@@ -140,7 +141,7 @@ async function getChatParticipants(opportunityId, senderEmail) {
     const companiesCollection = db.collection('companies');
     const company = await companiesCollection.findOne({ _id: new ObjectId(opportunity.companyId) });
     
-    if (company && company.email && company.email.toLowerCase().trim() !== senderEmail.toLowerCase().trim()) {
+    if (company && company.email && (company.email.toLowerCase().trim() !== senderEmail.toLowerCase().trim() || senderType === 'organization')) {
       participants.push({
         email: company.email,
         name: company.name,
@@ -240,9 +241,10 @@ async function sendChatNotificationEmail(participant, opportunity, senderName, m
  * @param {string} senderEmail - The sender's email (to exclude from notifications)
  * @param {string} senderName - The sender's name
  * @param {string} message - The message content
+ * @param {string} senderType - The type of the sender (e.g., 'user', 'organization')
  * @returns {Promise<Object>} - Results of email sending
  */
-export async function sendChatNotifications(opportunityId, senderEmail, senderName, message) {
+export async function sendChatNotifications(opportunityId, senderEmail, senderName, message, senderType) {
   try {
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
@@ -257,7 +259,7 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
     }
 
     // Get all participants
-    const participants = await getChatParticipants(opportunityId, senderEmail);
+    const participants = await getChatParticipants(opportunityId, senderEmail, senderType);
     
     if (participants.length === 0) {
       console.log('No participants found for chat notifications');
