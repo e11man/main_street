@@ -97,8 +97,8 @@ export default function About() {
             backgroundBlendMode: 'overlay'
           }}
         >
-          {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-primary/70 z-0"></div>
+          {/* Blue overlay for better text readability */}
+          <div className="absolute inset-0 bg-blue-900/50 z-0"></div>
           
           {/* Background pattern */}
           <div className="absolute inset-0 z-10 opacity-10">

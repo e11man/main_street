@@ -17,8 +17,9 @@ const FloatingCardSection = () => {
             className="w-full h-full object-cover transition-transform duration-700 ease-in-out
                        group-hover:scale-[1.05]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-primary/[0.9] via-primary/[0.5] to-primary/[0.2] flex items-end p-6 md:p-10 transition-all duration-400 ease-in-out
-                          group-hover:bg-gradient-to-t group-hover:from-primary/[0.95] group-hover:via-primary/[0.6] group-hover:to-primary/[0.3]">
+          {/* Blue overlay for better text readability */}
+          <div className="absolute inset-0 bg-blue-900/50 flex items-end p-6 md:p-10 transition-all duration-400 ease-in-out
+                          group-hover:bg-blue-900/60">
             <div className="translate-y-2 opacity-90 transition-all duration-400 ease-in-out
                             group-hover:translate-y-0 group-hover:opacity-100 w-full">
               <h3 className="text-2xl md:text-3xl font-bold mb-2 text-white font-montserrat
