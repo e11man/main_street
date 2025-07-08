@@ -191,29 +191,15 @@ async function sendChatNotificationEmail(participant, opportunity, senderName, m
     subject: `New Message in ${opportunity.title} Chat`,
     text: isCompanyRecipient ? baseText : `Hi ${participant.name},\n\nYou have a new message in the chat for "${opportunity.title}" from ${senderName}.\n\nMessage: ${messagePreview}\n\nLogin to Community Connect to view the full conversation and reply.\n\nBest regards,\nCommunity Connect Team`,
     html: isCompanyRecipient ? `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-          <h1 style="margin: 0; font-size: 24px;">💬 New Chat Message</h1>
-          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Community Connect</p>
-        </div>
-        <div style="background: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-          <h2 style="color: #333; margin-top: 0;">Hi ${participant.name}!</h2>
-          <p style="color: #666; line-height: 1.6; font-size: 16px;">
-            You have a new message in the chat for <strong>"${opportunity.title}"</strong>.
-          </p>
-          <div style="text-align: center; margin: 30px 0;">
-            <p style="color: #666; margin-bottom: 20px;">Login to Community Connect to view the conversation.</p>
-            <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}" 
-               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
-              View Chat 💬
-            </a>
-          </div>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-          <p style="font-size: 0.9em; color: #777; text-align: center; margin: 0;">
-            <strong>Community Connect</strong><br />
-            Connecting volunteers with opportunities.
-          </p>
-        </div>
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h2 style="color: #333;">New Chat Notification</h2>
+        <p>You have a new message in the chat for "${opportunity.title}".</p>
+        <p>Please log in to Community Connect to view and reply.</p>
+        <hr style="border: none; border-top: 1px solid #eee;" />
+        <p style="font-size: 0.9em; color: #777;">
+          Community Connect<br />
+          Connecting volunteers with opportunities.
+        </p>
       </div>
     ` : `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto;">
