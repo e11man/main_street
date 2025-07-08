@@ -30,9 +30,21 @@ async function promoteUserHandler(req, res) {
     const db = client.db('mainStreetOpportunities');
     const usersCollection = db.collection('users');
 
-    // Check if user exists
-    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
-    if (!user) {
+    // Check the target user to apply protections
+    const targetUser = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    
+    // Prevent modification of the original admin by other admins
+    if (targetUser?.isOriginalAdmin && req.user?.email !== 'admin@admin.com') {
+      return res.status(403).json({ error: 'Only the original admin can modify their own account' });
+    }
+
+    // Prevent demoting the original admin
+    if (targetUser?.isOriginalAdmin && role !== 'admin') {
+      return res.status(403).json({ error: 'The original admin cannot be demoted from admin role' });
+    }
+
+    // Check if user exists (already fetched as targetUser above)
+    if (!targetUser) {
       return res.status(404).json({ error: 'User not found' });
     }
 
