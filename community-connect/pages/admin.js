@@ -1447,65 +1447,69 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <ul className="divide-y divide-gray-200">
-                  {filteredUsers.map((user) => (
-                    <li key={user._id} className="px-6 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                {user.name}
-                                {user.isPA && <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">PA</span>}
-                                {user.isAdmin && <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">ADMIN</span>}
-                              </p>
-                              <p className="text-sm text-gray-500">{user.email}</p>
-                              <p className="text-xs text-gray-400">
-                                Dorm: {user.dorm || 'Not specified'} | Commitments: {user.commitments ? user.commitments.length : 0}
-                              </p>
-                              <p className="text-xs text-gray-400">
-                                Role: {user.role || 'user'} | Created: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <select
-                            value={user.role || 'user'}
-                            onChange={(e) => promoteUser(user._id, e.target.value)}
-                            className="px-2 py-1 text-xs border rounded"
-                          >
-                            <option value="user">User</option>
-                            <option value="PA">PA</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                          <button
-                            onClick={() => setEditingUser(user)}
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => deleteUser(user._id)}
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                  {filteredUsers.length === 0 && users.length > 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No users found matching your search
-                    </li>
-                  )}
-                  {users.length === 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No users found
-                    </li>
-                  )}
-                </ul>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dorm</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredUsers.map(user => (
+                        <tr key={user._id} className="hover:bg-gray-50">
+                          {/* Name */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {user.name}
+                            {user.isPA && <span className="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">PA</span>}
+                            {user.isAdmin && <span className="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded-full">ADMIN</span>}
+                          </td>
+                          {/* Email */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                          {/* Dorm */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.dorm || '—'}</td>
+                          {/* Role (with inline select) */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <select
+                              value={user.role || 'user'}
+                              onChange={(e) => promoteUser(user._id, e.target.value)}
+                              className="px-2 py-1 text-xs border rounded bg-white shadow-sm"
+                            >
+                              <option value="user">User</option>
+                              <option value="PA">PA</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          </td>
+                          {/* Actions */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2 min-w-[120px]">
+                            <button
+                              onClick={() => setEditingUser(user)}
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deleteUser(user._id)}
+                              className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredUsers.length === 0 && (
+                        <tr>
+                          <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                            {users.length ? 'No users found matching your search' : 'No users found'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
