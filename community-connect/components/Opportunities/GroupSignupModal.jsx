@@ -201,7 +201,9 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
-                {floorUsers.map(user => {
+                {floorUsers
+                  .filter(user => !user.isOriginalAdmin && user.email !== 'admin@admin.com') // Filter out original admin
+                  .map(user => {
                   const isSelected = selectedUsers.includes(user._id);
                   const isDisabled = !canSelectMore && !isSelected;
                   const hasMaxCommitments = (user.commitments || []).length >= 2;
