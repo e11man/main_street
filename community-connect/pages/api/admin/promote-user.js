@@ -25,6 +25,17 @@ async function promoteUserHandler(req, res) {
       return res.status(403).json({ error: 'Only the original admin can promote a user to admin' });
     }
 
+    // Prevent modification of the original admin by other admins
+    const targetUser = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    if (targetUser?.isOriginalAdmin && req.user?.email !== 'admin@admin.com') {
+      return res.status(403).json({ error: 'Only the original admin can modify their own account' });
+    }
+
+    // Prevent demoting the original admin
+    if (targetUser?.isOriginalAdmin && role !== 'admin') {
+      return res.status(403).json({ error: 'The original admin cannot be demoted from admin role' });
+    }
+
     // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');

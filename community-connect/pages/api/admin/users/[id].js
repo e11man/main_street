@@ -1,7 +1,8 @@
 import clientPromise from '../../../../lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { protectRoute } from '../../../../lib/authUtils';
 
-export default async function handler(req, res) {
+async function userHandler(req, res) {
   const { id } = req.query;
 
   if (!id) {
@@ -15,6 +16,12 @@ export default async function handler(req, res) {
     const usersCollection = db.collection('users');
 
     if (req.method === 'DELETE') {
+      // Check if trying to delete the original admin
+      const targetUser = await usersCollection.findOne({ _id: new ObjectId(id) });
+      if (targetUser?.isOriginalAdmin) {
+        return res.status(403).json({ error: 'The original admin account cannot be deleted' });
+      }
+
       // Delete user
       const result = await usersCollection.deleteOne({ _id: new ObjectId(id) });
       
@@ -26,6 +33,12 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PUT') {
+      // Check if trying to modify the original admin
+      const targetUser = await usersCollection.findOne({ _id: new ObjectId(id) });
+      if (targetUser?.isOriginalAdmin) {
+        return res.status(403).json({ error: 'The original admin account cannot be modified through this endpoint. Use admin-specific endpoints only.' });
+      }
+
       // Update specific user
       const { name, email, commitments, dorm, wing } = req.body;
 
@@ -61,3 +74,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+export default protectRoute(userHandler, ['admin']);

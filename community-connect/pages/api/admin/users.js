@@ -64,6 +64,12 @@ async function usersHandler(req, res) { // Renamed original handler
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
+      // Check if trying to modify the original admin
+      const targetUser = await usersCollection.findOne({ _id: new ObjectId(_id) });
+      if (targetUser?.isOriginalAdmin && req.user?.email !== 'admin@admin.com') {
+        return res.status(403).json({ error: 'Only the original admin can modify their own account' });
+      }
+
       const updateData = {
         name,
         email,
