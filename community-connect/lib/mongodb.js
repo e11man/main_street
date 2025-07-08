@@ -48,16 +48,17 @@
 
 import { MongoClient } from 'mongodb';
 
-// Ensure the MongoDB connection string is defined in environment variables
-if (!process.env.MONGODB_URI) {
-  if (process.env.NODE_ENV === 'development') {
-    console.error('❌ MONGODB_URI is not defined in .env.local');
-    console.error('Please add MONGODB_URI=your-mongodb-connection-string to your .env.local file');
-  }
-  throw new Error('Please define the MONGODB_URI environment variable in .env.local');
+// Prefer the URI from environment variables but fall back to the default one provided by the client.
+// NOTE: Storing credentials directly in code is generally discouraged. Make sure to move this value
+// into an environment variable (e.g. .env.local) in production.
+
+const DEFAULT_MONGODB_URI = 'mongodb+srv://joshalanellman:zIXJY3zEA0SH3WUm@mainstreetoppertunties.t85upr7.mongodb.net/?retryWrites=true&w=majority&appName=mainStreetOppertunties';
+
+if (!process.env.MONGODB_URI && process.env.NODE_ENV === 'development') {
+  console.warn('⚠️  MONGODB_URI environment variable not found. Falling back to the default URI.');
 }
 
-const uri = process.env.MONGODB_URI;
+const uri = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
 const options = {
   maxPoolSize: 10, // Maintain up to 10 socket connections
   serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
