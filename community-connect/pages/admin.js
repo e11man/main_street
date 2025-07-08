@@ -76,6 +76,12 @@ export default function AdminPage() {
   const [sessionWarning, setSessionWarning] = useState(false);
   const [sessionTimeRemaining, setSessionTimeRemaining] = useState(null);
   
+  // Theme management states
+  const [themes, setThemes] = useState([]);
+  const [activeTheme, setActiveTheme] = useState(null);
+  const [showAddTheme, setShowAddTheme] = useState(false);
+  const [editingTheme, setEditingTheme] = useState(null);
+  
   // Search states
   const [searchTerms, setSearchTerms] = useState({
     users: '',
@@ -83,7 +89,8 @@ export default function AdminPage() {
     companies: '',
     pendingCompanies: '',
     opportunities: '',
-    blockedEmails: ''
+    blockedEmails: '',
+    themes: ''
   });
   const router = useRouter();
 
@@ -556,6 +563,23 @@ export default function AdminPage() {
         return;
       }
 
+      // Fetch themes
+      const themesResponse = await fetch('/api/admin/themes/list', {
+        credentials: 'include'
+      });
+      if (themesResponse.ok) {
+        const themesData = await themesResponse.json();
+        setThemes(themesData);
+        
+        // Find and set active theme
+        const activeThemeData = themesData.find(theme => theme.isActive);
+        setActiveTheme(activeThemeData);
+      } else if (themesResponse.status === 401) {
+        console.log('❌ 401 error fetching themes - token expired');
+        handleTokenExpiration();
+        return;
+      }
+
       console.log('✅ All data fetched successfully');
     } catch (error) {
       console.error('💥 Error in fetchData:', error);
@@ -816,6 +840,144 @@ export default function AdminPage() {
     }
   };
 
+  // Theme management functions
+  const createTheme = async (themeData) => {
+    try {
+      setLoading(true);
+      const response = await makeAuthenticatedRequest('/api/admin/themes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(themeData)
+      });
+
+      if (response.ok) {
+        const newTheme = await response.json();
+        setThemes([...themes, newTheme]);
+        setActiveTheme(newTheme);
+        setShowAddTheme(false);
+        alert('Theme created and activated successfully!');
+        
+        // Refresh the theme in context
+        if (window.location.reload) {
+          window.location.reload();
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        alert(errorData.error || 'Failed to create theme');
+      }
+    } catch (error) {
+      if (error.message !== 'Session expired') {
+        alert('Error creating theme');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateTheme = async (themeId, themeData) => {
+    try {
+      setLoading(true);
+      const response = await makeAuthenticatedRequest('/api/admin/themes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ themeId, ...themeData })
+      });
+
+      if (response.ok) {
+        const updatedTheme = await response.json();
+        setThemes(themes.map(theme => theme._id === themeId ? updatedTheme : theme));
+        
+        if (updatedTheme.isActive) {
+          setActiveTheme(updatedTheme);
+        }
+        
+        setEditingTheme(null);
+        alert('Theme updated successfully!');
+        
+        // Refresh the theme in context if it's the active theme
+        if (updatedTheme.isActive && window.location.reload) {
+          window.location.reload();
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        alert(errorData.error || 'Failed to update theme');
+      }
+    } catch (error) {
+      if (error.message !== 'Session expired') {
+        alert('Error updating theme');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteTheme = async (themeId) => {
+    if (!confirm('Are you sure you want to delete this theme?')) return;
+
+    try {
+      setLoading(true);
+      const response = await makeAuthenticatedRequest('/api/admin/themes', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ themeId })
+      });
+
+      if (response.ok) {
+        setThemes(themes.filter(theme => theme._id !== themeId));
+        alert('Theme deleted successfully!');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        alert(errorData.error || 'Failed to delete theme');
+      }
+    } catch (error) {
+      if (error.message !== 'Session expired') {
+        alert('Error deleting theme');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const activateTheme = async (themeId) => {
+    if (!confirm('Are you sure you want to activate this theme? This will make it the active theme for all users.')) return;
+
+    try {
+      setLoading(true);
+      const response = await makeAuthenticatedRequest('/api/admin/themes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ themeId, isActive: true })
+      });
+
+      if (response.ok) {
+        const updatedTheme = await response.json();
+        
+        // Update themes list: deactivate all others, activate selected
+        setThemes(themes.map(theme => ({
+          ...theme,
+          isActive: theme._id === themeId
+        })));
+        
+        setActiveTheme(updatedTheme);
+        alert('Theme activated successfully!');
+        
+        // Refresh page to apply new theme
+        if (window.location.reload) {
+          window.location.reload();
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        alert(errorData.error || 'Failed to activate theme');
+      }
+    } catch (error) {
+      if (error.message !== 'Session expired') {
+        alert('Error activating theme');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Search filtering functions
   const handleSearchChange = (tab, value) => {
     setSearchTerms(prev => ({
@@ -865,6 +1027,16 @@ export default function AdminPage() {
     );
   };
 
+  const filterThemes = (themesList, searchTerm) => {
+    if (!searchTerm.trim()) return themesList;
+    const term = searchTerm.toLowerCase();
+    return themesList.filter(theme => 
+      theme.name?.toLowerCase().includes(term) ||
+      theme.fonts?.primary?.toLowerCase().includes(term) ||
+      theme.fonts?.secondary?.toLowerCase().includes(term)
+    );
+  };
+
   // Get filtered data
   const filteredUsers = filterUsers(users, searchTerms.users);
   const filteredPendingUsers = filterUsers(pendingUsers, searchTerms.pendingUsers);
@@ -872,6 +1044,7 @@ export default function AdminPage() {
   const filteredPendingCompanies = filterCompanies(pendingCompanies, searchTerms.pendingCompanies);
   const filteredOpportunities = filterOpportunities(opportunities, searchTerms.opportunities);
   const filteredBlockedEmails = filterBlockedEmails(blockedEmails, searchTerms.blockedEmails);
+  const filteredThemes = filterThemes(themes, searchTerms.themes);
 
   if (!isAuthenticated) {
     return (
@@ -1614,6 +1787,546 @@ export default function AdminPage() {
     );
   };
 
+  // Add Theme Modal
+  const AddThemeModal = () => {
+    const [formData, setFormData] = useState({
+      name: '',
+      colors: {
+        primary: '#1B365F',
+        primaryLight: '#284B87',
+        primaryDark: '#14284A',
+        accent1: '#00AFCE',
+        accent1Light: '#00C4E6',
+        accent1Dark: '#0095AF',
+        accent2: '#E14F3D',
+        textPrimary: '#2C2C2E',
+        textSecondary: '#6C6C70',
+        textTertiary: '#8E8E93',
+        background: '#FFFFFF',
+        surface: '#F8F8F9',
+        surfaceHover: '#F1F5F9',
+        border: '#E2E8F0',
+        borderLight: '#F1F5F9'
+      },
+      fonts: {
+        primary: 'Montserrat',
+        secondary: 'Source Serif 4',
+        primaryWeight: '700',
+        secondaryWeight: '400'
+      }
+    });
+    const [modalLoading, setModalLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setModalLoading(true);
+      await createTheme(formData);
+      setModalLoading(false);
+    };
+
+    const handleColorChange = (colorKey, value) => {
+      setFormData(prev => ({
+        ...prev,
+        colors: {
+          ...prev.colors,
+          [colorKey]: value
+        }
+      }));
+    };
+
+    const handleFontChange = (fontKey, value) => {
+      setFormData(prev => ({
+        ...prev,
+        fonts: {
+          ...prev.fonts,
+          [fontKey]: value
+        }
+      }));
+    };
+
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <h2 className="text-xl font-bold mb-4">Create New Theme</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Theme Name */}
+              <div className="lg:col-span-2">
+                <label className="block text-sm font-medium mb-2">Theme Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="Enter theme name"
+                  required
+                />
+              </div>
+
+              {/* Colors */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Colors</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Primary Color</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.primary}
+                        onChange={(e) => handleColorChange('primary', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.primary}
+                        onChange={(e) => handleColorChange('primary', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Primary Light</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.primaryLight}
+                        onChange={(e) => handleColorChange('primaryLight', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.primaryLight}
+                        onChange={(e) => handleColorChange('primaryLight', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Primary Dark</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.primaryDark}
+                        onChange={(e) => handleColorChange('primaryDark', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.primaryDark}
+                        onChange={(e) => handleColorChange('primaryDark', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Accent Color 1</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.accent1}
+                        onChange={(e) => handleColorChange('accent1', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.accent1}
+                        onChange={(e) => handleColorChange('accent1', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Accent Color 2</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.accent2}
+                        onChange={(e) => handleColorChange('accent2', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.accent2}
+                        onChange={(e) => handleColorChange('accent2', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Background</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.background}
+                        onChange={(e) => handleColorChange('background', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.background}
+                        onChange={(e) => handleColorChange('background', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fonts */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Fonts</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Primary Font (Headers)</label>
+                    <select
+                      value={formData.fonts.primary}
+                      onChange={(e) => handleFontChange('primary', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md"
+                    >
+                      <option value="Montserrat">Montserrat</option>
+                      <option value="Inter">Inter</option>
+                      <option value="Roboto">Roboto</option>
+                      <option value="Open Sans">Open Sans</option>
+                      <option value="Lato">Lato</option>
+                      <option value="Poppins">Poppins</option>
+                      <option value="Nunito">Nunito</option>
+                      <option value="Source Sans Pro">Source Sans Pro</option>
+                      <option value="Raleway">Raleway</option>
+                      <option value="Ubuntu">Ubuntu</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Secondary Font (Body)</label>
+                    <select
+                      value={formData.fonts.secondary}
+                      onChange={(e) => handleFontChange('secondary', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md"
+                    >
+                      <option value="Source Serif 4">Source Serif 4</option>
+                      <option value="Roboto">Roboto</option>
+                      <option value="Open Sans">Open Sans</option>
+                      <option value="Lato">Lato</option>
+                      <option value="Inter">Inter</option>
+                      <option value="Poppins">Poppins</option>
+                      <option value="Nunito">Nunito</option>
+                      <option value="Source Sans Pro">Source Sans Pro</option>
+                      <option value="Georgia">Georgia</option>
+                      <option value="Times New Roman">Times New Roman</option>
+                    </select>
+                  </div>
+                  
+                  {/* Font Preview */}
+                  <div className="mt-4 p-3 border rounded-lg bg-gray-50">
+                    <h4 className="text-sm font-medium mb-2">Preview</h4>
+                    <div 
+                      style={{ fontFamily: formData.fonts.primary }}
+                      className="text-lg font-bold mb-1"
+                    >
+                      Header Text ({formData.fonts.primary})
+                    </div>
+                    <div 
+                      style={{ fontFamily: formData.fonts.secondary }}
+                      className="text-sm"
+                    >
+                      Body text content goes here. This is how your regular text will appear throughout the site. ({formData.fonts.secondary})
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowAddTheme(false)}
+                className="px-4 py-2 text-gray-600 border rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={modalLoading}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50"
+              >
+                {modalLoading ? 'Creating...' : 'Create Theme'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // Edit Theme Modal
+  const EditThemeModal = () => {
+    const [formData, setFormData] = useState({
+      name: editingTheme?.name || '',
+      colors: editingTheme?.colors || {
+        primary: '#1B365F',
+        primaryLight: '#284B87',
+        primaryDark: '#14284A',
+        accent1: '#00AFCE',
+        accent1Light: '#00C4E6',
+        accent1Dark: '#0095AF',
+        accent2: '#E14F3D',
+        textPrimary: '#2C2C2E',
+        textSecondary: '#6C6C70',
+        textTertiary: '#8E8E93',
+        background: '#FFFFFF',
+        surface: '#F8F8F9',
+        surfaceHover: '#F1F5F9',
+        border: '#E2E8F0',
+        borderLight: '#F1F5F9'
+      },
+      fonts: editingTheme?.fonts || {
+        primary: 'Montserrat',
+        secondary: 'Source Serif 4',
+        primaryWeight: '700',
+        secondaryWeight: '400'
+      }
+    });
+    const [modalLoading, setModalLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setModalLoading(true);
+      await updateTheme(editingTheme._id, formData);
+      setModalLoading(false);
+    };
+
+    const handleColorChange = (colorKey, value) => {
+      setFormData(prev => ({
+        ...prev,
+        colors: {
+          ...prev.colors,
+          [colorKey]: value
+        }
+      }));
+    };
+
+    const handleFontChange = (fontKey, value) => {
+      setFormData(prev => ({
+        ...prev,
+        fonts: {
+          ...prev.fonts,
+          [fontKey]: value
+        }
+      }));
+    };
+
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <h2 className="text-xl font-bold mb-4">Edit Theme: {editingTheme?.name}</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Theme Name */}
+              <div className="lg:col-span-2">
+                <label className="block text-sm font-medium mb-2">Theme Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="Enter theme name"
+                  required
+                />
+              </div>
+
+              {/* Colors */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Colors</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Primary Color</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.primary}
+                        onChange={(e) => handleColorChange('primary', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.primary}
+                        onChange={(e) => handleColorChange('primary', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Primary Light</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.primaryLight}
+                        onChange={(e) => handleColorChange('primaryLight', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.primaryLight}
+                        onChange={(e) => handleColorChange('primaryLight', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Primary Dark</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.primaryDark}
+                        onChange={(e) => handleColorChange('primaryDark', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.primaryDark}
+                        onChange={(e) => handleColorChange('primaryDark', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Accent Color 1</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.accent1}
+                        onChange={(e) => handleColorChange('accent1', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.accent1}
+                        onChange={(e) => handleColorChange('accent1', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Accent Color 2</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.accent2}
+                        onChange={(e) => handleColorChange('accent2', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.accent2}
+                        onChange={(e) => handleColorChange('accent2', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Background</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="color"
+                        value={formData.colors.background}
+                        onChange={(e) => handleColorChange('background', e.target.value)}
+                        className="w-10 h-8 border rounded"
+                      />
+                      <input
+                        type="text"
+                        value={formData.colors.background}
+                        onChange={(e) => handleColorChange('background', e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border rounded"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fonts */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Fonts</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Primary Font (Headers)</label>
+                    <select
+                      value={formData.fonts.primary}
+                      onChange={(e) => handleFontChange('primary', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md"
+                    >
+                      <option value="Montserrat">Montserrat</option>
+                      <option value="Inter">Inter</option>
+                      <option value="Roboto">Roboto</option>
+                      <option value="Open Sans">Open Sans</option>
+                      <option value="Lato">Lato</option>
+                      <option value="Poppins">Poppins</option>
+                      <option value="Nunito">Nunito</option>
+                      <option value="Source Sans Pro">Source Sans Pro</option>
+                      <option value="Raleway">Raleway</option>
+                      <option value="Ubuntu">Ubuntu</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Secondary Font (Body)</label>
+                    <select
+                      value={formData.fonts.secondary}
+                      onChange={(e) => handleFontChange('secondary', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md"
+                    >
+                      <option value="Source Serif 4">Source Serif 4</option>
+                      <option value="Roboto">Roboto</option>
+                      <option value="Open Sans">Open Sans</option>
+                      <option value="Lato">Lato</option>
+                      <option value="Inter">Inter</option>
+                      <option value="Poppins">Poppins</option>
+                      <option value="Nunito">Nunito</option>
+                      <option value="Source Sans Pro">Source Sans Pro</option>
+                      <option value="Georgia">Georgia</option>
+                      <option value="Times New Roman">Times New Roman</option>
+                    </select>
+                  </div>
+                  
+                  {/* Font Preview */}
+                  <div className="mt-4 p-3 border rounded-lg bg-gray-50">
+                    <h4 className="text-sm font-medium mb-2">Preview</h4>
+                    <div 
+                      style={{ fontFamily: formData.fonts.primary }}
+                      className="text-lg font-bold mb-1"
+                    >
+                      Header Text ({formData.fonts.primary})
+                    </div>
+                    <div 
+                      style={{ fontFamily: formData.fonts.secondary }}
+                      className="text-sm"
+                    >
+                      Body text content goes here. This is how your regular text will appear throughout the site. ({formData.fonts.secondary})
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2 mt-6">
+              <button
+                type="button"
+                onClick={() => setEditingTheme(null)}
+                className="px-4 py-2 text-gray-600 border rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={modalLoading}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50"
+              >
+                {modalLoading ? 'Updating...' : 'Update Theme'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <Head>
@@ -1697,6 +2410,16 @@ export default function AdminPage() {
                 }`}
               >
                 Blocked Emails ({blockedEmails.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('themes')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'themes'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Themes
               </button>
             </nav>
           </div>
@@ -2262,6 +2985,134 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* Themes Tab */}
+          {activeTab === 'themes' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold">Theme Management</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    🎨 Manage the global appearance and fonts for the entire site
+                    {activeTheme && <span className="ml-2 text-green-600">• Active: {activeTheme.name}</span>}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAddTheme(true)}
+                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  Create New Theme
+                </button>
+              </div>
+              <div className="mb-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search themes by name or font family..."
+                    value={searchTerms.themes}
+                    onChange={(e) => handleSearchChange('themes', e.target.value)}
+                    className="w-full px-4 py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Theme Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Primary Colors</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fonts</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredThemes.map(theme => (
+                        <tr key={theme._id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {theme.name}
+                            {theme.isActive && <span className="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">ACTIVE</span>}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {theme.isActive ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                ● Active
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                ○ Inactive
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div className="flex items-center space-x-1">
+                              <div 
+                                className="w-4 h-4 rounded border border-gray-300" 
+                                style={{ backgroundColor: theme.colors?.primary || '#000' }}
+                                title={`Primary: ${theme.colors?.primary || 'N/A'}`}
+                              ></div>
+                              <div 
+                                className="w-4 h-4 rounded border border-gray-300" 
+                                style={{ backgroundColor: theme.colors?.accent1 || '#000' }}
+                                title={`Accent: ${theme.colors?.accent1 || 'N/A'}`}
+                              ></div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div className="max-w-32 truncate">
+                              <div className="text-xs">{theme.fonts?.primary || 'N/A'}</div>
+                              <div className="text-xs text-gray-400">{theme.fonts?.secondary || 'N/A'}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(theme.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2 min-w-[160px]">
+                            {!theme.isActive && (
+                              <button
+                                onClick={() => activateTheme(theme._id)}
+                                className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-xs"
+                              >
+                                Activate
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setEditingTheme(theme)}
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Edit
+                            </button>
+                            {!theme.isActive && (
+                              <button
+                                onClick={() => deleteTheme(theme._id)}
+                                className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredThemes.length === 0 && (
+                        <tr>
+                          <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                            {themes.length ? 'No themes found matching your search' : 'No themes found'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Modals */}
@@ -2271,6 +3122,8 @@ export default function AdminPage() {
         {editingOpportunity && <EditOpportunityModal />}
         {editingCompany && <EditCompanyModal />}
         {showAddBlockedEmail && <AddBlockedEmailModal />}
+        {showAddTheme && <AddThemeModal />}
+        {editingTheme && <EditThemeModal />}
 
         {/* Chat Modal for Admin */}
         {selectedOpportunityForChat && adminUser && (
