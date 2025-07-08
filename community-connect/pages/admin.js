@@ -73,6 +73,8 @@ export default function AdminPage() {
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [selectedOpportunityForChat, setSelectedOpportunityForChat] = useState(null);
   const [adminUser, setAdminUser] = useState(null); // To store admin user data for ChatModal
+  const [sessionWarning, setSessionWarning] = useState(false);
+  const [sessionTimeRemaining, setSessionTimeRemaining] = useState(null);
   
   // Search states
   const [searchTerms, setSearchTerms] = useState({
@@ -93,32 +95,233 @@ export default function AdminPage() {
     console.log('🔑 Admin auth from localStorage:', adminAuth);
     
     if (adminAuth === 'true') {
-      console.log('✅ Found admin auth in localStorage');
+      console.log('✅ Found admin auth in localStorage, validating token...');
       
-      const storedAdminUser = localStorage.getItem('adminUser');
-      console.log('👤 Stored admin user:', storedAdminUser);
-      
-      if (storedAdminUser) {
-        try {
-          const parsedAdminUser = JSON.parse(storedAdminUser);
-          console.log('👤 Parsed admin user:', parsedAdminUser);
-          setAdminUser(parsedAdminUser);
-        } catch (e) {
-          console.error('❌ Failed to parse stored admin user:', e);
-          setAdminUser({ _id: 'admin_user_id_placeholder', name: 'Admin', isAdmin: true });
-        }
-      } else {
-        console.log('⚠️ No stored admin user, using fallback');
-        setAdminUser({ _id: 'admin_user_id_placeholder', name: 'Admin', isAdmin: true });
-      }
-      
-      setIsAuthenticated(true);
-      console.log('📊 Starting initial data fetch...');
-      fetchData();
+      // Validate token by making a test API call
+      validateTokenAndFetchData();
     } else {
       console.log('❌ No admin auth found, user needs to login');
     }
   }, []);
+
+  // New function to validate token and fetch data
+  const validateTokenAndFetchData = async () => {
+    try {
+      console.log('🔍 Validating JWT token...');
+      
+      // Make a test call to verify token is still valid
+      const testResponse = await fetch('/api/admin/users', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (testResponse.ok) {
+        console.log('✅ Token is valid, setting up admin session...');
+        
+        const storedAdminUser = localStorage.getItem('adminUser');
+        console.log('👤 Stored admin user:', storedAdminUser);
+        
+        if (storedAdminUser) {
+          try {
+            const parsedAdminUser = JSON.parse(storedAdminUser);
+            console.log('👤 Parsed admin user:', parsedAdminUser);
+            setAdminUser(parsedAdminUser);
+          } catch (e) {
+            console.error('❌ Failed to parse stored admin user:', e);
+            setAdminUser({ _id: 'admin_user_id_placeholder', name: 'Admin', isAdmin: true });
+          }
+        } else {
+          console.log('⚠️ No stored admin user, using fallback');
+          setAdminUser({ _id: 'admin_user_id_placeholder', name: 'Admin', isAdmin: true });
+        }
+        
+        setIsAuthenticated(true);
+        console.log('📊 Starting initial data fetch...');
+        fetchData();
+      } else if (testResponse.status === 401) {
+        console.log('❌ Token expired or invalid, clearing session...');
+        handleTokenExpiration();
+      } else {
+        console.error('❌ Unexpected response during token validation:', testResponse.status);
+        setError(`Authentication check failed: ${testResponse.status} ${testResponse.statusText}`);
+      }
+    } catch (error) {
+      console.error('💥 Error validating token:', error);
+      // Network error - could be offline, don't clear session immediately
+      console.log('⚠️ Network error during token validation, trying to proceed...');
+      
+      const storedAdminUser = localStorage.getItem('adminUser');
+      if (storedAdminUser) {
+        try {
+          const parsedAdminUser = JSON.parse(storedAdminUser);
+          setAdminUser(parsedAdminUser);
+          setIsAuthenticated(true);
+        } catch (e) {
+          console.error('❌ Failed to parse stored admin user:', e);
+          handleTokenExpiration();
+        }
+      } else {
+        handleTokenExpiration();
+      }
+    }
+  };
+
+  // New function to handle token expiration
+  const handleTokenExpiration = () => {
+    console.log('🔄 Handling token expiration...');
+    setIsAuthenticated(false);
+    localStorage.removeItem('adminAuth');
+    localStorage.removeItem('adminUser');
+    setAdminUser(null);
+    setError('Your session has expired. Please log in again.');
+    
+    // Clear any existing data
+    setUsers([]);
+    setCompanies([]);
+    setOpportunities([]);
+    setBlockedEmails([]);
+    setPendingUsers([]);
+    setPendingCompanies([]);
+  };
+
+  // Utility function for making authenticated API calls with automatic 401 handling
+  const makeAuthenticatedRequest = async (url, options = {}) => {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        credentials: 'include'
+      });
+
+      if (response.status === 401) {
+        console.log(`❌ 401 error for ${url} - token expired`);
+        handleTokenExpiration();
+        throw new Error('Session expired');
+      }
+
+      return response;
+    } catch (error) {
+      if (error.message === 'Session expired') {
+        throw error;
+      }
+      console.error(`💥 Network error for ${url}:`, error);
+      throw error;
+    }
+  };
+
+  // Session management with automatic refresh
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    console.log('🕒 Setting up session management...');
+    
+    // Check session every 5 minutes
+    const sessionCheckInterval = setInterval(async () => {
+      try {
+        console.log('🔍 Checking session validity...');
+        const response = await fetch('/api/admin/users', {
+          method: 'HEAD', // Use HEAD to avoid transferring data
+          credentials: 'include'
+        });
+
+        if (response.status === 401) {
+          console.log('❌ Session expired during check');
+          handleTokenExpiration();
+        } else {
+          console.log('✅ Session still valid');
+        }
+      } catch (error) {
+        console.error('💥 Error checking session:', error);
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Warning 5 minutes before expiration (23 hours after login)
+    const warningTimeout = setTimeout(() => {
+      setSessionWarning(true);
+      setSessionTimeRemaining(5 * 60); // 5 minutes in seconds
+      
+      // Start countdown
+      const countdownInterval = setInterval(() => {
+        setSessionTimeRemaining(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            handleTokenExpiration();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      // Store countdown interval to clear it if user refreshes session
+      window.countdownInterval = countdownInterval;
+    }, 23 * 60 * 60 * 1000); // 23 hours
+
+    return () => {
+      clearInterval(sessionCheckInterval);
+      clearTimeout(warningTimeout);
+      if (window.countdownInterval) {
+        clearInterval(window.countdownInterval);
+      }
+    };
+  }, [isAuthenticated]);
+
+  // Function to refresh session
+  const refreshSession = async () => {
+    try {
+      setLoading(true);
+      console.log('🔄 Refreshing session...');
+      
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          username: adminUser?.email || localStorage.getItem('adminEmail'), 
+          password: 'refresh_token' // Special case for refresh
+        }),
+      });
+
+      if (response.ok) {
+        console.log('✅ Session refreshed successfully');
+        setSessionWarning(false);
+        setSessionTimeRemaining(null);
+        if (window.countdownInterval) {
+          clearInterval(window.countdownInterval);
+        }
+      } else {
+        console.log('❌ Failed to refresh session');
+        handleTokenExpiration();
+      }
+    } catch (error) {
+      console.error('💥 Error refreshing session:', error);
+      handleTokenExpiration();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to extend session (simpler alternative to full refresh)
+  const extendSession = async () => {
+    try {
+      console.log('⏰ Extending session...');
+      // Make a simple authenticated request to reset the token timer
+      const response = await makeAuthenticatedRequest('/api/admin/users', {
+        method: 'HEAD'
+      });
+
+      if (response.ok) {
+        console.log('✅ Session extended');
+        setSessionWarning(false);
+        setSessionTimeRemaining(null);
+        if (window.countdownInterval) {
+          clearInterval(window.countdownInterval);
+        }
+      }
+    } catch (error) {
+      console.error('💥 Error extending session:', error);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -155,6 +358,7 @@ export default function AdminPage() {
         console.log('👤 Setting admin user details:', adminUserDetails);
         setAdminUser(adminUserDetails);
         localStorage.setItem('adminUser', JSON.stringify(adminUserDetails));
+        localStorage.setItem('adminEmail', username); // Store email for session refresh
         setIsAuthenticated(true);
         localStorage.setItem('adminAuth', 'true');
         
@@ -184,12 +388,26 @@ export default function AdminPage() {
   };
 
   const handleLogout = () => {
+    console.log('👋 Logging out admin user...');
     setIsAuthenticated(false);
     localStorage.removeItem('adminAuth');
-    localStorage.removeItem('adminUser'); // Clear admin user details on logout
+    localStorage.removeItem('adminUser');
+    localStorage.removeItem('adminEmail');
     setAdminUser(null);
     setUsername('');
     setPassword('');
+    setSessionWarning(false);
+    setSessionTimeRemaining(null);
+    
+    // Clear any session timers
+    if (window.countdownInterval) {
+      clearInterval(window.countdownInterval);
+    }
+    
+    // Clear error state
+    setError('');
+    
+    console.log('✅ Admin logout complete');
   };
 
   const openChatModalForAdmin = (opportunity) => {
@@ -258,6 +476,10 @@ export default function AdminPage() {
         console.log('✅ Users data received:', usersData.length, 'users');
         console.log('👥 Users data:', usersData);
         setUsers(usersData);
+      } else if (usersResponse.status === 401) {
+        console.log('❌ 401 error fetching users - token expired');
+        handleTokenExpiration();
+        return; // Stop further API calls
       } else {
         const errorText = await usersResponse.text();
         console.error('❌ Failed to fetch users:', {
@@ -266,6 +488,7 @@ export default function AdminPage() {
           errorBody: errorText
         });
         setError(`Failed to fetch users: ${usersResponse.status} ${usersResponse.statusText}`);
+        return; // Stop further API calls on error
       }
 
       // Fetch companies
@@ -275,6 +498,10 @@ export default function AdminPage() {
       if (companiesResponse.ok) {
         const companiesData = await companiesResponse.json();
         setCompanies(companiesData);
+      } else if (companiesResponse.status === 401) {
+        console.log('❌ 401 error fetching companies - token expired');
+        handleTokenExpiration();
+        return;
       }
 
       // Fetch opportunities
@@ -284,6 +511,10 @@ export default function AdminPage() {
       if (opportunitiesResponse.ok) {
         const opportunitiesData = await opportunitiesResponse.json();
         setOpportunities(opportunitiesData);
+      } else if (opportunitiesResponse.status === 401) {
+        console.log('❌ 401 error fetching opportunities - token expired');
+        handleTokenExpiration();
+        return;
       }
 
       // Fetch blocked emails
@@ -293,6 +524,10 @@ export default function AdminPage() {
       if (blockedEmailsResponse.ok) {
         const blockedEmailsData = await blockedEmailsResponse.json();
         setBlockedEmails(blockedEmailsData);
+      } else if (blockedEmailsResponse.status === 401) {
+        console.log('❌ 401 error fetching blocked emails - token expired');
+        handleTokenExpiration();
+        return;
       }
 
       // Fetch pending users
@@ -302,6 +537,10 @@ export default function AdminPage() {
       if (pendingUsersResponse.ok) {
         const pendingUsersData = await pendingUsersResponse.json();
         setPendingUsers(pendingUsersData);
+      } else if (pendingUsersResponse.status === 401) {
+        console.log('❌ 401 error fetching pending users - token expired');
+        handleTokenExpiration();
+        return;
       }
 
       // Fetch pending companies
@@ -311,7 +550,13 @@ export default function AdminPage() {
       if (pendingCompaniesResponse.ok) {
         const pendingCompaniesData = await pendingCompaniesResponse.json();
         setPendingCompanies(pendingCompaniesData);
+      } else if (pendingCompaniesResponse.status === 401) {
+        console.log('❌ 401 error fetching pending companies - token expired');
+        handleTokenExpiration();
+        return;
       }
+
+      console.log('✅ All data fetched successfully');
     } catch (error) {
       console.error('💥 Error in fetchData:', error);
       setError(`Network error: ${error.message}`);
@@ -322,18 +567,21 @@ export default function AdminPage() {
     if (!confirm('Are you sure you want to delete this user?')) return;
 
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'DELETE',
-        credentials: 'include',
+      const response = await makeAuthenticatedRequest(`/api/admin/users/${userId}`, {
+        method: 'DELETE'
       });
 
       if (response.ok) {
         setUsers(users.filter(user => user._id !== userId));
+        console.log('✅ User deleted successfully');
       } else {
-        alert('Failed to delete user');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        alert(errorData.error || 'Failed to delete user');
       }
     } catch (error) {
-      alert('Error deleting user');
+      if (error.message !== 'Session expired') {
+        alert('Error deleting user');
+      }
     }
   };
 
@@ -538,12 +786,11 @@ export default function AdminPage() {
 
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/promote-user', {
+      const response = await makeAuthenticatedRequest('/api/admin/promote-user', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ userId, role: newRole }),
       });
 
@@ -554,13 +801,16 @@ export default function AdminPage() {
           user._id === userId ? data.user : user
         ));
         alert(data.message);
+        console.log('✅ User promoted successfully');
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         alert(errorData.error || 'Failed to promote user');
       }
     } catch (error) {
-      console.error('Error promoting user:', error);
-      alert('Error promoting user');
+      if (error.message !== 'Session expired') {
+        console.error('Error promoting user:', error);
+        alert('Error promoting user');
+      }
     } finally {
       setLoading(false);
     }
@@ -1450,6 +1700,42 @@ export default function AdminPage() {
               </button>
             </nav>
           </div>
+
+          {/* Session Warning */}
+          {sessionWarning && (
+            <div className="mb-6 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-bold">Session Expiring Soon!</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm">
+                    {sessionTimeRemaining ? (
+                      `${Math.floor(sessionTimeRemaining / 60)}:${(sessionTimeRemaining % 60).toString().padStart(2, '0')} remaining`
+                    ) : 'Session will expire soon'}
+                  </span>
+                  <button
+                    onClick={extendSession}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm font-medium"
+                    disabled={loading}
+                  >
+                    {loading ? 'Extending...' : 'Extend Session'}
+                  </button>
+                  <button
+                    onClick={() => setSessionWarning(false)}
+                    className="text-yellow-700 hover:text-yellow-900"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Error Display */}
           {error && (
