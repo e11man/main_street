@@ -1795,64 +1795,57 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <ul className="divide-y divide-gray-200">
-                  {filteredPendingCompanies.map((company) => (
-                    <li key={company._id} className="px-6 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{company.name}</p>
-                              <p className="text-sm text-gray-500">{company.email}</p>
-                              <p className="text-xs text-gray-400">
-                                Requested on: {new Date(company.createdAt).toLocaleDateString()}
-                              </p>
-                              {company.website && (
-                                <p className="text-xs text-gray-400">
-                                  Website: {company.website}
-                                </p>
-                              )}
-                              {company.phone && (
-                                <p className="text-xs text-gray-400">
-                                  Phone: {company.phone}
-                                </p>
-                              )}
-                              {company.description && (
-                                <p className="text-xs text-gray-400 mt-1">
-                                  Description: {company.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => approveCompany(company._id)}
-                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => rejectCompany(company._id)}
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                  {filteredPendingCompanies.length === 0 && pendingCompanies.length > 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No pending companies found matching your search
-                    </li>
-                  )}
-                  {pendingCompanies.length === 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No pending companies found
-                    </li>
-                  )}
-                </ul>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Website</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested</th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredPendingCompanies.map(company => (
+                        <tr key={company._id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {company.name}
+                            <div className="text-xs text-gray-400">{company.email}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 underline">
+                            {company.website ? (
+                              <a href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer">
+                                {company.website}
+                              </a>
+                            ) : '—'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(company.createdAt).toLocaleDateString()}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2 min-w-[120px]">
+                            <button
+                              onClick={() => approveCompany(company._id)}
+                              className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => rejectCompany(company._id)}
+                              className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Reject
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredPendingCompanies.length === 0 && (
+                        <tr>
+                          <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                            {pendingCompanies.length ? 'No pending companies found matching your search' : 'No pending companies found'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
