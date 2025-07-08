@@ -2,11 +2,20 @@ import nodemailer from 'nodemailer';
 
 // Create transporter for email service
 const createTransporter = () => {
-  // For development, use Ethereal Email (test email service)
-  // In production, you would use a real email service like Gmail, SendGrid, etc.
+  // Use real email service for both development and production
+  // This ensures notifications actually reach users in all environments
   
-  if (process.env.NODE_ENV === 'production') {
-    // Production email configuration
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    // Use Gmail configuration (consistent with other email services in the app)
+    return nodemailer.createTransporter({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+  } else if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    // Fallback to SMTP configuration
     return nodemailer.createTransporter({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: process.env.SMTP_PORT || 587,
@@ -17,7 +26,8 @@ const createTransporter = () => {
       },
     });
   } else {
-    // Development configuration - using Ethereal for testing
+    // Development fallback - using Ethereal for testing when no real email is configured
+    console.warn('No email credentials configured. Using Ethereal test service. Emails will not reach real users.');
     return nodemailer.createTransporter({
       host: 'smtp.ethereal.email',
       port: 587,
