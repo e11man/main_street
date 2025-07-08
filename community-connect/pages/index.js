@@ -318,7 +318,7 @@ export default function Home() {
       
       // Show success message
       setMessageBox({
-        message: `You've successfully joined "${opportunity.title}"! We'll send you more details via email.`,
+        message: `You've successfully signed up for "${opportunity.title}"!`,
         callback: () => setMessageBox(null)
       });
     } catch (error) {
