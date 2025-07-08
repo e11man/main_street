@@ -176,6 +176,17 @@ The system provides clear, security-conscious error messages:
 1. **Restoration Test:** Successfully restored `admin@admin.com` from PA role to admin
 2. **Database Verification:** Confirmed `isOriginalAdmin` flag is properly set
 3. **Admin Count:** Verified total admin count and roles
+4. **Bug Fix Verification:** Fixed internal server error when non-original admins try to change user status
+
+### Issue Fixed ✅
+
+**Problem:** Non-original admins were getting "internal server error" when trying to change any user's status.
+
+**Root Cause:** In `pages/api/admin/promote-user.js`, the code was trying to access `usersCollection` before the MongoDB connection was established.
+
+**Fix Applied:** Moved the MongoDB connection setup before the protection logic checks.
+
+**Result:** Non-original admins now receive proper error messages for unauthorized operations while being able to perform authorized tasks.
 
 ### Recommended Additional Tests
 
