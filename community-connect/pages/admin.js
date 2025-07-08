@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import ChatModal from '../components/Modal/ChatModal'; // Import ChatModal
+import { useTheme } from '../contexts/ThemeContext';
 
 // Add the full dorm list constant after imports
 const DORM_DATA = {
@@ -52,6 +53,8 @@ const DORM_DATA = {
 };
 
 export default function AdminPage() {
+  const { refreshTheme } = useTheme(); // Access theme context
+  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -843,6 +846,7 @@ export default function AdminPage() {
   // Theme management functions
   const createTheme = async (themeData) => {
     try {
+      console.log('🎨 Admin: Creating theme...', themeData);
       setLoading(true);
       const response = await makeAuthenticatedRequest('/api/admin/themes', {
         method: 'POST',
@@ -852,20 +856,24 @@ export default function AdminPage() {
 
       if (response.ok) {
         const newTheme = await response.json();
+        console.log('✅ Admin: Theme created successfully', newTheme);
+        
         setThemes([...themes, newTheme]);
         setActiveTheme(newTheme);
         setShowAddTheme(false);
-        alert('Theme created and activated successfully!');
         
-        // Refresh the theme in context
-        if (window.location.reload) {
-          window.location.reload();
-        }
+        // Refresh the theme in context immediately
+        console.log('🔄 Admin: Refreshing theme context...');
+        await refreshTheme();
+        
+        alert('Theme created and activated successfully!');
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Admin: Failed to create theme:', errorData);
         alert(errorData.error || 'Failed to create theme');
       }
     } catch (error) {
+      console.error('❌ Admin: Error creating theme:', error);
       if (error.message !== 'Session expired') {
         alert('Error creating theme');
       }
@@ -876,6 +884,7 @@ export default function AdminPage() {
 
   const updateTheme = async (themeId, themeData) => {
     try {
+      console.log('🎨 Admin: Updating theme...', { themeId, themeData });
       setLoading(true);
       const response = await makeAuthenticatedRequest('/api/admin/themes', {
         method: 'PUT',
@@ -885,6 +894,8 @@ export default function AdminPage() {
 
       if (response.ok) {
         const updatedTheme = await response.json();
+        console.log('✅ Admin: Theme updated successfully', updatedTheme);
+        
         setThemes(themes.map(theme => theme._id === themeId ? updatedTheme : theme));
         
         if (updatedTheme.isActive) {
@@ -892,17 +903,21 @@ export default function AdminPage() {
         }
         
         setEditingTheme(null);
-        alert('Theme updated successfully!');
         
         // Refresh the theme in context if it's the active theme
-        if (updatedTheme.isActive && window.location.reload) {
-          window.location.reload();
+        if (updatedTheme.isActive) {
+          console.log('🔄 Admin: Refreshing theme context for active theme...');
+          await refreshTheme();
         }
+        
+        alert('Theme updated successfully!');
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Admin: Failed to update theme:', errorData);
         alert(errorData.error || 'Failed to update theme');
       }
     } catch (error) {
+      console.error('❌ Admin: Error updating theme:', error);
       if (error.message !== 'Session expired') {
         alert('Error updating theme');
       }
@@ -942,6 +957,7 @@ export default function AdminPage() {
     if (!confirm('Are you sure you want to activate this theme? This will make it the active theme for all users.')) return;
 
     try {
+      console.log('🎨 Admin: Activating theme...', themeId);
       setLoading(true);
       const response = await makeAuthenticatedRequest('/api/admin/themes', {
         method: 'PUT',
@@ -951,6 +967,7 @@ export default function AdminPage() {
 
       if (response.ok) {
         const updatedTheme = await response.json();
+        console.log('✅ Admin: Theme activated successfully', updatedTheme);
         
         // Update themes list: deactivate all others, activate selected
         setThemes(themes.map(theme => ({
@@ -959,17 +976,19 @@ export default function AdminPage() {
         })));
         
         setActiveTheme(updatedTheme);
-        alert('Theme activated successfully!');
         
-        // Refresh page to apply new theme
-        if (window.location.reload) {
-          window.location.reload();
-        }
+        // Refresh the theme in context immediately
+        console.log('🔄 Admin: Refreshing theme context for newly activated theme...');
+        await refreshTheme();
+        
+        alert('Theme activated successfully!');
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Admin: Failed to activate theme:', errorData);
         alert(errorData.error || 'Failed to activate theme');
       }
     } catch (error) {
+      console.error('❌ Admin: Error activating theme:', error);
       if (error.message !== 'Session expired') {
         alert('Error activating theme');
       }

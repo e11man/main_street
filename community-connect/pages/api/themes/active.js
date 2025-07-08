@@ -2,6 +2,8 @@ import clientPromise from '../../../lib/mongodb';
 import { asyncHandler, AppError, ErrorTypes } from '../../../lib/errorHandler';
 
 const activeThemeHandler = asyncHandler(async function handler(req, res) {
+  console.log('🌐 Public theme API called:', req.method);
+  
   if (req.method !== 'GET') {
     throw new AppError('Method not allowed', ErrorTypes.VALIDATION, 405);
   }
@@ -10,10 +12,13 @@ const activeThemeHandler = asyncHandler(async function handler(req, res) {
   const db = client.db('mainStreetOpportunities');
   const themesCollection = db.collection('themes');
 
+  console.log('🔍 Fetching active theme from database...');
+  
   // Get current active theme
   const activeTheme = await themesCollection.findOne({ isActive: true });
   
   if (!activeTheme) {
+    console.log('⚠️ No active theme found, returning default theme');
     // Return default theme if none exists
     const defaultTheme = {
       name: 'Default Theme',
@@ -45,6 +50,7 @@ const activeThemeHandler = asyncHandler(async function handler(req, res) {
     return res.status(200).json(defaultTheme);
   }
   
+  console.log('✅ Active theme found:', activeTheme.name);
   return res.status(200).json(activeTheme);
 });
 

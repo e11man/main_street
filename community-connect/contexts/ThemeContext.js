@@ -17,39 +17,55 @@ export const ThemeProvider = ({ children }) => {
 
   // Function to apply theme to CSS custom properties
   const applyTheme = (themeData) => {
-    if (!themeData?.colors || !themeData?.fonts) {
-      console.warn('Invalid theme data:', themeData);
+    if (typeof window === 'undefined') {
+      console.log('🌐 ThemeContext: Server-side, skipping theme application');
       return;
     }
 
+    if (!themeData?.colors || !themeData?.fonts) {
+      console.warn('⚠️ ThemeContext: Invalid theme data:', themeData);
+      return;
+    }
+
+    console.log('🎨 ThemeContext: Applying theme:', themeData.name);
     const root = document.documentElement;
     const { colors, fonts } = themeData;
 
-    // Apply color variables
-    root.style.setProperty('--primary', colors.primary);
-    root.style.setProperty('--primary-light', colors.primaryLight);
-    root.style.setProperty('--primary-dark', colors.primaryDark);
-    root.style.setProperty('--accent1', colors.accent1);
-    root.style.setProperty('--accent1-light', colors.accent1Light);
-    root.style.setProperty('--accent1-dark', colors.accent1Dark);
-    root.style.setProperty('--accent2', colors.accent2);
-    root.style.setProperty('--text-primary', colors.textPrimary);
-    root.style.setProperty('--text-secondary', colors.textSecondary);
-    root.style.setProperty('--text-tertiary', colors.textTertiary);
-    root.style.setProperty('--background', colors.background);
-    root.style.setProperty('--surface', colors.surface);
-    root.style.setProperty('--surface-hover', colors.surfaceHover);
-    root.style.setProperty('--border', colors.border);
-    root.style.setProperty('--border-light', colors.borderLight);
+    try {
+      // Apply color variables
+      console.log('🎨 ThemeContext: Setting color variables...');
+      root.style.setProperty('--primary', colors.primary);
+      root.style.setProperty('--primary-light', colors.primaryLight);
+      root.style.setProperty('--primary-dark', colors.primaryDark);
+      root.style.setProperty('--accent1', colors.accent1);
+      root.style.setProperty('--accent1-light', colors.accent1Light);
+      root.style.setProperty('--accent1-dark', colors.accent1Dark);
+      root.style.setProperty('--accent2', colors.accent2);
+      root.style.setProperty('--text-primary', colors.textPrimary);
+      root.style.setProperty('--text-secondary', colors.textSecondary);
+      root.style.setProperty('--text-tertiary', colors.textTertiary);
+      root.style.setProperty('--background', colors.background);
+      root.style.setProperty('--surface', colors.surface);
+      root.style.setProperty('--surface-hover', colors.surfaceHover);
+      root.style.setProperty('--border', colors.border);
+      root.style.setProperty('--border-light', colors.borderLight);
 
-    // Apply font variables
-    root.style.setProperty('--font-montserrat', `"${fonts.primary}", sans-serif`);
-    root.style.setProperty('--font-source-serif', `"${fonts.secondary}", serif`);
+      // Apply font variables
+      console.log('🔤 ThemeContext: Setting font variables...');
+      root.style.setProperty('--font-montserrat', `"${fonts.primary}", sans-serif`);
+      root.style.setProperty('--font-source-serif', `"${fonts.secondary}", serif`);
 
-    // Update Google Fonts imports dynamically
-    updateGoogleFonts(fonts.primary, fonts.secondary);
+      // Update Google Fonts imports dynamically
+      console.log('📝 ThemeContext: Loading Google Fonts...');
+      updateGoogleFonts(fonts.primary, fonts.secondary);
 
-    console.log('Theme applied successfully:', themeData.name);
+      console.log('✅ ThemeContext: Theme applied successfully:', themeData.name);
+      
+      // Trigger a custom event to notify other parts of the app
+      window.dispatchEvent(new CustomEvent('themeChanged', { detail: themeData }));
+    } catch (error) {
+      console.error('❌ ThemeContext: Error applying theme:', error);
+    }
   };
 
   // Function to update Google Fonts
@@ -84,24 +100,39 @@ export const ThemeProvider = ({ children }) => {
   // Function to fetch and apply the active theme
   const fetchActiveTheme = async () => {
     try {
+      console.log('🎨 ThemeContext: Fetching active theme...');
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/themes/active');
+      const response = await fetch('/api/themes/active', {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
       if (!response.ok) {
-        throw new Error(`Failed to fetch theme: ${response.status}`);
+        throw new Error(`Failed to fetch theme: ${response.status} ${response.statusText}`);
       }
 
       const themeData = await response.json();
+      console.log('✅ ThemeContext: Received theme data:', themeData);
+      
+      if (!themeData || !themeData.colors || !themeData.fonts) {
+        throw new Error('Invalid theme data received');
+      }
+      
       setTheme(themeData);
       applyTheme(themeData);
+      console.log('🎭 ThemeContext: Theme applied successfully');
     } catch (err) {
-      console.error('Error fetching theme:', err);
+      console.error('❌ ThemeContext: Error fetching theme:', err);
       setError(err.message);
       
       // Apply default theme on error
       const defaultTheme = {
-        name: 'Default Theme',
+        name: 'Default Theme (Fallback)',
         colors: {
           primary: '#1B365F',
           primaryLight: '#284B87',
@@ -126,6 +157,7 @@ export const ThemeProvider = ({ children }) => {
           secondaryWeight: '400'
         }
       };
+      console.log('🔄 ThemeContext: Applying fallback theme');
       setTheme(defaultTheme);
       applyTheme(defaultTheme);
     } finally {
