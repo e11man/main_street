@@ -20,6 +20,11 @@ async function promoteUserHandler(req, res) {
       return res.status(400).json({ error: 'Invalid role. Allowed roles: user, PA, admin' });
     }
 
+    // Only original admin can promote another user to admin role
+    if (role === 'admin' && req.user?.email !== 'admin@admin.com') {
+      return res.status(403).json({ error: 'Only the original admin can promote a user to admin' });
+    }
+
     // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
