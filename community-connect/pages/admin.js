@@ -1880,42 +1880,40 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <ul className="divide-y divide-gray-200">
-                  {filteredBlockedEmails.map((item) => (
-                    <li key={item._id} className="px-6 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{item.email}</p>
-                              <p className="text-xs text-gray-400">
-                                Blocked on: {new Date(item.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => removeBlockedEmail(item._id)}
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
-                          >
-                            Unblock
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                  {filteredBlockedEmails.length === 0 && blockedEmails.length > 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No blocked emails found matching your search
-                    </li>
-                  )}
-                  {blockedEmails.length === 0 && (
-                    <li className="px-6 py-4 text-center text-gray-500">
-                      No blocked emails found
-                    </li>
-                  )}
-                </ul>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email Address</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blocked On</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredBlockedEmails.map(item => (
+                        <tr key={item._id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.email}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(item.createdAt).toLocaleDateString()}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-right min-w-[120px]">
+                            <button
+                              onClick={() => removeBlockedEmail(item._id)}
+                              className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs"
+                            >
+                              Unblock
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredBlockedEmails.length === 0 && (
+                        <tr>
+                          <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
+                            {blockedEmails.length ? 'No blocked emails found matching your search' : 'No blocked emails found'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
