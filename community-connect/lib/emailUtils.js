@@ -115,7 +115,46 @@ async function recordEmailNotificationSent(opportunityId, recipientEmail) {
 }
 
 /**
- * Gets all participants for a specific chat opportunity
+ * Validates an email address format and domain
+ * @param {string} email - The email address to validate
+ * @returns {boolean} - True if email is valid
+ */
+function isValidEmail(email) {
+  if (!email || typeof email !== 'string') return false;
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isValid = emailRegex.test(email.trim());
+  
+  // Additional checks for common issues
+  if (isValid) {
+    const trimmedEmail = email.trim().toLowerCase();
+    // Check for common problematic patterns
+    if (trimmedEmail.includes('..') || 
+        trimmedEmail.startsWith('.') || 
+        trimmedEmail.endsWith('.') ||
+        trimmedEmail.includes('@.') ||
+        trimmedEmail.includes('.@')) {
+      return false;
+    }
+  }
+  
+  return isValid;
+}
+
+/**
+ * Sanitizes and normalizes email address
+ * @param {string} email - The email address to sanitize
+ * @returns {string|null} - Sanitized email or null if invalid
+ */
+function sanitizeEmail(email) {
+  if (!email || typeof email !== 'string') return null;
+  
+  const sanitized = email.trim().toLowerCase();
+  return isValidEmail(sanitized) ? sanitized : null;
+}
+
+/**
+ * Gets all participants for a specific chat opportunity with email validation
  * @param {string} opportunityId - The opportunity ID
  * @param {string} senderEmail - The sender's email (to exclude from notifications)
  * @param {string} senderType - The type of the sender (e.g., 'user', 'organization')
@@ -136,17 +175,24 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
     }
 
     const participants = [];
+    const sanitizedSenderEmail = sanitizeEmail(senderEmail);
     
     // Get company information
     const companiesCollection = db.collection('companies');
     const company = await companiesCollection.findOne({ _id: new ObjectId(opportunity.companyId) });
     
-    if (company && company.email && (company.email.toLowerCase().trim() !== senderEmail.toLowerCase().trim() || senderType === 'organization')) {
-      participants.push({
-        email: company.email,
-        name: company.name,
-        type: 'company'
-      });
+    if (company) {
+      const companyEmail = sanitizeEmail(company.email);
+      if (companyEmail && 
+          (companyEmail !== sanitizedSenderEmail || senderType === 'organization')) {
+        participants.push({
+          email: companyEmail,
+          name: company.name || 'Organization',
+          type: 'company'
+        });
+      } else if (!companyEmail && company.email) {
+        console.warn(`Invalid company email format for company ${company._id}: ${company.email}`);
+      }
     }
 
     // Get users who have committed to this opportunity
@@ -156,12 +202,15 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
     }).toArray();
 
     users.forEach(user => {
-      if (user.email && user.email.toLowerCase().trim() !== senderEmail.toLowerCase().trim()) {
+      const userEmail = sanitizeEmail(user.email);
+      if (userEmail && userEmail !== sanitizedSenderEmail) {
         participants.push({
-          email: user.email,
-          name: user.name,
+          email: userEmail,
+          name: user.name || 'Volunteer',
           type: 'user'
         });
+      } else if (!userEmail && user.email) {
+        console.warn(`Invalid user email format for user ${user._id}: ${user.email}`);
       }
     });
 
@@ -173,70 +222,89 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
 }
 
 /**
- * Sends a chat notification email to a recipient
+ * Sends a chat notification email to a recipient with enhanced error handling
  * @param {Object} participant - The participant to send to
  * @param {Object} opportunity - The opportunity details
  * @param {string} senderName - The name of the message sender
  * @param {string} messagePreview - Preview of the message (first 100 chars)
- * @returns {Promise<boolean>} - True if email was sent successfully
+ * @returns {Promise<Object>} - Result object with success status and error details
  */
 async function sendChatNotificationEmail(participant, opportunity, senderName, messagePreview) {
-  const isCompanyRecipient = participant.type === 'company';
-
-  const plainBodyLines = [
-    `Hi ${participant.name},`,
-    '',
-    `You have a new message in the chat for "${opportunity.title}"${isCompanyRecipient ? '' : ` from ${senderName}`}.`,
-  ];
-
-  if (!isCompanyRecipient) {
-    plainBodyLines.push('', `Message: ${messagePreview}${messagePreview.length >= 100 ? '...' : ''}`);
-  }
-
-  plainBodyLines.push('', 'Login to Community Connect to view the full conversation and reply.', '', 'Best regards,', 'Community Connect Team');
-
-  const textBody = plainBodyLines.join('\n');
-
-  // HTML Version – mirrors the verification-code e-mail style
-  let htmlContent = `<div style="font-family: Arial, sans-serif; line-height: 1.6;">`;
-  htmlContent += `<h2 style=\"color: #333;\">New Chat Message</h2>`;
-  htmlContent += `<p>Hi ${participant.name},</p>`;
-  htmlContent += `<p>You have a new message in the chat for <strong>\"${opportunity.title}\"</strong>${isCompanyRecipient ? '' : ` from <strong>${senderName}</strong>`}.</p>`;
-
-  if (!isCompanyRecipient) {
-    htmlContent += `<p style=\"font-style: italic; color: #555;\">\"${messagePreview}${messagePreview.length >= 100 ? '...' : ''}\"</p>`;
-  }
-
-  htmlContent += `<p>Please log in to Community Connect to view and reply.</p>`;
-  htmlContent += `<hr style=\"border: none; border-top: 1px solid #eee;\" />`;
-  htmlContent += `<p style=\"font-size: 0.9em; color: #777;\">Community Connect<br />Connecting volunteers with opportunities.</p>`;
-
-  if (!isCompanyRecipient) {
-    htmlContent += `<p style=\"font-size: 0.8em; color: #999;\">Note: To prevent spam, you'll only receive one email notification every 30 minutes per chat.</p>`;
-  }
-
-  htmlContent += `</div>`;
-
-  const mailOptions = {
-    from: `"Community Connect" <${process.env.EMAIL_USER}>`,
-    to: participant.email,
-    subject: `New Message in ${opportunity.title} Chat`,
-    text: textBody,
-    html: htmlContent
-  };
-
   try {
+    // Validate participant email before attempting to send
+    const sanitizedEmail = sanitizeEmail(participant.email);
+    if (!sanitizedEmail) {
+      return {
+        success: false,
+        error: 'Invalid email address format',
+        email: participant.email
+      };
+    }
+
+    const isCompanyRecipient = participant.type === 'company';
+
+    const plainBodyLines = [
+      `Hi ${participant.name},`,
+      '',
+      `You have a new message in the chat for "${opportunity.title}"${isCompanyRecipient ? '' : ` from ${senderName}`}.`,
+    ];
+
+    if (!isCompanyRecipient) {
+      plainBodyLines.push('', `Message: ${messagePreview}${messagePreview.length >= 100 ? '...' : ''}`);
+    }
+
+    plainBodyLines.push('', 'Login to Community Connect to view the full conversation and reply.', '', 'Best regards,', 'Community Connect Team');
+
+    const textBody = plainBodyLines.join('\n');
+
+    // HTML Version – mirrors the verification-code e-mail style
+    let htmlContent = `<div style="font-family: Arial, sans-serif; line-height: 1.6;">`;
+    htmlContent += `<h2 style=\"color: #333;\">New Chat Message</h2>`;
+    htmlContent += `<p>Hi ${participant.name},</p>`;
+    htmlContent += `<p>You have a new message in the chat for <strong>\"${opportunity.title}\"</strong>${isCompanyRecipient ? '' : ` from <strong>${senderName}</strong>`}.</p>`;
+
+    if (!isCompanyRecipient) {
+      htmlContent += `<p style=\"font-style: italic; color: #555;\">\"${messagePreview}${messagePreview.length >= 100 ? '...' : ''}\"</p>`;
+    }
+
+    htmlContent += `<p>Please log in to Community Connect to view and reply.</p>`;
+    htmlContent += `<hr style=\"border: none; border-top: 1px solid #eee;\" />`;
+    htmlContent += `<p style=\"font-size: 0.9em; color: #777;\">Community Connect<br />Connecting volunteers with opportunities.</p>`;
+
+    if (!isCompanyRecipient) {
+      htmlContent += `<p style=\"font-size: 0.8em; color: #999;\">Note: To prevent spam, you'll only receive one email notification every 30 minutes per chat.</p>`;
+    }
+
+    htmlContent += `</div>`;
+
+    const mailOptions = {
+      from: `"Community Connect" <${process.env.EMAIL_USER}>`,
+      to: sanitizedEmail,
+      subject: `New Message in ${opportunity.title} Chat`,
+      text: textBody,
+      html: htmlContent
+    };
+
     const info = await transporter.sendMail(mailOptions);
-    console.log(`Chat notification email sent to ${participant.email}: %s`, info.messageId);
-    return true;
+    console.log(`Chat notification email sent to ${sanitizedEmail}: %s`, info.messageId);
+    return {
+      success: true,
+      messageId: info.messageId,
+      email: sanitizedEmail
+    };
   } catch (error) {
     console.error(`Error sending chat notification email to ${participant.email}:`, error);
-    return false;
+    return {
+      success: false,
+      error: error.message,
+      email: participant.email,
+      code: error.code || 'UNKNOWN'
+    };
   }
 }
 
 /**
- * Sends chat notification emails to all participants with rate limiting
+ * Sends chat notification emails to all participants with enhanced error handling and validation
  * @param {string} opportunityId - The opportunity ID
  * @param {string} senderEmail - The sender's email (to exclude from notifications)
  * @param {string} senderName - The sender's name
@@ -249,6 +317,17 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
     
+    // Validate sender email
+    const sanitizedSenderEmail = sanitizeEmail(senderEmail);
+    if (!sanitizedSenderEmail) {
+      console.warn(`Invalid sender email format: ${senderEmail}`);
+      return { 
+        success: false, 
+        error: 'Invalid sender email format',
+        senderEmail: senderEmail
+      };
+    }
+    
     // Get opportunity details
     const opportunitiesCollection = db.collection('opportunities');
     const opportunity = await opportunitiesCollection.findOne({ _id: new ObjectId(opportunityId) });
@@ -258,11 +337,11 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
       return { success: false, error: 'Opportunity not found' };
     }
 
-    // Get all participants
-    const participants = await getChatParticipants(opportunityId, senderEmail, senderType);
+    // Get all participants with email validation
+    const participants = await getChatParticipants(opportunityId, sanitizedSenderEmail, senderType);
     
     if (participants.length === 0) {
-      console.log('No participants found for chat notifications');
+      console.log('No valid participants found for chat notifications');
       return { success: true, emailsSent: 0, participants: [] };
     }
 
@@ -271,7 +350,9 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
       emailsSent: 0,
       rateLimited: 0,
       failed: 0,
-      participants: []
+      invalidEmails: 0,
+      participants: [],
+      errors: []
     };
 
     // Prepare message preview (first 100 characters)
@@ -280,6 +361,19 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
     // Send emails to eligible participants
     for (const participant of participants) {
       try {
+        // Double-check email validity
+        if (!isValidEmail(participant.email)) {
+          console.warn(`Skipping invalid email: ${participant.email}`);
+          results.invalidEmails++;
+          results.participants.push({
+            email: participant.email,
+            name: participant.name,
+            type: participant.type,
+            status: 'invalid_email'
+          });
+          continue;
+        }
+
         // Check rate limiting
         const shouldSend = await shouldSendEmailNotification(opportunityId, participant.email);
         
@@ -295,10 +389,10 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
           continue;
         }
 
-        // Send email
-        const emailSent = await sendChatNotificationEmail(participant, opportunity, senderName, messagePreview);
+        // Send email with enhanced error handling
+        const emailResult = await sendChatNotificationEmail(participant, opportunity, senderName, messagePreview);
         
-        if (emailSent) {
+        if (emailResult.success) {
           // Record that email was sent
           await recordEmailNotificationSent(opportunityId, participant.email);
           results.emailsSent++;
@@ -306,7 +400,8 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
             email: participant.email,
             name: participant.name,
             type: participant.type,
-            status: 'sent'
+            status: 'sent',
+            messageId: emailResult.messageId
           });
         } else {
           results.failed++;
@@ -314,7 +409,14 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
             email: participant.email,
             name: participant.name,
             type: participant.type,
-            status: 'failed'
+            status: 'failed',
+            error: emailResult.error,
+            errorCode: emailResult.code
+          });
+          results.errors.push({
+            email: participant.email,
+            error: emailResult.error,
+            code: emailResult.code
           });
         }
       } catch (error) {
@@ -324,12 +426,17 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
           email: participant.email,
           name: participant.name,
           type: participant.type,
-          status: 'error'
+          status: 'error',
+          error: error.message
+        });
+        results.errors.push({
+          email: participant.email,
+          error: error.message
         });
       }
     }
 
-    console.log(`Chat notifications completed: ${results.emailsSent} sent, ${results.rateLimited} rate limited, ${results.failed} failed`);
+    console.log(`Chat notifications completed: ${results.emailsSent} sent, ${results.rateLimited} rate limited, ${results.failed} failed, ${results.invalidEmails} invalid emails`);
     return results;
 
   } catch (error) {
