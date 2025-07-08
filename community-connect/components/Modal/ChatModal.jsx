@@ -10,6 +10,8 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [notification, setNotification] = useState('');
+  const [emailStatus, setEmailStatus] = useState(null);
   const chatMessagesEndRef = useRef(null);
 
   // Determine the role of the current user viewing the chat
@@ -42,6 +44,26 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
     chatMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Clear notifications after 5 seconds
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  // Clear email status after 10 seconds
+  useEffect(() => {
+    if (emailStatus) {
+      const timer = setTimeout(() => {
+        setEmailStatus(null);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [emailStatus]);
+
   useEffect(() => {
     if (isOpen && opportunity?._id) {
       fetchMessages();
@@ -51,6 +73,8 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
       setMessages([]);
       setNewMessage('');
       setError('');
+      setNotification('');
+      setEmailStatus(null);
     }
   }, [isOpen, opportunity?._id]);
 
@@ -82,6 +106,9 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
 
     setLoading(true);
     setError('');
+    setNotification('');
+    setEmailStatus(null);
+    
     try {
       const payload = {
         opportunityId: opportunity._id,
@@ -95,8 +122,68 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
       }
 
       const response = await axios.post('/api/chat/messages', payload);
-      setMessages([...messages, response.data]);
+      const newMessageData = response.data;
+      
+      setMessages([...messages, newMessageData]);
       setNewMessage('');
+      setNotification('Message sent successfully!');
+
+      // Handle email notification results
+      if (newMessageData.emailNotificationResults) {
+        const emailResults = newMessageData.emailNotificationResults;
+        
+        if (emailResults.success) {
+          const { emailsSent, rateLimited, failed, invalidEmails } = emailResults;
+          
+          let statusMessage = '';
+          let statusType = 'success';
+          
+          if (emailsSent > 0) {
+            statusMessage += `✓ ${emailsSent} notification${emailsSent > 1 ? 's' : ''} sent`;
+          }
+          
+          if (rateLimited > 0) {
+            if (statusMessage) statusMessage += ', ';
+            statusMessage += `${rateLimited} rate limited`;
+          }
+          
+          if (failed > 0) {
+            if (statusMessage) statusMessage += ', ';
+            statusMessage += `${failed} failed`;
+            statusType = 'warning';
+          }
+          
+          if (invalidEmails > 0) {
+            if (statusMessage) statusMessage += ', ';
+            statusMessage += `${invalidEmails} invalid email${invalidEmails > 1 ? 's' : ''}`;
+            statusType = 'warning';
+          }
+          
+          if (!statusMessage) {
+            statusMessage = 'No email notifications sent (no other participants)';
+            statusType = 'info';
+          }
+          
+          setEmailStatus({
+            message: statusMessage,
+            type: statusType,
+            details: emailResults
+          });
+        } else {
+          setEmailStatus({
+            message: 'Email notification system unavailable',
+            type: 'warning',
+            details: emailResults
+          });
+        }
+      } else if (newMessageData.emailNotificationError) {
+        setEmailStatus({
+          message: 'Email notifications temporarily unavailable',
+          type: 'warning',
+          error: newMessageData.emailNotificationError
+        });
+      }
+      
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message. Please try again.');
@@ -108,6 +195,34 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Chat for ${opportunity?.title || 'Opportunity'}`}>
       <div className="p-6 bg-gradient-to-br from-surface to-surface-dark rounded-lg shadow-xl max-h-[70vh] flex flex-col">
+        {/* Notification Bar */}
+        {(notification || emailStatus) && (
+          <div className="mb-4 space-y-2">
+            {notification && (
+              <div className="p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
+                {notification}
+              </div>
+            )}
+            {emailStatus && (
+              <div className={`p-3 border rounded-lg text-sm ${
+                emailStatus.type === 'success' ? 'bg-green-50 border-green-300 text-green-700' :
+                emailStatus.type === 'warning' ? 'bg-yellow-50 border-yellow-300 text-yellow-700' :
+                'bg-blue-50 border-blue-300 text-blue-700'
+              }`}>
+                <div className="flex items-start justify-between">
+                  <span>{emailStatus.message}</span>
+                  <button
+                    onClick={() => setEmailStatus(null)}
+                    className="ml-2 text-current opacity-60 hover:opacity-100"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="overflow-y-auto flex-grow mb-4 pr-2 space-y-4 scrollbar-thin scrollbar-thumb-accent1/50 scrollbar-track-surface-light rounded-lg">
           {loading && messages.length === 0 && (
             <div className="flex justify-center items-center h-full">

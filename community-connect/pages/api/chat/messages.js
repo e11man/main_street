@@ -56,6 +56,9 @@ export default async function handler(req, res) {
       const insertedMessage = await chatCollection.findOne({ _id: result.insertedId });
 
       // Send email notifications to all participants (excluding the sender)
+      let emailNotificationResults = null;
+      let emailNotificationError = null;
+
       try {
         // Get sender information for email notifications
         let senderEmail = '';
@@ -84,7 +87,7 @@ export default async function handler(req, res) {
 
         // Send email notifications if we have sender information
         if (senderEmail && senderName) {
-          const emailResults = await sendChatNotifications(
+          emailNotificationResults = await sendChatNotifications(
             opportunityId, 
             senderEmail, 
             senderName, 
@@ -92,18 +95,34 @@ export default async function handler(req, res) {
             senderType // pass senderType for participant logic
           );
           
-          console.log('Chat email notifications result:', emailResults);
+          console.log('Chat email notifications result:', emailNotificationResults);
           
-          // Add email notification results to the response (optional - for debugging/monitoring)
-          insertedMessage.emailNotificationResults = emailResults;
+          // Only include detailed results if there are issues or for debugging
+          if (emailNotificationResults.failed > 0 || 
+              emailNotificationResults.invalidEmails > 0 || 
+              !emailNotificationResults.success) {
+            insertedMessage.emailNotificationResults = emailNotificationResults;
+          } else {
+            // Simplified results for successful sends
+            insertedMessage.emailNotificationResults = {
+              success: true,
+              emailsSent: emailNotificationResults.emailsSent,
+              rateLimited: emailNotificationResults.rateLimited
+            };
+          }
         } else {
           console.warn('Could not determine sender information for email notifications');
+          emailNotificationError = 'Could not determine sender information';
         }
       } catch (emailError) {
         // Email notifications should not fail the chat message posting
         console.error('Error sending chat email notifications:', emailError);
-        // Optionally add error info to response for debugging
-        insertedMessage.emailNotificationError = emailError.message;
+        emailNotificationError = emailError.message;
+      }
+
+      // Add email status to response
+      if (emailNotificationError) {
+        insertedMessage.emailNotificationError = emailNotificationError;
       }
 
       res.status(201).json(insertedMessage);
