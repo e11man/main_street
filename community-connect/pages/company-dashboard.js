@@ -283,61 +283,61 @@ export default function CompanyDashboard() {
       <main className="container mx-auto px-4 pt-24 pb-8"> {/* Added pt-24 for padding top */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold">{companyData.name} Dashboard</h1>
-            <p className="text-gray-600">{companyData.email}</p>
+            <h1 className="text-3xl font-bold text-primary font-montserrat">{companyData.name} Dashboard</h1>
+            <p className="text-text-secondary font-source-serif">{companyData.email}</p>
           </div>
           <button
             onClick={handleLogout}
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+            className="bg-text-secondary hover:bg-text-primary text-white font-bold py-2 px-4 rounded font-montserrat"
           >
             Logout
           </button>
         </div>
 
-        <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+        <div className="bg-background shadow-md rounded-lg p-6 mb-8 border border-border">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Company Information</h2>
+            <h2 className="text-xl font-semibold text-primary font-montserrat">Company Information</h2>
             <button
               onClick={openCompanyInfoModal}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              className="bg-accent1 hover:bg-accent1-dark text-white font-bold py-2 px-4 rounded font-montserrat"
             >
               Edit Information
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-gray-600">Description:</p>
-              <p>{companyData.description || 'No description provided'}</p>
+              <p className="text-text-secondary font-montserrat">Description:</p>
+              <p className="text-text-primary font-source-serif">{companyData.description || 'No description provided'}</p>
             </div>
             <div>
-              <p className="text-gray-600">Website:</p>
-              <p>{companyData.website || 'No website provided'}</p>
+              <p className="text-text-secondary font-montserrat">Website:</p>
+              <p className="text-text-primary font-source-serif">{companyData.website || 'No website provided'}</p>
             </div>
             <div>
-              <p className="text-gray-600">Phone:</p>
-              <p>{companyData.phone || 'No phone number provided'}</p>
+              <p className="text-text-secondary font-montserrat">Phone:</p>
+              <p className="text-text-primary font-source-serif">{companyData.phone || 'No phone number provided'}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white shadow-md rounded-lg p-6">
+        <div className="bg-background shadow-md rounded-lg p-6 border border-border">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Your Opportunities</h2>
+            <h2 className="text-xl font-semibold text-primary font-montserrat">Your Opportunities</h2>
             <button
               onClick={() => setIsOpportunityModalOpen(true)}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              className="bg-accent1 hover:bg-accent1-dark text-white font-bold py-2 px-4 rounded font-montserrat"
             >
               Add New Opportunity
             </button>
           </div>
           
           {opportunities.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No opportunities yet. Create your first one!</p>
+            <p className="text-text-secondary text-center py-4 font-source-serif">No opportunities yet. Create your first one!</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-white">
+              <table className="min-w-full bg-background">
                 <thead>
-                  <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                  <tr className="bg-surface text-text-secondary uppercase text-sm leading-normal font-montserrat">
                     <th className="py-3 px-6 text-left">Title</th>
                     <th className="py-3 px-6 text-left">Category</th>
                     <th className="py-3 px-6 text-left">Date</th>
@@ -345,9 +345,9 @@ export default function CompanyDashboard() {
                     <th className="py-3 px-6 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="text-gray-600 text-sm">
+                <tbody className="text-text-primary text-sm font-source-serif">
                   {opportunities.map((opportunity) => (
-                    <tr key={opportunity._id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <tr key={opportunity._id} className="border-b border-border hover:bg-surface-hover">
                       <td className="py-3 px-6 text-left">{opportunity.title}</td>
                       <td className="py-3 px-6 text-left">{opportunity.category}</td>
                       <td className="py-3 px-6 text-left">{new Date(opportunity.date).toLocaleDateString()}</td>
@@ -356,19 +356,19 @@ export default function CompanyDashboard() {
                         <div className="flex item-center justify-center space-x-2">
                           <button
                             onClick={() => openOpportunityModal(opportunity)}
-                            className="text-blue-600 hover:text-blue-800 transition-colors duration-150 text-xs font-medium"
+                            className="text-accent1 hover:text-accent1-dark transition-colors duration-150 text-xs font-medium font-montserrat"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteOpportunity(opportunity._id)}
-                            className="text-red-600 hover:text-red-800 transition-colors duration-150 text-xs font-medium"
+                            className="text-accent2 hover:text-red-800 transition-colors duration-150 text-xs font-medium font-montserrat"
                           >
                             Delete
                           </button>
                           <button
                             onClick={() => openChatModal(opportunity)}
-                            className="text-green-600 hover:text-green-800 transition-colors duration-150 text-xs font-medium"
+                            className="text-accent1 hover:text-accent1-dark transition-colors duration-150 text-xs font-medium font-montserrat"
                           >
                             Chat
                           </button>

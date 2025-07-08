@@ -8,47 +8,47 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // Custom color palette matching your original style.css variables
+      // Custom color palette using CSS custom properties for theming
       colors: {
-        primary: '#1B365F',
-        'primary-light': '#284B87',
-        'primary-dark': '#14284A',
-        accent1: '#00AFCE',
-        'accent1-light': '#00C4E6',
-        'accent1-dark': '#0095AF',
-        accent2: '#E14F3D',
-        'text-primary': '#2C2C2E',
-        'text-secondary': '#6C6C70',
-        'text-tertiary': '#8E8E93',
-        background: '#FFFFFF',
-        surface: '#F8F8F9',
-        'surface-hover': '#F1F5F9',
-        border: '#E2E8F0',
-        'border-light': '#F1F5F9',
-        // Added custom colors
+        primary: 'var(--primary)',
+        'primary-light': 'var(--primary-light)',
+        'primary-dark': 'var(--primary-dark)',
+        accent1: 'var(--accent1)',
+        'accent1-light': 'var(--accent1-light)',
+        'accent1-dark': 'var(--accent1-dark)',
+        accent2: 'var(--accent2)',
+        'text-primary': 'var(--text-primary)',
+        'text-secondary': 'var(--text-secondary)',
+        'text-tertiary': 'var(--text-tertiary)',
+        background: 'var(--background)',
+        surface: 'var(--surface)',
+        'surface-hover': 'var(--surface-hover)',
+        border: 'var(--border)',
+        'border-light': 'var(--border-light)',
+        // Legacy specific colors (these can remain hardcoded)
         'taylor-purple': '#522D72',
         'legacy-gold': '#B68D40',
         'legacy-gold-light': '#D2BB8C',
       },
-      // Custom font families
+      // Custom font families using CSS custom properties
       fontFamily: {
-        montserrat: ['Montserrat', 'sans-serif'],
-        'source-serif': ['Source Serif 4', 'serif'],
+        montserrat: 'var(--font-montserrat)',
+        'source-serif': 'var(--font-source-serif)',
       },
-      // Custom border radii
+      // Custom border radii using CSS custom properties
       borderRadius: {
-        sm: '6px',
-        DEFAULT: '8px',
-        md: '12px',
-        lg: '16px',
-        xl: '24px',
+        sm: 'var(--radius-sm)',
+        DEFAULT: 'var(--radius-default)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
       },
-      // Custom box shadows
+      // Custom box shadows using CSS custom properties
       boxShadow: {
-        sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-        DEFAULT: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-        md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-        lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+        sm: 'var(--shadow-sm)',
+        DEFAULT: 'var(--shadow-default)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
         xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
       },
       // Custom keyframes for animations
