@@ -3,6 +3,54 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import ChatModal from '../components/Modal/ChatModal'; // Import ChatModal
 
+// Add the full dorm list constant after imports
+const DORM_DATA = {
+  "Away From Campus": ["Upland (abroad)"],
+  "Bergwall Hall": ["1st Bergwall", "2nd Bergwall", "3rd Bergwall", "4th Bergwall"],
+  "Breuninger Hall": ["1st Breuninger", "2nd Breuninger", "3rd Breuninger"],
+  "Brolund Hall": ["Residential Village Wing 6"],
+  "Campbell Hall": ["Univ Apts-Campbell Hall-1st Fl", "Univ Apts-Campbell Hall-2nd Fl"],
+  "Chiu Hall": ["Residential Village Wing 1"],
+  "Commuter": ["Commuter Married", "Commuter Single"],
+  "Corner House": ["Corner House Wing"],
+  "Delta Apts": ["Delta Wing"],
+  "English Hall": [
+    "1st North English", "1st South English", "2nd Center English", 
+    "2nd North English", "2nd South English", "3rd Center English", 
+    "3rd North English", "3rd South English", "English Hall - Cellar"
+  ],
+  "Flanigan Hall": ["Residential Village Wing 3"],
+  "Gerig Hall": ["2nd Gerig", "3rd Gerig", "4th Gerig"],
+  "Gygi Hall": ["Residential Village Wing 2"],
+  "Haven on 2nd": ["Second South Street", "West Spencer Avenue"],
+  "Jacobsen Hall": ["Residential Village Wing 7"],
+  "Kerlin Hall": ["Residential Village Wing 5"],
+  "Off-Campus Housing": [],
+  "Olson Hall": [
+    "1st East Olson", "1st West Olson", "2nd Center Olson", 
+    "2nd East Olson", "2nd West Olson", "3rd Center Olson", 
+    "3rd East Olson", "3rd West Olson"
+  ],
+  "Robbins Hall": ["Residential Village Wing 4"],
+  "Sammy Morris Hall": [
+    "1st Morris Center", "1st Morris North", "1st Morris South", 
+    "2nd Morris Center", "2nd Morris North", "2nd Morris South", 
+    "3rd Morris Center", "3rd Morris North", "3rd Morris South", 
+    "4th Morris Center", "4th Morris North", "4th Morris South"
+  ],
+  "Swallow Robin Hall": ["1st Swallow", "2nd Swallow", "3rd Swallow"],
+  "The Flats Apartments": ["Casa Wing"],
+  "Wengatz Hall": [
+    "1st East Wengatz", "1st West Wengatz", "2nd Center Wengatz", 
+    "2nd East Wengatz", "2nd West Wengatz", "3rd Center Wengatz", 
+    "3rd East Wengatz", "3rd West Wengatz"
+  ],
+  "Wolgemuth Hall": [
+    "Univ Apt-Wolgemuth Hall-1st Fl", "Univ Apt-Wolgemuth Hall-2nd Fl", 
+    "Univ Apt-Wolgemuth Hall-3rd Fl"
+  ]
+};
+
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
@@ -630,7 +678,7 @@ export default function AdminPage() {
 
   // Add User Modal
   const AddUserModal = () => {
-    const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', dorm: '' });
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -647,7 +695,7 @@ export default function AdminPage() {
           const newUser = await response.json();
           setUsers([...users, newUser]);
           setShowAddUser(false);
-          setFormData({ name: '', email: '', password: '' });
+          setFormData({ name: '', email: '', password: '', dorm: '' });
         } else {
           alert('Failed to create user');
         }
@@ -692,6 +740,19 @@ export default function AdminPage() {
                 className="w-full px-3 py-2 border rounded-md"
                 required
               />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Dorm</label>
+              <select
+                value={formData.dorm}
+                onChange={(e) => setFormData({...formData, dorm: e.target.value})}
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                <option value="">Choose dorm/building...</option>
+                {Object.keys(DORM_DATA).sort().map((dorm) => (
+                  <option key={dorm} value={dorm}>{dorm}</option>
+                ))}
+              </select>
             </div>
             <div className="flex justify-end space-x-2">
               <button
@@ -948,13 +1009,10 @@ export default function AdminPage() {
                 onChange={(e) => setFormData({...formData, dorm: e.target.value})}
                 className="w-full px-3 py-2 border rounded-md"
               >
-                <option value="">Choose dorm...</option>
-                <option value="Berg">Berg</option>
-                <option value="Sammy">Sammy</option>
-                <option value="Wengatz">Wengatz</option>
-                <option value="Olson">Olson</option>
-                <option value="English">English</option>
-                <option value="Brue">Brue</option>
+                <option value="">Choose dorm/building...</option>
+                {Object.keys(DORM_DATA).sort().map((dorm) => (
+                  <option key={dorm} value={dorm}>{dorm}</option>
+                ))}
               </select>
             </div>
             <div className="flex justify-end space-x-2">
