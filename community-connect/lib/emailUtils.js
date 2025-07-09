@@ -183,19 +183,44 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
     
     if (company) {
       const companyEmail = sanitizeEmail(company.email);
-      if (companyEmail && 
-          (companyEmail !== sanitizedSenderEmail || senderType === 'organization')) {
-        participants.push({
-          email: companyEmail,
-          name: company.name || 'Organization',
-          type: 'company'
-        });
-      } else if (!companyEmail && company.email) {
+      if (companyEmail) {
+        // For admin_as_host: only notify the organization owner (company)
+        if (senderType === 'admin_as_host') {
+          if (companyEmail !== sanitizedSenderEmail) {
+            participants.push({
+              email: companyEmail,
+              name: company.name || 'Organization',
+              type: 'company'
+            });
+          }
+        } 
+        // For organization: notify company if different sender
+        else if (senderType === 'organization' && companyEmail !== sanitizedSenderEmail) {
+          participants.push({
+            email: companyEmail,
+            name: company.name || 'Organization',
+            type: 'company'
+          });
+        }
+        // For user: always notify company
+        else if (senderType === 'user') {
+          participants.push({
+            email: companyEmail,
+            name: company.name || 'Organization',
+            type: 'company'
+          });
+        }
+      } else if (company.email) {
         console.warn(`Invalid company email format for company ${company._id}: ${company.email}`);
       }
     }
 
-    // Get users who have committed to this opportunity
+    // For admin_as_host: don't notify users, only the organization owner
+    if (senderType === 'admin_as_host') {
+      return participants;
+    }
+
+    // Get users who have committed to this opportunity (for organization and user senders)
     const usersCollection = db.collection('users');
     const users = await usersCollection.find({ 
       commitments: { $in: [new ObjectId(opportunityId)] }

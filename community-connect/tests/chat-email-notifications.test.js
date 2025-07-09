@@ -399,5 +399,139 @@ describe('Chat Email Notifications', () => {
         { upsert: true }
       );
     });
+
+    it('should only notify organization owner when admin sends as host', async () => {
+      const mockOpportunity = {
+        _id: new ObjectId(mockOpportunityId),
+        title: 'Test Opportunity',
+        companyId: new ObjectId().toString()
+      };
+
+      const mockCompany = {
+        _id: new ObjectId(mockOpportunity.companyId),
+        name: 'Test Company',
+        email: 'company@example.com'
+      };
+
+      const mockUsers = [
+        {
+          _id: new ObjectId(),
+          name: 'User One',
+          email: 'user1@example.com',
+          commitments: [new ObjectId(mockOpportunityId)]
+        },
+        {
+          _id: new ObjectId(),
+          name: 'User Two',
+          email: 'user2@example.com',
+          commitments: [new ObjectId(mockOpportunityId)]
+        }
+      ];
+
+      mockCollections.opportunities.findOne.mockResolvedValue(mockOpportunity);
+      mockCollections.companies.findOne.mockResolvedValue(mockCompany);
+      mockCollections.users.find().toArray.mockResolvedValue(mockUsers);
+      mockCollections.emailNotifications.findOne.mockResolvedValue(null);
+      mockCollections.emailNotifications.updateOne.mockResolvedValue({});
+
+      const nodemailer = require('nodemailer');
+      const mockTransporter = nodemailer.createTransport();
+      mockTransporter.sendMail.mockResolvedValue({ messageId: 'test-message-id' });
+
+      // Admin sending as host
+      const result = await sendChatNotifications(
+        mockOpportunityId,
+        'admin@example.com', // Admin email
+        'Admin User',
+        mockMessage,
+        'admin_as_host' // Admin sender type
+      );
+
+      // Should only send to company, not to users
+      expect(result.success).toBe(true);
+      expect(result.emailsSent).toBe(1);
+      expect(result.participants).toHaveLength(1);
+      
+      const companyParticipant = result.participants.find(p => p.email === 'company@example.com');
+      expect(companyParticipant).toBeDefined();
+      expect(companyParticipant.type).toBe('company');
+      
+      // Verify no emails were sent to users
+      expect(mockTransporter.sendMail).toHaveBeenCalledTimes(1);
+      expect(mockTransporter.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'company@example.com'
+        })
+      );
+    });
+
+    it('should notify all committed users when company sends message', async () => {
+      const mockOpportunity = {
+        _id: new ObjectId(mockOpportunityId),
+        title: 'Test Opportunity',
+        companyId: new ObjectId().toString()
+      };
+
+      const mockCompany = {
+        _id: new ObjectId(mockOpportunity.companyId),
+        name: 'Test Company',
+        email: 'company@example.com'
+      };
+
+      const mockUsers = [
+        {
+          _id: new ObjectId(),
+          name: 'User One',
+          email: 'user1@example.com',
+          commitments: [new ObjectId(mockOpportunityId)]
+        },
+        {
+          _id: new ObjectId(),
+          name: 'User Two',
+          email: 'user2@example.com',
+          commitments: [new ObjectId(mockOpportunityId)]
+        }
+      ];
+
+      mockCollections.opportunities.findOne.mockResolvedValue(mockOpportunity);
+      mockCollections.companies.findOne.mockResolvedValue(mockCompany);
+      mockCollections.users.find().toArray.mockResolvedValue(mockUsers);
+      mockCollections.emailNotifications.findOne.mockResolvedValue(null);
+      mockCollections.emailNotifications.updateOne.mockResolvedValue({});
+
+      const nodemailer = require('nodemailer');
+      const mockTransporter = nodemailer.createTransport();
+      mockTransporter.sendMail.mockResolvedValue({ messageId: 'test-message-id' });
+
+      // Company sending message
+      const result = await sendChatNotifications(
+        mockOpportunityId,
+        'company@example.com', // Company email
+        'Test Company',
+        mockMessage,
+        'organization' // Company sender type
+      );
+
+      // Should send to all committed users, but not to company (same sender)
+      expect(result.success).toBe(true);
+      expect(result.emailsSent).toBe(2);
+      expect(result.participants).toHaveLength(2);
+      
+      const userParticipants = result.participants.filter(p => p.type === 'user');
+      expect(userParticipants).toHaveLength(2);
+      
+      // Verify emails were sent to users only
+      expect(mockTransporter.sendMail).toHaveBeenCalledTimes(2);
+      expect(mockTransporter.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'user1@example.com'
+        })
+      );
+      expect(mockTransporter.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'user2@example.com'
+        })
+      );
+    });
   });
 });
