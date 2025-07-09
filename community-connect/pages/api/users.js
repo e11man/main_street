@@ -15,6 +15,32 @@ import { hash, compare } from 'bcrypt';
 import { ObjectId } from 'mongodb';
 import { sendVerificationEmail } from '../../lib/emailUtils'; // Assuming this will be created
 
+// Helper function to calculate hours from duration string
+function calculateHoursFromDuration(duration) {
+  if (!duration || typeof duration !== 'string') {
+    return 0;
+  }
+
+  // Extract numbers from duration string
+  const numbers = duration.match(/\d+(?:\.\d+)?/g);
+  
+  if (!numbers || numbers.length === 0) {
+    return 0;
+  }
+
+  // Convert to numbers
+  const hours = numbers.map(num => parseFloat(num));
+  
+  // If there's a range (e.g., "2-4 hours"), take the average
+  if (hours.length >= 2) {
+    const average = (hours[0] + hours[1]) / 2;
+    return Math.round(average * 10) / 10; // Round to 1 decimal place
+  }
+  
+  // If there's just one number, return it
+  return hours[0];
+}
+
 // Helper function to generate a random 6-digit code
 function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -102,6 +128,25 @@ async function handleRemoveCommitment(req, res, usersCollection, opportunitiesCo
         updateFilter,
         { $inc: { spotsFilled: -1 } }
       );
+      
+      // Update metrics for hours served (decrement)
+      try {
+        const client = await clientPromise;
+        const db = client.db('mainStreetOpportunities');
+        const metricsCollection = db.collection('metrics');
+        const hours = calculateHoursFromDuration(opportunity.duration);
+        
+        await metricsCollection.updateOne(
+          { _id: 'main' },
+          { 
+            $inc: { hoursServed: -hours },
+            $set: { lastUpdated: new Date() }
+          }
+        );
+      } catch (metricsError) {
+        console.error('Error updating metrics:', metricsError);
+        // Don't fail the entire operation if metrics update fails
+      }
     }
     
     // Return updated user data (excluding password)
@@ -161,6 +206,24 @@ async function handleTaylorVerify(req, res, usersCollection, taylorVerificationC
     }
 
     const result = await usersCollection.insertOne(newUser);
+
+    // Update metrics for volunteers connected
+    try {
+      const client = await clientPromise;
+      const db = client.db('mainStreetOpportunities');
+      const metricsCollection = db.collection('metrics');
+      
+      await metricsCollection.updateOne(
+        { _id: 'main' },
+        { 
+          $inc: { volunteersConnected: 1 },
+          $set: { lastUpdated: new Date() }
+        }
+      );
+    } catch (metricsError) {
+      console.error('Error updating metrics:', metricsError);
+      // Don't fail the entire operation if metrics update fails
+    }
 
     // Delete from taylorVerification collection
     await taylorVerificationCollection.deleteOne({ email: normalizedEmail });
@@ -608,6 +671,25 @@ async function handleAddCommitment(req, res, usersCollection, opportunitiesColle
       updateFilter,
       { $inc: { spotsFilled: 1 } }
     );
+    
+    // Update metrics for hours served
+    try {
+      const client = await clientPromise;
+      const db = client.db('mainStreetOpportunities');
+      const metricsCollection = db.collection('metrics');
+      const hours = calculateHoursFromDuration(opportunity.duration);
+      
+      await metricsCollection.updateOne(
+        { _id: 'main' },
+        { 
+          $inc: { hoursServed: hours },
+          $set: { lastUpdated: new Date() }
+        }
+      );
+    } catch (metricsError) {
+      console.error('Error updating metrics:', metricsError);
+      // Don't fail the entire operation if metrics update fails
+    }
     
     // Return updated user data (excluding password)
     const updatedUser = await usersCollection.findOne({ _id: new ObjectId(userId) });

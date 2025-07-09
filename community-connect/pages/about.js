@@ -7,8 +7,8 @@ import Button from '../components/ui/Button';
 import Modal from '../components/Modal/Modal';
 import VolunteerRequestForm from '../components/Modal/VolunteerRequestForm';
 import Icon from '../components/ui/Icon';
+import MetricsDisplay from '../components/Metrics/MetricsDisplay';
 import { useScrollTriggeredAnimationCallback } from '../lib/hooks';
-import { useAnimatedNumber } from '../lib/useAnimatedNumber';
 
 export default function About() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,10 +22,8 @@ export default function About() {
   const contactRef = useRef(null);
   const ctaRef = useRef(null);
   
-  // Animated numbers for impact section
-  const volunteersNumber = useAnimatedNumber(isVisible.impact ? 3500 : 0);
-  const projectsNumber = useAnimatedNumber(isVisible.impact ? 250 : 0);
-  const areasNumber = useAnimatedNumber(isVisible.impact ? 120 : 0);
+  // Metrics visibility state
+  const [metricsVisible, setMetricsVisible] = useState(false);
 
   // Apply scroll animations
   useScrollTriggeredAnimationCallback(heroRef, (entry) => {
@@ -38,6 +36,7 @@ export default function About() {
   
   useScrollTriggeredAnimationCallback(impactRef, (entry) => {
     setIsVisible(prev => ({ ...prev, impact: entry.isIntersecting }));
+    setMetricsVisible(entry.isIntersecting);
   });
   
   useScrollTriggeredAnimationCallback(whatWeDoRef, (entry) => {
@@ -180,57 +179,10 @@ export default function About() {
               </h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                { 
-                  iconPath: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z", 
-                  number: volunteersNumber, 
-                  label: "Volunteers Connected",
-                  description: "Passionate individuals serving upland"
-                },
-                { 
-                  iconPath: "M13 10V3L4 14h7v7l9-11h-7z", 
-                  number: projectsNumber, 
-                  label: "Active Projects",
-                  description: "Ongoing initiatives creating lasting change" 
-                },
-                { 
-                  iconPath: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4", 
-                  number: areasNumber, 
-                  label: "Impacted Areas in Upland",
-                  description: "Local areas in Upland transformed through service"
-                }
-              ].map((stat, index) => {
-                
-                return (
-                  <div 
-                    key={index}
-                    className={`bg-white rounded-xl md:rounded-2xl p-8 text-center shadow-md border border-border/80 overflow-hidden
-                               transition-all duration-400 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]
-                               hover:translate-y-[-8px] hover:scale-[1.02] hover:shadow-xl hover:border-accent1/50 group transform ${
-                      isVisible.impact ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-                    }`}
-                    style={{ transitionDelay: `${index * 200}ms` }}
-                  >
-                    <div className="bg-accent1/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 transition-all duration-300 group-hover:bg-accent1/20 group-hover:scale-110">
-                      <Icon 
-                        path={stat.iconPath} 
-                        className="w-8 h-8 text-accent1 transition-all duration-300 group-hover:text-accent1" 
-                      />
-                    </div>
-                    <div className="text-4xl md:text-5xl font-montserrat font-bold text-accent1 mb-2 transition-all duration-300 group-hover:text-accent1">
-                      {stat.number.toLocaleString()}
-                    </div>
-                    <div className="font-source-serif text-text-secondary font-medium transition-all duration-300 group-hover:text-text-primary mb-2">
-                      {stat.label}
-                    </div>
-                    <p className="font-source-serif text-sm text-text-secondary/80 leading-relaxed">
-                      {stat.description}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
+            <MetricsDisplay 
+              isVisible={metricsVisible}
+              layout="grid"
+            />
           </div>
         </section>
 
