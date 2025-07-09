@@ -2,6 +2,39 @@ import clientPromise from '../../../lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { sendBulkGroupSignupNotifications, sendGroupSignupNotification } from '../../../lib/email';
 
+// Helper function to calculate hours from arrival and departure times
+function calculateHoursFromTimes(arrivalTime, departureTime) {
+  if (!arrivalTime || !departureTime) {
+    return 0;
+  }
+
+  try {
+    // Parse times (format: "HH:MM" or "H:MM")
+    const [arrivalHour, arrivalMin] = arrivalTime.split(':').map(num => parseInt(num));
+    const [departureHour, departureMin] = departureTime.split(':').map(num => parseInt(num));
+    
+    // Convert to minutes for easier calculation
+    const arrivalMinutes = arrivalHour * 60 + arrivalMin;
+    let departureMinutes = departureHour * 60 + departureMin;
+    
+    // Handle case where departure is the next day (e.g., arrival 23:00, departure 01:00)
+    if (departureMinutes < arrivalMinutes) {
+      departureMinutes += 24 * 60; // Add 24 hours
+    }
+    
+    // Calculate difference in minutes and convert to hours
+    const diffMinutes = departureMinutes - arrivalMinutes;
+    const hours = diffMinutes / 60;
+    
+    // Round to 1 decimal place and ensure reasonable bounds (0.5 to 12 hours)
+    const roundedHours = Math.round(hours * 10) / 10;
+    return Math.max(0.5, Math.min(12, roundedHours));
+  } catch (error) {
+    console.error('Error calculating hours from times:', error, { arrivalTime, departureTime });
+    return 0;
+  }
+}
+
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
@@ -180,6 +213,28 @@ export default async function handler(req, res) {
         updateFilter,
         { $inc: { spotsFilled: successCount } }
       );
+
+      // Update metrics for hours served (add hours for each successful signup)
+      try {
+        const metricsCollection = db.collection('metrics');
+        
+        // Calculate hours from arrival and departure times
+        const hoursPerUser = calculateHoursFromTimes(opportunity.arrivalTime, opportunity.departureTime);
+        const totalHours = hoursPerUser * successCount;
+        
+        console.log(`Adding ${totalHours} hours to metrics for ${successCount} users in group signup for opportunity: ${opportunity.title}`);
+        
+        await metricsCollection.updateOne(
+          { _id: 'main' },
+          { 
+            $inc: { hoursServed: totalHours },
+            $set: { lastUpdated: new Date() }
+          }
+        );
+      } catch (metricsError) {
+        console.error('Error updating metrics in group signup:', metricsError);
+        // Don't fail the entire operation if metrics update fails
+      }
     }
 
     // Send email notifications to successfully signed up users

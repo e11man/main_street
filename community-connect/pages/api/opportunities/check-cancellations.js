@@ -14,6 +14,39 @@ import clientPromise from '../../../lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { sendCancellationNotifications } from '../../../lib/email';
 
+// Helper function to calculate hours from arrival and departure times
+function calculateHoursFromTimes(arrivalTime, departureTime) {
+  if (!arrivalTime || !departureTime) {
+    return 0;
+  }
+
+  try {
+    // Parse times (format: "HH:MM" or "H:MM")
+    const [arrivalHour, arrivalMin] = arrivalTime.split(':').map(num => parseInt(num));
+    const [departureHour, departureMin] = departureTime.split(':').map(num => parseInt(num));
+    
+    // Convert to minutes for easier calculation
+    const arrivalMinutes = arrivalHour * 60 + arrivalMin;
+    let departureMinutes = departureHour * 60 + departureMin;
+    
+    // Handle case where departure is the next day (e.g., arrival 23:00, departure 01:00)
+    if (departureMinutes < arrivalMinutes) {
+      departureMinutes += 24 * 60; // Add 24 hours
+    }
+    
+    // Calculate difference in minutes and convert to hours
+    const diffMinutes = departureMinutes - arrivalMinutes;
+    const hours = diffMinutes / 60;
+    
+    // Round to 1 decimal place and ensure reasonable bounds (0.5 to 12 hours)
+    const roundedHours = Math.round(hours * 10) / 10;
+    return Math.max(0.5, Math.min(12, roundedHours));
+  } catch (error) {
+    console.error('Error calculating hours from times:', error, { arrivalTime, departureTime });
+    return 0;
+  }
+}
+
 export default async function handler(req, res) {
   // Only allow POST requests (for cron job security)
   if (req.method !== 'POST') {
@@ -63,10 +96,19 @@ export default async function handler(req, res) {
           }
         );
 
-        // Get list of signed up users
+        // Get list of signed up users (handle both old numeric and new ObjectId formats)
+        const opportunityIdNum = opportunity.id; // Old format
+        const opportunityIdStr = opportunity._id.toString(); // New format
+        
         const signedUpUsers = await usersCollection.find({
-          'commitments.opportunityId': opportunity._id.toString()
+          $or: [
+            { commitments: opportunityIdNum }, // Old numeric format
+            { commitments: opportunityIdStr }, // New ObjectId string format
+            { commitments: opportunity._id } // ObjectId format
+          ]
         }).toArray();
+
+        console.log(`Found ${signedUpUsers.length} users signed up for cancelled opportunity: ${opportunity.title}`);
 
         // Get company information
         let company = null;
@@ -81,12 +123,48 @@ export default async function handler(req, res) {
           }
         }
 
-        // Remove the opportunity from users' commitments
+        // Remove the opportunity from users' commitments and track metrics
+        let usersUpdated = 0;
         for (const user of signedUpUsers) {
-          await usersCollection.updateOne(
+          // Remove commitment from user (handle all ID formats)
+          const result = await usersCollection.updateOne(
             { _id: user._id },
-            { $pull: { commitments: { opportunityId: opportunity._id.toString() } } }
+            { 
+              $pull: { 
+                commitments: { 
+                  $in: [opportunityIdNum, opportunityIdStr, opportunity._id].filter(Boolean)
+                }
+              }
+            }
           );
+          
+          if (result.modifiedCount > 0) {
+            usersUpdated++;
+          }
+        }
+
+        // Update metrics to remove hours for cancelled signups
+        if (usersUpdated > 0) {
+          try {
+            const metricsCollection = db.collection('metrics');
+            
+            // Calculate hours from arrival and departure times
+            const hoursPerUser = calculateHoursFromTimes(opportunity.arrivalTime, opportunity.departureTime);
+            const totalHoursToRemove = hoursPerUser * usersUpdated;
+            
+            console.log(`Removing ${totalHoursToRemove} hours from metrics due to cancellation of ${opportunity.title} (${usersUpdated} users affected)`);
+            
+            await metricsCollection.updateOne(
+              { _id: 'main' },
+              { 
+                $inc: { hoursServed: -totalHoursToRemove },
+                $set: { lastUpdated: new Date() }
+              }
+            );
+          } catch (metricsError) {
+            console.error('Error updating metrics during cancellation:', metricsError);
+            // Don't fail the entire operation if metrics update fails
+          }
         }
 
         // Send cancellation notifications

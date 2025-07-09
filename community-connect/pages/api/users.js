@@ -15,7 +15,7 @@ import { hash, compare } from 'bcrypt';
 import { ObjectId } from 'mongodb';
 import { sendVerificationEmail } from '../../lib/emailUtils'; // Assuming this will be created
 
-// Helper function to calculate hours from duration string
+// Helper function to calculate hours from duration string (DEPRECATED - use calculateHoursFromTimes)
 function calculateHoursFromDuration(duration) {
   if (!duration || typeof duration !== 'string') {
     return 0;
@@ -39,6 +39,39 @@ function calculateHoursFromDuration(duration) {
   
   // If there's just one number, return it
   return hours[0];
+}
+
+// Helper function to calculate hours from arrival and departure times
+function calculateHoursFromTimes(arrivalTime, departureTime) {
+  if (!arrivalTime || !departureTime) {
+    return 0;
+  }
+
+  try {
+    // Parse times (format: "HH:MM" or "H:MM")
+    const [arrivalHour, arrivalMin] = arrivalTime.split(':').map(num => parseInt(num));
+    const [departureHour, departureMin] = departureTime.split(':').map(num => parseInt(num));
+    
+    // Convert to minutes for easier calculation
+    const arrivalMinutes = arrivalHour * 60 + arrivalMin;
+    let departureMinutes = departureHour * 60 + departureMin;
+    
+    // Handle case where departure is the next day (e.g., arrival 23:00, departure 01:00)
+    if (departureMinutes < arrivalMinutes) {
+      departureMinutes += 24 * 60; // Add 24 hours
+    }
+    
+    // Calculate difference in minutes and convert to hours
+    const diffMinutes = departureMinutes - arrivalMinutes;
+    const hours = diffMinutes / 60;
+    
+    // Round to 1 decimal place and ensure reasonable bounds (0.5 to 12 hours)
+    const roundedHours = Math.round(hours * 10) / 10;
+    return Math.max(0.5, Math.min(12, roundedHours));
+  } catch (error) {
+    console.error('Error calculating hours from times:', error, { arrivalTime, departureTime });
+    return 0;
+  }
 }
 
 // Helper function to generate a random 6-digit code
@@ -187,7 +220,11 @@ async function handleRemoveCommitment(req, res, usersCollection, opportunitiesCo
         const client = await clientPromise;
         const db = client.db('mainStreetOpportunities');
         const metricsCollection = db.collection('metrics');
-        const hours = calculateHoursFromDuration(opportunity.duration);
+        
+        // Calculate hours from arrival and departure times
+        const hours = calculateHoursFromTimes(opportunity.arrivalTime, opportunity.departureTime);
+        
+        console.log(`Removing ${hours} hours from metrics for opportunity: ${opportunity.title}`);
         
         await metricsCollection.updateOne(
           { _id: 'main' },
@@ -758,7 +795,11 @@ async function handleAddCommitment(req, res, usersCollection, opportunitiesColle
       const client = await clientPromise;
       const db = client.db('mainStreetOpportunities');
       const metricsCollection = db.collection('metrics');
-      const hours = calculateHoursFromDuration(opportunity.duration);
+      
+      // Calculate hours from arrival and departure times
+      const hours = calculateHoursFromTimes(opportunity.arrivalTime, opportunity.departureTime);
+      
+      console.log(`Adding ${hours} hours to metrics for opportunity: ${opportunity.title}`);
       
       await metricsCollection.updateOne(
         { _id: 'main' },
