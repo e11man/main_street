@@ -22,7 +22,6 @@ export default function CompanyDashboard() {
     description: '',
     category: '',
     date: '',
-    time: '',
     arrivalTime: '',
     departureTime: '',
     totalSpots: '',
@@ -106,7 +105,6 @@ export default function CompanyDashboard() {
         description: opportunity.description || '',
         category: opportunity.category || '',
         date: opportunity.date || '',
-        time: opportunity.time || '',
         arrivalTime: opportunity.arrivalTime || '',
         departureTime: opportunity.departureTime || '',
         totalSpots: opportunity.totalSpots || '',
@@ -127,7 +125,6 @@ export default function CompanyDashboard() {
         description: '',
         category: '',
         date: '',
-        time: '',
         arrivalTime: '',
         departureTime: '',
         totalSpots: '',
@@ -156,9 +153,9 @@ export default function CompanyDashboard() {
   const handleOpportunitySubmit = async (e) => {
     e.preventDefault();
 
-    // Remove the minimum 6 students validation
-    if (parseInt(opportunityFormData.totalSpots, 10) < 1) {
-      setError('Please specify at least 1 volunteer spot');
+    // Ensure minimum 6 volunteers
+    if (parseInt(opportunityFormData.totalSpots, 10) < 6) {
+      setError('Please specify at least 6 volunteer spots');
       return;
     }
 
@@ -466,22 +463,6 @@ export default function CompanyDashboard() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="time">
-                Start Time <span className="text-red-500">*</span>
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="time"
-                type="time"
-                name="time"
-                value={opportunityFormData.time}
-                onChange={handleOpportunityFormChange}
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">When does the volunteer activity begin?</p>
-            </div>
-
-            <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="arrivalTime">
                 Arrival Time <span className="text-red-500">*</span>
               </label>
@@ -622,10 +603,10 @@ export default function CompanyDashboard() {
                 name="totalSpots"
                 value={opportunityFormData.totalSpots}
                 onChange={handleOpportunityFormChange}
-                min="1"
+                min="6"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">Required: 1</p>
+              <p className="text-xs text-gray-500 mt-1">Minimum required: 6</p>
             </div>
 
             <div className="mb-4">
