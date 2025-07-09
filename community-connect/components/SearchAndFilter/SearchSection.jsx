@@ -24,13 +24,28 @@ const SearchSection = ({ filter, setFilter, searchTerm, setSearchTerm, currentUs
   
   const handleDecommit = async (commitment) => {
     if (!currentUser) return;
-    
+
+    // 1. Confirmation dialog
+    const confirm = window.confirm(`Are you sure you want to cancel your commitment to "${commitment.title}"?`);
+    if (!confirm) return;
+
+    // 2. Optimistic UI update: remove commitment from userCommitments immediately
+    // We'll update the user object locally and call onUserUpdate
+    const prevCommitments = currentUser.commitments ? [...currentUser.commitments] : [];
+    const commitmentId = commitment.id || commitment._id;
+    const updatedCommitments = prevCommitments.filter(cid =>
+      cid != commitmentId && cid != String(commitmentId)
+    );
+    const optimisticUser = { ...currentUser, commitments: updatedCommitments };
+    onUserUpdate(optimisticUser);
+
+    let loadingToastId;
     try {
-      console.log('Decommitting from opportunity:', commitment);
-      
-      // Show loading toast
-      const loadingToastId = toast.loading('Removing your commitment...');
-      
+      // 3. Show loading toast
+      loadingToastId = toast.loading('Removing your commitment...');
+
+      // 4. Send both id and _id if available, fallback to string
+      const opportunityId = commitment.id || commitment._id || String(commitment.id || commitment._id);
       const response = await fetch('/api/users?removeCommitment=true', {
         method: 'POST',
         headers: {
@@ -38,24 +53,27 @@ const SearchSection = ({ filter, setFilter, searchTerm, setSearchTerm, currentUs
         },
         body: JSON.stringify({
           userId: currentUser._id,
-          opportunityId: Number(commitment.id), // Convert to number explicitly
+          opportunityId,
         }),
       });
-      
-      // Dismiss loading toast
+
       toast.dismiss(loadingToastId);
-      
+
       if (response.ok) {
         const updatedUser = await response.json();
-        // Update the current user with the new commitments
         onUserUpdate(updatedUser);
         toast.success(`Successfully removed commitment to ${commitment.title}`);
       } else {
+        // 5. Roll back UI if API fails
+        onUserUpdate({ ...currentUser, commitments: prevCommitments });
         const error = await response.json();
         console.error('Server error:', error);
         toast.error(error.error || 'Failed to remove commitment. Please try again.');
       }
     } catch (error) {
+      if (loadingToastId) toast.dismiss(loadingToastId);
+      // Roll back UI
+      onUserUpdate({ ...currentUser, commitments: prevCommitments });
       console.error('Error removing commitment:', error);
       toast.error('An error occurred while removing your commitment. Please try again later.');
     }
