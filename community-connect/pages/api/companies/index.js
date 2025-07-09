@@ -1,13 +1,12 @@
 /**
- * API Endpoint for Companies
- * -----------------------------
+ * API Endpoint for Organizations
  * 
- * This API endpoint connects to MongoDB and provides company authentication and management functionality.
+ * This API endpoint connects to MongoDB and provides organization authentication and management functionality.
  * 
- * ENDPOINT USAGE:
- * - POST /api/companies?signup=true: Creates a new company account
- * - POST /api/companies?login=true: Authenticates a company and returns company data
- * - GET /api/companies: Retrieves company data (requires authentication)
+ * Endpoints:
+ * - POST /api/organizations?signup=true: Creates a new organization account
+ * - POST /api/organizations?login=true: Authenticates an organization and returns organization data
+ * - GET /api/organizations: Retrieves organization data (requires authentication)
  */
 
 import clientPromise from '../../../lib/mongodb';
@@ -18,60 +17,62 @@ export default async function handler(req, res) {
   // Connect to MongoDB
   const client = await clientPromise;
   const db = client.db('mainStreetOpportunities');
-  const companiesCollection = db.collection('companies');
+  const organizationsCollection = db.collection('companies');
   
   // Handle different HTTP methods
   if (req.method === 'POST') {
     // Handle signup
     if (req.query.signup === 'true') {
-      return handleSignup(req, res, companiesCollection);
+      return handleSignup(req, res, organizationsCollection);
     }
     
     // Handle login
     if (req.query.login === 'true') {
-      return handleLogin(req, res, companiesCollection);
+      return handleLogin(req, res, organizationsCollection);
     }
   }
   
   if (req.method === 'GET') {
-    // Get company by ID
+    // Get organization by ID
     const { id } = req.query;
     if (id) {
       try {
-        const company = await companiesCollection.findOne({ _id: new ObjectId(id) });
-        if (!company) {
-          return res.status(404).json({ error: 'Company not found' });
+        const organization = await organizationsCollection.findOne({ _id: new ObjectId(id) });
+        if (!organization) {
+      return res.status(404).json({ error: 'Organization not found' });
         }
         
-        // Return company data (excluding password)
-        const { password: _, ...companyWithoutPassword } = company;
-        return res.status(200).json(companyWithoutPassword);
+        // Return organization data (excluding password)
+    const { password: _, ...organizationWithoutPassword } = organization;
+    
+    return res.status(200).json(organizationWithoutPassword);
       } catch (error) {
-        return res.status(500).json({ error: 'Failed to fetch company data' });
+        return res.status(500).json({ error: 'Failed to fetch organization data' });
       }
     }
     
-    // Get all companies
+    // Get all organizations
     try {
-      const companies = await companiesCollection.find({}).toArray();
-      // Remove passwords from all companies
-      const companiesWithoutPasswords = companies.map(company => {
-        const { password: _, ...companyWithoutPassword } = company;
-        return companyWithoutPassword;
+      const organizations = await organizationsCollection.find({}).toArray();
+      // Remove passwords from all organizations
+      const organizationsWithoutPasswords = organizations.map(organization => {
+        const { password: _, ...organizationWithoutPassword } = organization;
+        return organizationWithoutPassword;
       });
-      return res.status(200).json(companiesWithoutPasswords);
+      
+      return res.status(200).json(organizationsWithoutPasswords);
     } catch (error) {
-      return res.status(500).json({ error: 'Failed to fetch companies' });
+      return res.status(500).json({ error: 'Failed to fetch organizations' });
     }
   }
   
-  // Handle PUT request for updating company information
+  // Handle PUT request for updating organization information
   if (req.method === 'PUT') {
     try {
       const { id, name, description, website, phone } = req.body;
       
       if (!id) {
-        return res.status(400).json({ error: 'Company ID is required' });
+      return res.status(400).json({ error: 'Organization ID is required' });
       }
       
       // Prepare update data
@@ -81,24 +82,25 @@ export default async function handler(req, res) {
       if (website) updateData.website = website;
       if (phone) updateData.phone = phone;
       
-      // Update company in database
-      const result = await companiesCollection.updateOne(
+      // Update organization in database
+    try {
+      const result = await organizationsCollection.updateOne(
         { _id: new ObjectId(id) },
         { $set: updateData }
       );
       
       if (result.matchedCount === 0) {
-        return res.status(404).json({ error: 'Company not found' });
+        return res.status(404).json({ error: 'Organization not found' });
       }
       
-      // Get updated company data
-      const updatedCompany = await companiesCollection.findOne({ _id: new ObjectId(id) });
-      const { password: _, ...companyWithoutPassword } = updatedCompany;
+      // Get updated organization data
+      const updatedOrganization = await organizationsCollection.findOne({ _id: new ObjectId(id) });
+      const { password: _, ...organizationWithoutPassword } = updatedOrganization;
       
-      return res.status(200).json(companyWithoutPassword);
+      return res.status(200).json(organizationWithoutPassword);
     } catch (error) {
-      console.error('Error updating company:', error);
-      return res.status(500).json({ error: 'Failed to update company information' });
+      console.error('Error updating organization:', error);
+      return res.status(500).json({ error: 'Failed to update organization information' });
     }
   }
   
@@ -106,7 +108,7 @@ export default async function handler(req, res) {
   return res.status(405).json({ error: 'Method not allowed' });
 }
 
-async function handleSignup(req, res, companiesCollection) {
+async function handleSignup(req, res, organizationsCollection) {
   const { name, email, password, description, website, phone } = req.body;
   
   // Validate input
@@ -117,56 +119,56 @@ async function handleSignup(req, res, companiesCollection) {
   // Normalize email to lowercase for case-insensitive handling
   const normalizedEmail = email.toLowerCase().trim();
   
-  // Check if company already exists in companies collection
-  const existingCompany = await companiesCollection.findOne({ email: normalizedEmail });
-  if (existingCompany) {
-    return res.status(409).json({ error: 'Company with this email already exists' });
+  // Check if organization already exists in organizations collection
+  const existingOrganization = await organizationsCollection.findOne({ email: normalizedEmail });
+  if (existingOrganization) {
+    return res.status(409).json({ error: 'Organization with this email already exists' });
   }
   
-  // Check if company already exists in pending companies collection
+  // Check if organization already exists in pending organizations collection
   const client = await clientPromise;
   const db = client.db('mainStreetOpportunities');
-  const pendingCompaniesCollection = db.collection('pendingCompanies');
+  const pendingOrganizationsCollection = db.collection('pendingCompanies');
   
-  const existingPendingCompany = await pendingCompaniesCollection.findOne({ email: normalizedEmail });
-  if (existingPendingCompany) {
-    return res.status(409).json({ error: 'Company with this email is already pending approval' });
+  const existingPendingOrganization = await pendingOrganizationsCollection.findOne({ email: normalizedEmail });
+  if (existingPendingOrganization) {
+    return res.status(409).json({ error: 'Organization with this email is already pending approval' });
   }
   
   // Hash password
   const hashedPassword = await hash(password, 10);
   
-  // Create new company object
-  const newCompany = {
+  // Create new organization object
+  const newOrganization = {
     name,
     email: normalizedEmail,
     password: hashedPassword,
     description: description || '',
     website: website || '',
     phone: phone || '',
-    opportunities: [], // Array to store opportunity IDs created by this company
+    opportunities: [], // Array to store opportunity IDs created by this organization
     createdAt: new Date(),
-    approved: false // Companies require approval
+    approved: false // Organizations require approval
   };
   
-  // Insert new company into pending companies collection
+  // Insert new organization into pending organizations collection
   try {
-    const result = await pendingCompaniesCollection.insertOne(newCompany);
+    const result = await pendingOrganizationsCollection.insertOne(newOrganization);
     
-    // Return company data (excluding password)
-    const { password: _, ...companyWithoutPassword } = newCompany;
+    // Return organization data (excluding password)
+    const { password: _, ...organizationWithoutPassword } = newOrganization;
     return res.status(201).json({
-      ...companyWithoutPassword,
+      ...organizationWithoutPassword,
       pending: true,
-      message: 'Your company account has been submitted for approval. You will be notified when it is approved.'
+      message: 'Your organization account has been submitted for approval. You will be notified when it is approved.'
     });
   } catch (error) {
-    console.error('Error creating pending company:', error);
-    return res.status(500).json({ error: 'Failed to create company account' });
+    console.error('Error creating pending organization:', error);
+    return res.status(500).json({ error: 'Failed to create organization account' });
   }
 }
 
-async function handleLogin(req, res, companiesCollection) {
+async function handleLogin(req, res, organizationsCollection) {
   const { email, password } = req.body;
   
   // Validate input
@@ -177,21 +179,21 @@ async function handleLogin(req, res, companiesCollection) {
   // Normalize email to lowercase for case-insensitive handling
   const normalizedEmail = email.toLowerCase().trim();
   
-  // Find company
-  const company = await companiesCollection.findOne({ email: normalizedEmail });
-  if (!company) {
-    // Check if company is in pending companies collection
+  // Find organization
+  const organization = await organizationsCollection.findOne({ email: normalizedEmail });
+  if (!organization) {
+    // Check if organization is in pending organizations collection
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
-    const pendingCompaniesCollection = db.collection('pendingCompanies');
+    const pendingOrganizationsCollection = db.collection('pendingCompanies');
     
-    const pendingCompany = await pendingCompaniesCollection.findOne({ email: normalizedEmail });
-    if (pendingCompany) {
-      // Compare passwords for pending company
-      const passwordMatch = await compare(password, pendingCompany.password);
+    const pendingOrganization = await pendingOrganizationsCollection.findOne({ email: normalizedEmail });
+    if (pendingOrganization) {
+      // Compare passwords for pending organization
+      const passwordMatch = await compare(password, pendingOrganization.password);
       if (passwordMatch) {
         return res.status(403).json({ 
-          error: 'Your company account is pending approval by an administrator',
+          error: 'Your organization account is pending approval by an administrator',
           pending: true
         });
       }
@@ -200,21 +202,21 @@ async function handleLogin(req, res, companiesCollection) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
   
-  // Check if company is approved
-  if (!company.approved) {
+  // Check if organization is approved
+  if (!organization.approved) {
     return res.status(403).json({ 
-      error: 'Your company account is pending approval by an administrator',
+      error: 'Your organization account is pending approval by an administrator',
       pending: true
     });
   }
   
   // Compare passwords
-  const passwordMatch = await compare(password, company.password);
+  const passwordMatch = await compare(password, organization.password);
   if (!passwordMatch) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
   
-  // Return company data (excluding password)
-  const { password: _, ...companyWithoutPassword } = company;
-  return res.status(200).json(companyWithoutPassword);
+  // Return organization data (excluding password)
+  const { password: _, ...organizationWithoutPassword } = organization;
+  return res.status(200).json(organizationWithoutPassword);
 }

@@ -241,17 +241,17 @@ export default async function handler(req, res) {
     let emailResults = [];
     if (signedUpUsers.length > 0) {
       try {
-        // Get the company information for the opportunity
-        const companiesCollection = db.collection('companies');
-        const company = await companiesCollection.findOne({ _id: new ObjectId(opportunity.companyId) });
+        // Get the organization information for the opportunity
+        const organizationsCollection = db.collection('companies');
+        const organization = await organizationsCollection.findOne({ _id: new ObjectId(opportunity.organizationId) });
         
-        // Enrich opportunity with company details
+        // Enrich opportunity with organization details
         const enrichedOpportunity = {
           ...opportunity,
-          companyName: company?.name,
-          companyEmail: company?.email,
-          companyPhone: company?.phone,
-          companyWebsite: company?.website
+          organizationName: organization?.name,
+        organizationEmail: organization?.email,
+        organizationPhone: organization?.phone,
+        organizationWebsite: organization?.website
         };
 
         emailResults = await sendBulkGroupSignupNotifications(

@@ -59,7 +59,7 @@ export default async function handler(req, res) {
     const db = client.db('mainStreetOpportunities');
     const opportunitiesCollection = db.collection('opportunities');
     const usersCollection = db.collection('users');
-    const companiesCollection = db.collection('companies');
+    const organizationsCollection = db.collection('companies');
 
     // Get tomorrow's date in YYYY-MM-DD format
     const tomorrow = new Date();
@@ -110,16 +110,16 @@ export default async function handler(req, res) {
 
         console.log(`Found ${signedUpUsers.length} users signed up for cancelled opportunity: ${opportunity.title}`);
 
-        // Get company information
-        let company = null;
-        if (opportunity.companyId) {
+        // Get organization information
+        let organization = null;
+        if (opportunity.organizationId) {
           try {
-            const companyObjectId = typeof opportunity.companyId === 'string' 
-              ? new ObjectId(opportunity.companyId) 
-              : opportunity.companyId;
-            company = await companiesCollection.findOne({ _id: companyObjectId });
+            const organizationObjectId = typeof opportunity.organizationId === 'string' 
+              ? new ObjectId(opportunity.organizationId) 
+              : opportunity.organizationId;
+            organization = await organizationsCollection.findOne({ _id: organizationObjectId });
           } catch (error) {
-            console.error('Error fetching company:', error);
+            console.error('Error fetching organization:', error);
           }
         }
 
@@ -172,7 +172,7 @@ export default async function handler(req, res) {
           const emailResults = await sendCancellationNotifications(
             signedUpUsers,
             opportunity,
-            company
+            organization
           );
           
           cancellationResults.push({

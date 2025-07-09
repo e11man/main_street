@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     const metricsCollection = db.collection('metrics');
     const opportunitiesCollection = db.collection('opportunities');
     const usersCollection = db.collection('users');
-    const companiesCollection = db.collection('companies');
+    const organizationsCollection = db.collection('companies');
 
     // GET: Fetch current metrics
     if (req.method === 'GET') {
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
       });
 
       // Count unique organizations
-      const organizationsCount = await companiesCollection.countDocuments({});
+      const organizationsCount = await organizationsCollection.countDocuments({});
 
       // Calculate total hours served from opportunities
       let totalHoursServed = 0;

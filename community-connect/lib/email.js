@@ -96,13 +96,13 @@ export const sendGroupSignupNotification = async (user, opportunity, paUser) => 
               </table>
             </div>
             
-            ${opportunity.companyName || opportunity.companyEmail ? `
+            ${opportunity.organizationName || opportunity.organizationEmail ? `
             <div style="background: #fff; border: 2px solid #e9ecef; padding: 20px; margin: 25px 0; border-radius: 8px;">
               <h4 style="color: #333; margin-top: 0; margin-bottom: 15px;">🏢 Hosted by</h4>
-              ${opportunity.companyName ? `<p style="margin: 5px 0; color: #333;"><strong>${opportunity.companyName}</strong></p>` : ''}
-              ${opportunity.companyEmail ? `<p style="margin: 5px 0; color: #666;">📧 ${opportunity.companyEmail}</p>` : ''}
-              ${opportunity.companyPhone ? `<p style="margin: 5px 0; color: #666;">📞 ${opportunity.companyPhone}</p>` : ''}
-              ${opportunity.companyWebsite ? `<p style="margin: 5px 0; color: #666;">🌐 <a href="${opportunity.companyWebsite}" style="color: #667eea;">${opportunity.companyWebsite}</a></p>` : ''}
+              ${opportunity.organizationName ? `<p style="margin: 5px 0; color: #333;"><strong>${opportunity.organizationName}</strong></p>` : ''}
+              ${opportunity.organizationEmail ? `<p style="margin: 5px 0; color: #666;">📧 ${opportunity.organizationEmail}</p>` : ''}
+              ${opportunity.organizationPhone ? `<p style="margin: 5px 0; color: #666;">📞 ${opportunity.organizationPhone}</p>` : ''}
+              ${opportunity.organizationWebsite ? `<p style="margin: 5px 0; color: #666;">🌐 <a href="${opportunity.organizationWebsite}" style="color: #667eea;">${opportunity.organizationWebsite}</a></p>` : ''}
             </div>
             ` : ''}
             
@@ -136,8 +136,8 @@ ${opportunity.time ? `Time: ${opportunity.time}` : ''}
 ${opportunity.location ? `Location: ${opportunity.location}` : ''}
 ${opportunity.description ? `Description: ${opportunity.description}` : ''}
 
-${opportunity.companyName ? `Hosted by: ${opportunity.companyName}` : ''}
-${opportunity.companyEmail ? `Contact: ${opportunity.companyEmail}` : ''}
+${opportunity.organizationName ? `Hosted by: ${opportunity.organizationName}` : ''}
+${opportunity.organizationEmail ? `Contact: ${opportunity.organizationEmail}` : ''}
 
 You're all set! If you have any questions, contact your PA ${paUser.name} at ${paUser.email}.
 
@@ -173,7 +173,7 @@ export const sendBulkGroupSignupNotifications = async (users, opportunity, paUse
   return results;
 };
 
-export const sendCancellationNotification = async (user, opportunity, company) => {
+export const sendCancellationNotification = async (user, opportunity, organization) => {
   try {
     const transporter = createTransporter();
     
@@ -233,12 +233,12 @@ export const sendCancellationNotification = async (user, opportunity, company) =
               </table>
             </div>
             
-            ${company ? `
+            ${organization ? `
             <div style="background: #fff; border: 2px solid #e5e7eb; padding: 20px; margin: 25px 0; border-radius: 8px;">
               <h4 style="color: #333; margin-top: 0; margin-bottom: 15px;">🏢 Event Host</h4>
-              ${company.name ? `<p style="margin: 5px 0; color: #333;"><strong>${company.name}</strong></p>` : ''}
-              ${company.email ? `<p style="margin: 5px 0; color: #666;">📧 ${company.email}</p>` : ''}
-              ${company.phone ? `<p style="margin: 5px 0; color: #666;">📞 ${company.phone}</p>` : ''}
+              ${organization.name ? `<p style="margin: 5px 0; color: #333;"><strong>${organization.name}</strong></p>` : ''}
+              ${organization.email ? `<p style="margin: 5px 0; color: #666;">📧 ${organization.email}</p>` : ''}
+              ${organization.phone ? `<p style="margin: 5px 0; color: #666;">📞 ${organization.phone}</p>` : ''}
             </div>
             ` : ''}
             
@@ -283,7 +283,7 @@ ${opportunity.time ? `Start Time: ${opportunity.time}` : ''}
 ${opportunity.location ? `Location: ${opportunity.location}` : ''}
 Reason: ${opportunity.cancellationReason || 'Insufficient volunteer signups'}
 
-${company && company.name ? `Hosted by: ${company.name}` : ''}
+${organization && organization.name ? `Hosted by: ${organization.name}` : ''}
 
 What happens next?
 - You have been automatically removed from this event
@@ -310,11 +310,11 @@ Questions? Contact us at co@taylor.edu
   }
 };
 
-export const sendCancellationNotifications = async (users, opportunity, company) => {
+export const sendCancellationNotifications = async (users, opportunity, organization) => {
   const results = [];
   
   for (const user of users) {
-    const result = await sendCancellationNotification(user, opportunity, company);
+    const result = await sendCancellationNotification(user, opportunity, organization);
     results.push({
       email: user.email,
       name: user.name,
