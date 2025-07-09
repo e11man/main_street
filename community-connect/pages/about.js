@@ -181,7 +181,6 @@ export default function About() {
             
             <MetricsDisplay 
               isVisible={metricsVisible}
-              showHoursServed={true}
               layout="grid"
             />
           </div>

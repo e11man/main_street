@@ -22,7 +22,6 @@ export default async function handler(req, res) {
         metrics = {
           _id: 'main',
           volunteersConnected: 0,
-          projectsCompleted: 0,
           organizationsInvolved: 0,
           hoursServed: 0,
           lastUpdated: new Date()
@@ -48,7 +47,6 @@ export default async function handler(req, res) {
         metrics = {
           _id: 'main',
           volunteersConnected: 0,
-          projectsCompleted: 0,
           organizationsInvolved: 0,
           hoursServed: 0,
           lastUpdated: new Date()
@@ -90,11 +88,6 @@ export default async function handler(req, res) {
         isAdmin: { $ne: true } // Exclude admins from volunteer count
       });
 
-      // Count completed opportunities (projects)
-      const completedProjectsCount = await opportunitiesCollection.countDocuments({
-        status: 'completed'
-      });
-
       // Count unique organizations
       const organizationsCount = await companiesCollection.countDocuments({});
 
@@ -115,7 +108,6 @@ export default async function handler(req, res) {
       const updatedMetrics = {
         _id: 'main',
         volunteersConnected: volunteersCount,
-        projectsCompleted: completedProjectsCount,
         organizationsInvolved: organizationsCount,
         hoursServed: Math.round(totalHoursServed),
         lastUpdated: new Date()

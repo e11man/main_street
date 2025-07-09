@@ -6,7 +6,6 @@ const HeroStats = () => {
   const statsRef = useRef(null);
   const [metrics, setMetrics] = useState({
     volunteersConnected: 0,
-    projectsCompleted: 0,
     organizationsInvolved: 0,
     hoursServed: 0
   });
@@ -89,9 +88,9 @@ const HeroStats = () => {
         />
         <StatItem 
           className="stat-item" 
-          target={metrics.projectsCompleted} 
-          label="Projects Completed" 
-          icon="M13 10V3L4 14h7v7l9-11h-7z" 
+          target={metrics.hoursServed} 
+          label="Hours Served" 
+          icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
         />
         <StatItem 
           className="stat-item" 

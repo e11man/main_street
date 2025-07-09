@@ -122,7 +122,6 @@ export async function fetchMetrics() {
     // Return default metrics if fetch fails
     return {
       volunteersConnected: 0,
-      projectsCompleted: 0,
       organizationsInvolved: 0,
       hoursServed: 0
     };

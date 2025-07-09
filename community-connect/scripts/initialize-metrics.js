@@ -26,10 +26,11 @@ async function connectToDatabase() {
 }
 
 async function initializeMetrics() {
+  let client;
   try {
     console.log('🔄 Initializing metrics...');
     
-    const client = await connectToDatabase();
+    client = await connectToDatabase();
     const db = client.db('mainStreetOpportunities');
     
     const usersCollection = db.collection('users');
@@ -42,12 +43,6 @@ async function initializeMetrics() {
       isAdmin: { $ne: true } 
     });
     console.log(`📊 Volunteers Connected: ${volunteersCount}`);
-    
-    // Count completed opportunities (projects)
-    const completedProjectsCount = await opportunitiesCollection.countDocuments({
-      status: 'completed'
-    });
-    console.log(`📊 Projects Completed: ${completedProjectsCount}`);
     
     // Count unique organizations
     const organizationsCount = await companiesCollection.countDocuments({});
@@ -72,7 +67,6 @@ async function initializeMetrics() {
     const metrics = {
       _id: 'main',
       volunteersConnected: volunteersCount,
-      projectsCompleted: completedProjectsCount,
       organizationsInvolved: organizationsCount,
       hoursServed: Math.round(totalHoursServed),
       lastUpdated: new Date()
@@ -84,7 +78,6 @@ async function initializeMetrics() {
     console.log('✅ Metrics initialized successfully!');
     console.log('📈 Current metrics:');
     console.log(`   - Volunteers Connected: ${metrics.volunteersConnected}`);
-    console.log(`   - Projects Completed: ${metrics.projectsCompleted}`);
     console.log(`   - Organizations Involved: ${metrics.organizationsInvolved}`);
     console.log(`   - Hours Served: ${metrics.hoursServed}`);
     

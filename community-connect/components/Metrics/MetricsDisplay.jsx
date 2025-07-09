@@ -6,12 +6,10 @@ import Icon from '../ui/Icon';
 const MetricsDisplay = ({ 
   isVisible = true, 
   className = "", 
-  showHoursServed = true,
   layout = "grid" // "grid" or "list"
 }) => {
   const [metrics, setMetrics] = useState({
     volunteersConnected: 0,
-    projectsCompleted: 0,
     organizationsInvolved: 0,
     hoursServed: 0
   });
@@ -19,7 +17,6 @@ const MetricsDisplay = ({
 
   // Animated numbers
   const volunteersNumber = useAnimatedNumber(isVisible ? metrics.volunteersConnected : 0);
-  const projectsNumber = useAnimatedNumber(isVisible ? metrics.projectsCompleted : 0);
   const organizationsNumber = useAnimatedNumber(isVisible ? metrics.organizationsInvolved : 0);
   const hoursNumber = useAnimatedNumber(isVisible ? metrics.hoursServed : 0);
 
@@ -48,10 +45,10 @@ const MetricsDisplay = ({
       description: "Passionate individuals serving upland"
     },
     { 
-      iconPath: "M13 10V3L4 14h7v7l9-11h-7z", 
-      number: projectsNumber, 
-      label: "Projects Completed",
-      description: "Ongoing initiatives creating lasting change" 
+      iconPath: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", 
+      number: hoursNumber, 
+      label: "Hours Served",
+      description: "Collective time dedicated to service"
     },
     { 
       iconPath: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4", 
@@ -60,16 +57,6 @@ const MetricsDisplay = ({
       description: "Local organizations making a difference"
     }
   ];
-
-  // Add hours served if requested
-  if (showHoursServed) {
-    metricsData.push({
-      iconPath: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
-      number: hoursNumber,
-      label: "Hours Served",
-      description: "Collective time dedicated to service"
-    });
-  }
 
   if (loading) {
     return (
@@ -119,7 +106,7 @@ const MetricsDisplay = ({
 
   // Default grid layout
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${showHoursServed ? '4' : '3'} gap-6 ${className}`}>
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}>
       {metricsData.map((stat, index) => (
         <div 
           key={index}
