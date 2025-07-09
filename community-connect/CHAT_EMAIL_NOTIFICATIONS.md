@@ -10,7 +10,10 @@ The Chat Email Notifications system automatically sends email notifications to a
 - **Automatic Email Notifications**: Emails are sent when new chat messages are posted
 - **30-minute Rate Limiting**: Prevents spam by limiting emails to once every 30 minutes per recipient per chat
 - **Sender Exclusion**: The person sending the message doesn't receive an email notification
-- **Multi-participant Support**: Emails sent to all relevant parties (users, companies, admins)
+- **Smart Notification Logic**: 
+  - **Admin Messages**: When admin sends as host, only the organization owner receives notification
+  - **Company Messages**: When company sends, all committed users receive notifications
+  - **User Messages**: When user sends, company and other committed users receive notifications
 - **Beautiful Email Templates**: Professional-looking emails with message previews and opportunity details
 - **Robust Error Handling**: Email failures don't break the chat functionality
 
@@ -19,6 +22,22 @@ The Chat Email Notifications system automatically sends email notifications to a
 - **Database-tracked**: Uses MongoDB collection to track last notification times
 - **Automatic cleanup**: Old notification records are automatically deleted after 7 days via TTL index
 - **Graceful degradation**: If rate limiting check fails, emails are still sent (fail-safe approach)
+
+### 📧 Notification Logic by Sender Type
+- **Admin as Host (`admin_as_host`)**: 
+  - Only the organization owner (company email) receives notification
+  - Users who committed to the opportunity do NOT receive notifications
+  - This prevents spam when admins send messages on behalf of companies
+  
+- **Company (`organization`)**: 
+  - All users who committed to the opportunity receive notifications
+  - Company email is excluded if the company is the sender
+  - Ensures all volunteers are informed of company communications
+  
+- **User (`user`)**: 
+  - Company receives notification (organization owner)
+  - All other users who committed to the opportunity receive notifications
+  - Sender is excluded from notifications
 
 ### 📧 Email Content
 - **Message preview**: First 100 characters of the chat message
@@ -60,13 +79,14 @@ const emailResults = await sendChatNotifications(
   opportunityId, 
   senderEmail, 
   senderName, 
-  message
+  message,
+  senderType // 'user', 'organization', or 'admin_as_host'
 );
 ```
 
 ### Core Functions
 
-#### `sendChatNotifications(opportunityId, senderEmail, senderName, message)`
+#### `sendChatNotifications(opportunityId, senderEmail, senderName, message, senderType)`
 Main function that orchestrates the email notification process.
 
 **Parameters:**
@@ -74,6 +94,7 @@ Main function that orchestrates the email notification process.
 - `senderEmail`: Email of the person sending the message (excluded from notifications)
 - `senderName`: Display name of the sender
 - `message`: The chat message content
+- `senderType`: Type of sender ('user', 'organization', 'admin_as_host') - determines notification logic
 
 **Returns:**
 ```javascript
@@ -93,11 +114,12 @@ Main function that orchestrates the email notification process.
 }
 ```
 
-#### `getChatParticipants(opportunityId, senderEmail)`
-Identifies all participants in a chat by finding:
-- The company hosting the opportunity
-- All users who have committed to the opportunity
-- Excludes the sender from the list
+#### `getChatParticipants(opportunityId, senderEmail, senderType)`
+Identifies participants based on sender type:
+- **Admin as Host (`admin_as_host`)**: Only notifies the organization owner (company email)
+- **Company (`organization`)**: Notifies all committed users (excludes company if same sender)
+- **User (`user`)**: Notifies company and all other committed users
+- Always excludes the sender from notifications
 
 #### `shouldSendEmailNotification(opportunityId, recipientEmail)`
 Checks if an email should be sent based on the 30-minute rate limiting rule.
