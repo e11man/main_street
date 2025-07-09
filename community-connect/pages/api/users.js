@@ -46,6 +46,59 @@ function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// Helper function to validate and clean up user commitments
+async function validateUserCommitments(user, usersCollection, opportunitiesCollection) {
+  if (!user.commitments || user.commitments.length === 0) {
+    return { validCommitments: [], removedCount: 0 };
+  }
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+  
+  const validCommitments = [];
+  let removedCount = 0;
+  
+  for (const commitment of user.commitments) {
+    let opportunity = null;
+    
+    // Try to find opportunity by different ID formats
+    if (typeof commitment === 'number' || !isNaN(parseInt(commitment))) {
+      // Try numeric ID first
+      opportunity = await opportunitiesCollection.findOne({ id: parseInt(commitment) });
+    }
+    
+    if (!opportunity && ObjectId.isValid(commitment)) {
+      // Try ObjectId if it's a valid ObjectId string
+      opportunity = await opportunitiesCollection.findOne({ _id: new ObjectId(commitment) });
+    }
+    
+    // Check if opportunity exists and is still valid (not past its date)
+    if (opportunity) {
+      try {
+        const opportunityDate = new Date(opportunity.date);
+        opportunityDate.setHours(0, 0, 0, 0);
+        
+        // Only keep commitments for opportunities that are after today
+        if (opportunityDate > today) {
+          validCommitments.push(commitment);
+        } else {
+          console.log(`Removing expired commitment for user ${user._id}: opportunity ${opportunity.title} (date: ${opportunity.date})`);
+          removedCount++;
+        }
+      } catch (error) {
+        console.error('Error parsing opportunity date:', opportunity.date, error);
+        // If we can't parse the date, remove the commitment to be safe
+        removedCount++;
+      }
+    } else {
+      console.log(`Removing invalid commitment for user ${user._id}: commitment ID ${commitment} not found`);
+      removedCount++;
+    }
+  }
+  
+  return { validCommitments, removedCount };
+}
+
 async function handleRemoveCommitment(req, res, usersCollection, opportunitiesCollection) {
   const { userId, opportunityId } = req.body;
   
@@ -352,6 +405,10 @@ export default async function handler(req, res) {
         return await handleTaylorVerify(req, res, usersCollection, db.collection('taylorVerification'));
       } else if (req.query.resendCode === 'true') {
         return await handleResendVerificationCode(req, res, db.collection('taylorVerification'));
+      } else if (req.query.validateCommitments === 'true') {
+        return await handleValidateCommitments(req, res, usersCollection, opportunitiesCollection);
+      } else if (req.query.validateAllCommitments === 'true') {
+        return await handleValidateAllCommitments(req, res, usersCollection, opportunitiesCollection);
       } else {
         return res.status(400).json({ error: 'Invalid endpoint' });
       }
@@ -566,6 +623,30 @@ async function handleLogin(req, res, usersCollection) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
   
+  // Validate and clean up commitments if user has any
+  if (user.commitments && user.commitments.length > 0) {
+    const opportunitiesCollection = db.collection('opportunities');
+    const { validCommitments, removedCount } = await validateUserCommitments(user, usersCollection, opportunitiesCollection);
+    
+    // Update user's commitments if any were removed
+    if (removedCount > 0) {
+      await usersCollection.updateOne(
+        { _id: user._id },
+        { $set: { commitments: validCommitments } }
+      );
+      
+      console.log(`Cleaned up ${removedCount} invalid commitments for user ${user._id}`);
+      
+      // Fetch updated user data
+      const updatedUser = await usersCollection.findOne({ _id: user._id });
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      return res.status(200).json({
+        ...userWithoutPassword,
+        commitmentsCleaned: removedCount
+      });
+    }
+  }
+  
   // Return user data (excluding password)
   const { password: _, ...userWithoutPassword } = user;
   return res.status(200).json(userWithoutPassword);
@@ -697,6 +778,103 @@ async function handleAddCommitment(req, res, usersCollection, opportunitiesColle
     return res.status(200).json(userWithoutPassword);
   } catch (error) {
     console.error('Error adding commitment:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function handleValidateCommitments(req, res, usersCollection, opportunitiesCollection) {
+  const { userId } = req.body;
+  
+  // Validate input
+  if (!userId) {
+    return res.status(400).json({ error: 'Missing userId' });
+  }
+  
+  try {
+    console.log('Validating commitments for user:', userId);
+    
+    // Find user - convert string ID to MongoDB ObjectId
+    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Validate commitments using the helper function
+    const { validCommitments, removedCount } = await validateUserCommitments(user, usersCollection, opportunitiesCollection);
+    
+    // Update user's commitments if any were removed
+    if (removedCount > 0) {
+      await usersCollection.updateOne(
+        { _id: user._id },
+        { $set: { commitments: validCommitments } }
+      );
+      
+      console.log(`Cleaned up ${removedCount} invalid commitments for user ${user._id}`);
+    }
+    
+    // Fetch updated user data
+    const updatedUser = await usersCollection.findOne({ _id: user._id });
+    const { password: _, ...userWithoutPassword } = updatedUser;
+    
+    return res.status(200).json({
+      ...userWithoutPassword,
+      commitmentsCleaned: removedCount,
+      message: removedCount > 0 ? `${removedCount} invalid commitment(s) were removed` : 'All commitments are valid'
+    });
+  } catch (error) {
+    console.error('Error validating commitments:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function handleValidateAllCommitments(req, res, usersCollection, opportunitiesCollection) {
+  try {
+    console.log('Validating commitments for all users');
+    
+    // Find all users with commitments
+    const usersWithCommitments = await usersCollection.find({
+      commitments: { $exists: true, $not: { $size: 0 } }
+    }).toArray();
+    
+    if (usersWithCommitments.length === 0) {
+      return res.status(200).json({
+        message: 'No users with commitments found',
+        totalUsersProcessed: 0,
+        totalCommitmentsCleaned: 0
+      });
+    }
+    
+    let totalCommitmentsCleaned = 0;
+    const results = [];
+    
+    for (const user of usersWithCommitments) {
+      const { validCommitments, removedCount } = await validateUserCommitments(user, usersCollection, opportunitiesCollection);
+      
+      if (removedCount > 0) {
+        await usersCollection.updateOne(
+          { _id: user._id },
+          { $set: { commitments: validCommitments } }
+        );
+        
+        totalCommitmentsCleaned += removedCount;
+        results.push({
+          userId: user._id,
+          email: user.email,
+          commitmentsCleaned: removedCount
+        });
+      }
+    }
+    
+    console.log(`Cleaned up ${totalCommitmentsCleaned} invalid commitments across ${results.length} users`);
+    
+    return res.status(200).json({
+      message: `Cleaned up ${totalCommitmentsCleaned} invalid commitment(s) across ${results.length} user(s)`,
+      totalUsersProcessed: usersWithCommitments.length,
+      totalCommitmentsCleaned,
+      results
+    });
+  } catch (error) {
+    console.error('Error validating all commitments:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
