@@ -480,7 +480,7 @@ export default function CompanyDashboard() {
 
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="departureTime">
-                Expected End Time
+                Expected End Time <span className="text-red-500">*</span>
               </label>
               <input
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -489,8 +489,9 @@ export default function CompanyDashboard() {
                 name="departureTime"
                 value={opportunityFormData.departureTime}
                 onChange={handleOpportunityFormChange}
+                required
               />
-              <p className="text-xs text-gray-500 mt-1">When will the volunteers be done? (Optional but helpful)</p>
+              <p className="text-xs text-gray-500 mt-1">When will the volunteers be done? This helps volunteers plan their day.</p>
             </div>
 
             <div className="mb-4">

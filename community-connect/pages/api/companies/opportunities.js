@@ -76,7 +76,7 @@ export default async function handler(req, res) {
       } = req.body;
 
       // Validate required fields
-      if (!title || !description || !category || !date || !time || !arrivalTime || !totalSpots || !location || !companyId) {
+      if (!title || !description || !category || !date || !arrivalTime || !departureTime || !totalSpots || !location || !companyId) {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
@@ -103,7 +103,6 @@ export default async function handler(req, res) {
         spotsTotal: parseInt(totalSpots),
         spotsFilled: 0,
         location,
-        time,
         arrivalTime,
         departureTime,
         meetingPoint,
@@ -220,7 +219,7 @@ export default async function handler(req, res) {
         recurringDays
       } = req.body;
 
-      if (!id || !title || !description || !category || !date || !time || !arrivalTime || !totalSpots || !location || !companyId) {
+      if (!id || !title || !description || !category || !date || !arrivalTime || !departureTime || !totalSpots || !location || !companyId) {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
@@ -253,7 +252,6 @@ export default async function handler(req, res) {
         category,
         priority: priority || 'Medium',
         date,
-        time,
         arrivalTime,
         departureTime,
         spotsTotal: parseInt(totalSpots),
