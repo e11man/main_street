@@ -34,6 +34,22 @@ export default async function handler(req, res) {
       
       const result = await usersCollection.insertOne(userData);
       
+      // Update metrics for volunteers connected
+      try {
+        const metricsCollection = db.collection('metrics');
+        
+        await metricsCollection.updateOne(
+          { _id: 'main' },
+          { 
+            $inc: { volunteersConnected: 1 },
+            $set: { lastUpdated: new Date() }
+          }
+        );
+      } catch (metricsError) {
+        console.error('Error updating metrics:', metricsError);
+        // Don't fail the entire operation if metrics update fails
+      }
+      
       // Delete from pending users
       await pendingUsersCollection.deleteOne({ _id: new ObjectId(userId) });
 
