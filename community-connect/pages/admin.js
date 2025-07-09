@@ -60,14 +60,14 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
-  const [companies, setCompanies] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
   const [blockedEmails, setBlockedEmails] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
-  const [pendingCompanies, setPendingCompanies] = useState([]);
+  const [pendingOrganizations, setPendingOrganizations] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [editingOpportunity, setEditingOpportunity] = useState(null);
-  const [editingCompany, setEditingCompany] = useState(null);
+  const [editingOrganization, setEditingOrganization] = useState(null);
   const [showAddUser, setShowAddUser] = useState(false);
   const [showAddOpportunity, setShowAddOpportunity] = useState(false);
   const [showAddBlockedEmail, setShowAddBlockedEmail] = useState(false);
@@ -89,8 +89,8 @@ export default function AdminPage() {
   const [searchTerms, setSearchTerms] = useState({
     users: '',
     pendingUsers: '',
-    companies: '',
-    pendingCompanies: '',
+    organizations: '',
+    pendingOrganizations: '',
     opportunities: '',
     blockedEmails: '',
     themes: ''
@@ -187,11 +187,11 @@ export default function AdminPage() {
     
     // Clear any existing data
     setUsers([]);
-    setCompanies([]);
+    setOrganizations([]);
     setOpportunities([]);
     setBlockedEmails([]);
     setPendingUsers([]);
-    setPendingCompanies([]);
+    setPendingOrganizations([]);
   };
 
   // Utility function for making authenticated API calls with automatic 401 handling
@@ -421,17 +421,17 @@ export default function AdminPage() {
   };
 
   const openChatModalForAdmin = (opportunity) => {
-    // Ensure opportunity has companyId, if not, try to find it or use a placeholder
-    // This is crucial for admin to send messages as the host.
-    const opportunityWithCompanyId = {
+    // Ensure opportunity has organizationId, if not, try to find it or use a placeholder
+    console.log('Selected opportunity for chat:', opportunity);
+    const opportunityWithOrganizationId = {
       ...opportunity,
-      companyId: opportunity.companyId || opportunity.company?._id || opportunity.company, // Adjust based on actual structure
+      organizationId: opportunity.organizationId || opportunity.organization?._id || opportunity.organization, // Adjust based on actual structure
     };
-    if (!opportunityWithCompanyId.companyId) {
-      alert("Error: Company ID missing for this opportunity. Admin cannot chat as host.");
+    if (!opportunityWithOrganizationId.organizationId) {
+      alert("Error: Organization ID missing for this opportunity. Admin cannot chat as host.");
       return;
     }
-    setSelectedOpportunityForChat(opportunityWithCompanyId);
+    setSelectedOpportunityForChat(opportunityWithOrganizationId);
     setIsChatModalOpen(true);
   };
 
@@ -501,15 +501,15 @@ export default function AdminPage() {
         return; // Stop further API calls on error
       }
 
-      // Fetch companies
-      const companiesResponse = await fetch('/api/companies', {
+      // Fetch organizations
+      const organizationsResponse = await fetch('/api/organizations', {
         credentials: 'include'
       });
-      if (companiesResponse.ok) {
-        const companiesData = await companiesResponse.json();
-        setCompanies(companiesData);
-      } else if (companiesResponse.status === 401) {
-        console.log('❌ 401 error fetching companies - token expired');
+      if (organizationsResponse.ok) {
+        const organizationsData = await organizationsResponse.json();
+        setOrganizations(organizationsData);
+      } else if (organizationsResponse.status === 401) {
+        console.log('❌ 401 error fetching organizations - token expired');
         handleTokenExpiration();
         return;
       }
@@ -553,15 +553,15 @@ export default function AdminPage() {
         return;
       }
 
-      // Fetch pending companies
-      const pendingCompaniesResponse = await fetch('/api/admin/pending-companies', {
+      // Fetch pending organizations
+      const pendingOrganizationsResponse = await fetch('/api/admin/pending-organizations', {
         credentials: 'include'
       });
-      if (pendingCompaniesResponse.ok) {
-        const pendingCompaniesData = await pendingCompaniesResponse.json();
-        setPendingCompanies(pendingCompaniesData);
-      } else if (pendingCompaniesResponse.status === 401) {
-        console.log('❌ 401 error fetching pending companies - token expired');
+      if (pendingOrganizationsResponse.ok) {
+        const pendingOrganizationsData = await pendingOrganizationsResponse.json();
+        setPendingOrganizations(pendingOrganizationsData);
+      } else if (pendingOrganizationsResponse.status === 401) {
+        console.log('❌ 401 error fetching pending organizations - token expired');
         handleTokenExpiration();
         return;
       }
@@ -637,26 +637,26 @@ export default function AdminPage() {
     }
   };
 
-  const deleteCompany = async (companyId) => {
-    if (!confirm('Are you sure you want to delete this company?')) return;
+  const deleteOrganization = async (organizationId) => {
+    if (!confirm('Are you sure you want to delete this organization?')) return;
 
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/companies/${companyId}`, {
+      const response = await fetch(`/api/admin/organizations/${organizationId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
 
       if (response.ok) {
-        setCompanies(companies.filter(company => company._id !== companyId && (company.id !== companyId || !company.id)));
-        alert('Company deleted successfully');
+        setOrganizations(organizations.filter(organization => organization._id !== organizationId && (organization.id !== organizationId || !organization.id)));
+        alert('Organization deleted successfully');
       } else {
         const errorData = await response.json();
-        alert(errorData.error || 'Failed to delete company');
+        alert(errorData.error || 'Failed to delete organization');
       }
     } catch (error) {
-      console.error('Error deleting company:', error);
-      alert('Error deleting company');
+      console.error('Error deleting organization:', error);
+      alert('Error deleting organization');
     } finally {
       setLoading(false);
     }
@@ -760,51 +760,51 @@ export default function AdminPage() {
     }
   };
 
-  const approveCompany = async (companyId) => {
-    if (!confirm('Are you sure you want to approve this company?')) return;
+  const approveOrganization = async (organizationId) => {
+    if (!confirm('Are you sure you want to approve this organization?')) return;
 
     try {
-      const response = await fetch('/api/admin/pending-companies?approve=true', {
+      const response = await fetch('/api/admin/pending-organizations?approve=true', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ companyId }),
+        body: JSON.stringify({ organizationId }),
       });
 
       if (response.ok) {
-        setPendingCompanies(pendingCompanies.filter(company => company._id !== companyId));
-        // Refresh data to include the newly approved company
+        setPendingOrganizations(pendingOrganizations.filter(organization => organization._id !== organizationId));
+        // Refresh data to include the newly approved organization
         fetchData();
       } else {
-        alert('Failed to approve company');
+        alert('Failed to approve organization');
       }
     } catch (error) {
-      alert('Error approving company');
+      alert('Error approving organization');
     }
   };
 
-  const rejectCompany = async (companyId) => {
-    if (!confirm('Are you sure you want to reject this company?')) return;
+  const rejectOrganization = async (organizationId) => {
+    if (!confirm('Are you sure you want to reject this organization?')) return;
 
     try {
-      const response = await fetch('/api/admin/pending-companies', {
+      const response = await fetch('/api/admin/pending-organizations', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ companyId }),
+        body: JSON.stringify({ organizationId }),
       });
 
       if (response.ok) {
-        setPendingCompanies(pendingCompanies.filter(company => company._id !== companyId));
+        setPendingOrganizations(pendingOrganizations.filter(organization => organization._id !== organizationId));
       } else {
-        alert('Failed to reject company');
+        alert('Failed to reject organization');
       }
     } catch (error) {
-      alert('Error rejecting company');
+      alert('Error rejecting organization');
     }
   };
 
@@ -1014,15 +1014,15 @@ export default function AdminPage() {
     );
   };
 
-  const filterCompanies = (companiesList, searchTerm) => {
-    if (!searchTerm.trim()) return companiesList;
+  const filterOrganizations = (organizationsList, searchTerm) => {
+    if (!searchTerm.trim()) return organizationsList;
     const term = searchTerm.toLowerCase();
-    return companiesList.filter(company => 
-      company.name?.toLowerCase().includes(term) ||
-      company.email?.toLowerCase().includes(term) ||
-      company.website?.toLowerCase().includes(term) ||
-      company.phone?.toLowerCase().includes(term) ||
-      company.description?.toLowerCase().includes(term)
+    return organizationsList.filter(organization => 
+      organization.name?.toLowerCase().includes(term) ||
+      organization.email?.toLowerCase().includes(term) ||
+      organization.website?.toLowerCase().includes(term) ||
+      organization.phone?.toLowerCase().includes(term) ||
+      organization.description?.toLowerCase().includes(term)
     );
   };
 
@@ -1059,8 +1059,8 @@ export default function AdminPage() {
   // Get filtered data
   const filteredUsers = filterUsers(users, searchTerms.users);
   const filteredPendingUsers = filterUsers(pendingUsers, searchTerms.pendingUsers);
-  const filteredCompanies = filterCompanies(companies, searchTerms.companies);
-  const filteredPendingCompanies = filterCompanies(pendingCompanies, searchTerms.pendingCompanies);
+  const filteredOrganizations = filterOrganizations(organizations, searchTerms.organizations);
+  const filteredPendingOrganizations = filterOrganizations(pendingOrganizations, searchTerms.pendingOrganizations);
   const filteredOpportunities = filterOpportunities(opportunities, searchTerms.opportunities);
   const filteredBlockedEmails = filterBlockedEmails(blockedEmails, searchTerms.blockedEmails);
   const filteredThemes = filterThemes(themes, searchTerms.themes);
@@ -1634,14 +1634,14 @@ export default function AdminPage() {
   };
 
   // Edit Company Modal
-  const EditCompanyModal = () => {
+  const EditOrganizationModal = () => {
     const [formData, setFormData] = useState({
-      _id: editingCompany?._id || '',
-      name: editingCompany?.name || '',
-      email: editingCompany?.email || '',
-      website: editingCompany?.website || '',
-      phone: editingCompany?.phone || '',
-      description: editingCompany?.description || ''
+      _id: editingOrganization?._id || '',
+      name: editingOrganization?.name || '',
+      email: editingOrganization?.email || '',
+      website: editingOrganization?.website || '',
+      phone: editingOrganization?.phone || '',
+      description: editingOrganization?.description || ''
     });
     const [loading, setLoading] = useState(false);
 
@@ -1649,7 +1649,7 @@ export default function AdminPage() {
       e.preventDefault();
       setLoading(true);
       try {
-        const response = await fetch(`/api/admin/companies/${formData._id}`, {
+        const response = await fetch(`/api/admin/organizations/${formData._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -1657,16 +1657,16 @@ export default function AdminPage() {
         });
 
         if (response.ok) {
-          const updatedCompany = await response.json();
-          setCompanies(companies.map(company => 
-            company._id === updatedCompany._id ? updatedCompany : company
+          const updatedOrganization = await response.json();
+          setOrganizations(organizations.map(organization => 
+            organization._id === updatedOrganization._id ? updatedOrganization : organization
           ));
-          setEditingCompany(null);
+          setEditingOrganization(null);
         } else {
-          alert('Failed to update company');
+          alert('Failed to update organization');
         }
       } catch (error) {
-        alert('Error updating company');
+        alert('Error updating organization');
       } finally {
         setLoading(false);
       }
@@ -1675,7 +1675,7 @@ export default function AdminPage() {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white p-6 rounded-lg w-96 max-h-96 overflow-y-auto">
-          <h3 className="text-lg font-semibold mb-4">Edit Company</h3>
+          <h3 className="text-lg font-semibold mb-4">Edit Organization</h3>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2">Name</label>
@@ -1728,7 +1728,7 @@ export default function AdminPage() {
             <div className="flex justify-end space-x-2">
               <button
                 type="button"
-                onClick={() => setEditingCompany(null)}
+                onClick={() => setEditingOrganization(null)}
                 className="px-4 py-2 text-gray-600 border rounded-md"
               >
                 Cancel
@@ -1738,7 +1738,7 @@ export default function AdminPage() {
                 disabled={loading}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50"
               >
-                {loading ? 'Updating...' : 'Update Company'}
+                {loading ? 'Updating...' : 'Update Organization'}
               </button>
             </div>
           </form>
@@ -2391,24 +2391,24 @@ export default function AdminPage() {
                 Pending Users ({pendingUsers.length})
               </button>
               <button
-                onClick={() => setActiveTab('companies')}
+                onClick={() => setActiveTab('organizations')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'companies'
+                  activeTab === 'organizations'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Companies ({companies.length})
+                Organizations ({organizations.length})
               </button>
               <button
-                onClick={() => setActiveTab('pendingCompanies')}
+                onClick={() => setActiveTab('pendingOrganizations')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'pendingCompanies'
+                  activeTab === 'pendingOrganizations'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Pending Companies ({pendingCompanies.length})
+                Pending Organizations ({pendingOrganizations.length})
               </button>
               <button
                 onClick={() => setActiveTab('opportunities')}
@@ -2498,7 +2498,7 @@ export default function AdminPage() {
           {process.env.NODE_ENV === 'development' && (
             <div className="mb-6 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
               <p><strong>Debug Info:</strong></p>
-              <p>Users count: {users.length} | Companies: {companies.length} | Opportunities: {opportunities.length}</p>
+              <p>Users count: {users.length} | Organizations: {organizations.length} | Opportunities: {opportunities.length}</p>
               <p>Auth: {isAuthenticated ? '✅' : '❌'} | Admin User: {adminUser ? '✅' : '❌'}</p>
               <p>Active Tab: {activeTab}</p>
             </div>
@@ -2641,7 +2641,7 @@ export default function AdminPage() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spots</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chat</th>
@@ -2656,8 +2656,8 @@ export default function AdminPage() {
                             {opportunity.title}
                             {opportunity.priority && <span className="ml-1 text-xs text-gray-400">({opportunity.priority})</span>}
                           </td>
-                          {/* Company */}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{opportunity.companyName || '—'}</td>
+                          {/* Organization */}
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{opportunity.organizationName || '—'}</td>
                           {/* Date */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{opportunity.date}</td>
                           {/* Spots */}
@@ -2772,19 +2772,19 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* Companies Tab */}
-          {activeTab === 'companies' && (
+          {/* Organizations Tab */}
+          {activeTab === 'organizations' && (
             <div>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Companies Management</h2>
+                <h2 className="text-xl font-semibold">Organizations Management</h2>
               </div>
               <div className="mb-4">
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search companies by name, email, website, phone, or description..."
-                    value={searchTerms.companies}
-                    onChange={(e) => handleSearchChange('companies', e.target.value)}
+                    placeholder="Search organizations by name, email, website, phone, or description..."
+                    value={searchTerms.organizations}
+                    onChange={(e) => handleSearchChange('organizations', e.target.value)}
                     className="w-full px-4 py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -2807,37 +2807,37 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredCompanies.map(company => (
-                        <tr key={company._id} className="hover:bg-gray-50">
+                      {filteredOrganizations.map(organization => (
+                        <tr key={organization._id} className="hover:bg-gray-50">
                           {/* Name */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {company.name}
-                            <div className="text-xs text-gray-400">Registered: {new Date(company.createdAt).toLocaleDateString()}</div>
+                            {organization.name}
+                            <div className="text-xs text-gray-400">Registered: {new Date(organization.createdAt).toLocaleDateString()}</div>
                           </td>
                           {/* Description */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate">
-                            {company.description || '—'}
+                            {organization.description || '—'}
                           </td>
                           {/* Website */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 underline">
-                            {company.website ? (
-                              <a href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer">
-                                {company.website}
+                            {organization.website ? (
+                              <a href={organization.website.startsWith('http') ? organization.website : `https://${organization.website}`} target="_blank" rel="noopener noreferrer">
+                                {organization.website}
                               </a>
                             ) : '—'}
                           </td>
                           {/* Phone */}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{company.phone || '—'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{organization.phone || '—'}</td>
                           {/* Actions */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2 min-w-[120px]">
                             <button
-                              onClick={() => setEditingCompany(company)}
+                              onClick={() => setEditingOrganization(organization)}
                               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs"
                             >
                               Edit
                             </button>
                             <button
-                              onClick={() => deleteCompany(company._id)}
+                              onClick={() => deleteOrganization(organization._id)}
                               className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs"
                             >
                               Delete
@@ -2845,10 +2845,10 @@ export default function AdminPage() {
                           </td>
                         </tr>
                       ))}
-                      {filteredCompanies.length === 0 && (
+                      {filteredOrganizations.length === 0 && (
                         <tr>
                           <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                            {companies.length ? 'No companies found matching your search' : 'No companies found'}
+                            {organizations.length ? 'No organizations found matching your search' : 'No organizations found'}
                           </td>
                         </tr>
                       )}
@@ -2859,19 +2859,19 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* Pending Companies Tab */}
-          {activeTab === 'pendingCompanies' && (
+          {/* Pending Organizations Tab */}
+          {activeTab === 'pendingOrganizations' && (
             <div>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Pending Companies Management</h2>
+                <h2 className="text-xl font-semibold">Pending Organizations Management</h2>
               </div>
               <div className="mb-4">
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search pending companies by name, email, website, phone, or description..."
-                    value={searchTerms.pendingCompanies}
-                    onChange={(e) => handleSearchChange('pendingCompanies', e.target.value)}
+                    placeholder="Search pending organizations by name, email, website, phone, or description..."
+                    value={searchTerms.pendingOrganizations}
+                    onChange={(e) => handleSearchChange('pendingOrganizations', e.target.value)}
                     className="w-full px-4 py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -2893,29 +2893,29 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredPendingCompanies.map(company => (
-                        <tr key={company._id} className="hover:bg-gray-50">
+                      {filteredPendingOrganizations.map(organization => (
+                        <tr key={organization._id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {company.name}
-                            <div className="text-xs text-gray-400">{company.email}</div>
+                            {organization.name}
+                            <div className="text-xs text-gray-400">{organization.email}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 underline">
-                            {company.website ? (
-                              <a href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer">
-                                {company.website}
+                            {organization.website ? (
+                              <a href={organization.website.startsWith('http') ? organization.website : `https://${organization.website}`} target="_blank" rel="noopener noreferrer">
+                                {organization.website}
                               </a>
                             ) : '—'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(company.createdAt).toLocaleDateString()}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(organization.createdAt).toLocaleDateString()}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2 min-w-[120px]">
                             <button
-                              onClick={() => approveCompany(company._id)}
+                              onClick={() => approveOrganization(organization._id)}
                               className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-xs"
                             >
                               Approve
                             </button>
                             <button
-                              onClick={() => rejectCompany(company._id)}
+                              onClick={() => rejectOrganization(organization._id)}
                               className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs"
                             >
                               Reject
@@ -2923,10 +2923,10 @@ export default function AdminPage() {
                           </td>
                         </tr>
                       ))}
-                      {filteredPendingCompanies.length === 0 && (
+                      {filteredPendingOrganizations.length === 0 && (
                         <tr>
                           <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
-                            {pendingCompanies.length ? 'No pending companies found matching your search' : 'No pending companies found'}
+                            {pendingOrganizations.length ? 'No pending organizations found matching your search' : 'No pending organizations found'}
                           </td>
                         </tr>
                       )}
@@ -3139,7 +3139,7 @@ export default function AdminPage() {
         {showAddOpportunity && <AddOpportunityModal />}
         {editingUser && <EditUserModal />}
         {editingOpportunity && <EditOpportunityModal />}
-        {editingCompany && <EditCompanyModal />}
+        {editingOrganization && <EditOrganizationModal />}
         {showAddBlockedEmail && <AddBlockedEmailModal />}
         {showAddTheme && <AddThemeModal />}
         {editingTheme && <EditThemeModal />}
@@ -3154,7 +3154,7 @@ export default function AdminPage() {
             }}
             opportunity={selectedOpportunityForChat}
             currentUser={adminUser} // Pass admin user object
-            isCompany={false} // Admin is not the company, but will act as them
+            isCompany={false} // Admin is not the organization, but will act as them
                               // ChatModal logic uses currentUser.isAdmin to set viewerIs='admin'
           />
         )}

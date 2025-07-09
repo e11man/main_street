@@ -91,20 +91,20 @@ export default asyncHandler(async function handler(req, res) {
     // Get all opportunities from the collection
     const allOpportunities = await db.collection('opportunities').find({}).toArray();
     
-    // Get all companies to join with opportunities
-    const allCompanies = await db.collection('companies').find({}).toArray();
-    const companiesMap = new Map(allCompanies.map(company => [company._id.toString(), company]));
+    // Get all organizations to join with opportunities
+    const allOrganizations = await db.collection('companies').find({}).toArray();
+    const organizationsMap = new Map(allOrganizations.map(organization => [organization._id.toString(), organization]));
     
-    // Enrich opportunities with company information
+    // Enrich opportunities with organization information
     const enrichedOpportunities = allOpportunities.map(opportunity => {
-      const company = companiesMap.get(opportunity.companyId?.toString());
+      const organization = organizationsMap.get(opportunity.organizationId?.toString());
       return {
         ...opportunity,
-        companyName: company?.name || opportunity.companyName,
-        companyEmail: company?.email,
-        companyPhone: company?.phone,
-        companyWebsite: company?.website,
-        companyDescription: company?.description
+        organizationName: organization?.name || opportunity.organizationName,
+        organizationEmail: organization?.email,
+        organizationPhone: organization?.phone,
+        organizationWebsite: organization?.website,
+        organizationDescription: organization?.description
       };
     });
     
@@ -169,7 +169,7 @@ async function cleanupOldOpportunities(db) {
     );
     // Remove chat messages for these opportunities
     await db.collection('chatMessages').deleteMany({ opportunityId: { $in: oldIds } });
-    // Optionally, remove from company arrays
+    // Optionally, remove from organization arrays
     await db.collection('companies').updateMany(
       {},
       { $pull: { opportunities: { $in: oldIds } } }

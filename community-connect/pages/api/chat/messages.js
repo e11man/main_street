@@ -25,20 +25,20 @@ export default async function handler(req, res) {
 
       let finalSenderId;
       if (senderType === 'admin_as_host') {
-        // For admin_as_host, the 'senderId' in the message should be the company's ID (opportunity's companyId).
+        // For admin_as_host, the 'senderId' in the message should be the organization's ID (opportunity's organizationId).
         // The 'actualSenderId' (admin's ID) can be stored for audit if needed, or just used for validation.
-        // For simplicity here, we'll assume the frontend sends the correct companyId as senderId when admin sends as host.
-        // If opportunity object is not directly available here, this might need adjustment or rely on frontend sending companyId.
+        // For simplicity here, we'll assume the frontend sends the correct organizationId as senderId when admin sends as host.
+        // If opportunity object is not directly available here, this might need adjustment or rely on frontend sending organizationId.
         // Let's assume opportunityId is for the opportunity, and senderId is the ID of who is *appearing* to send.
-        if (!senderId) return res.status(400).json({ error: 'senderId (companyId) is required when admin is sending as host.' });
-        finalSenderId = new ObjectId(senderId); // This would be the companyId
+        if (!senderId) return res.status(400).json({ error: 'senderId (organizationId) is required when admin is sending as host.' });
+        finalSenderId = new ObjectId(senderId); // This would be the organizationId
       } else {
         finalSenderId = new ObjectId(senderId);
       }
 
       const newMessage = {
         opportunityId: new ObjectId(opportunityId),
-        senderId: finalSenderId, // This is who the message appears from (user or company)
+        senderId: finalSenderId, // This is who the message appears from (user or organization)
         senderType, // "user", "organization", or "admin_as_host" (or just "organization" if admin posts as them)
         message,
         timestamp: new Date(),
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
 
       // If admin is sending, we might want to log which admin sent it.
       // For now, senderType: "admin_as_host" can imply an admin action.
-      // Or, if senderType remains "organization", the frontend logic for admin sending would set senderId to companyId.
+      // Or, if senderType remains "organization", the frontend logic for admin sending would set senderId to organizationId.
 
       const result = await chatCollection.insertOne(newMessage);
       // result.ops was deprecated. insertOne returns insertedId in result.
@@ -72,14 +72,14 @@ export default async function handler(req, res) {
             senderName = sender.name;
           }
         } else if (senderType === 'organization' || senderType === 'admin_as_host') {
-          const companiesCollection = db.collection('companies');
-          const sender = await companiesCollection.findOne({ _id: finalSenderId });
+          const organizationsCollection = db.collection('companies');
+          const sender = await organizationsCollection.findOne({ _id: finalSenderId });
           if (sender) {
             senderEmail = sender.email;
             senderName = sender.name;
           }
           
-          // If admin is sending as host, use admin's name but company's email context
+          // If admin is sending as host, use admin's name but organization's email context
           if (senderType === 'admin_as_host') {
             senderName = 'Admin (on behalf of ' + senderName + ')';
           }
