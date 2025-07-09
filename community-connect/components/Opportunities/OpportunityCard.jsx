@@ -147,7 +147,15 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
                 <span className="font-semibold text-accent1">Start:</span> {formatTime(opportunity.time)}
               </div>
             )}
-            
+            {opportunity?.arrivalTime && (
+              <div className="flex items-center gap-1.5 text-sm font-medium text-text-secondary">
+                <Icon 
+                  path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  className="w-4 h-4 text-accent1/70" 
+                />
+                <span className="font-semibold text-accent1">Arrival:</span> {formatTime(opportunity.arrivalTime)}
+              </div>
+            )}
             {opportunity?.departureTime && (
               <div className="flex items-center gap-1.5 text-sm font-medium text-text-secondary">
                 <Icon 
