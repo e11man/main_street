@@ -39,13 +39,13 @@ export default async function handler(req, res) {
       try {
         const organization = await organizationsCollection.findOne({ _id: new ObjectId(id) });
         if (!organization) {
-      return res.status(404).json({ error: 'Organization not found' });
+          return res.status(404).json({ error: 'Organization not found' });
         }
         
         // Return organization data (excluding password)
-    const { password: _, ...organizationWithoutPassword } = organization;
-    
-    return res.status(200).json(organizationWithoutPassword);
+        const { password: _, ...organizationWithoutPassword } = organization;
+        
+        return res.status(200).json(organizationWithoutPassword);
       } catch (error) {
         return res.status(500).json({ error: 'Failed to fetch organization data' });
       }
@@ -72,7 +72,7 @@ export default async function handler(req, res) {
       const { id, name, description, website, phone } = req.body;
       
       if (!id) {
-      return res.status(400).json({ error: 'Organization ID is required' });
+        return res.status(400).json({ error: 'Organization ID is required' });
       }
       
       // Prepare update data
@@ -83,7 +83,6 @@ export default async function handler(req, res) {
       if (phone) updateData.phone = phone;
       
       // Update organization in database
-    try {
       const result = await organizationsCollection.updateOne(
         { _id: new ObjectId(id) },
         { $set: updateData }
