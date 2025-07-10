@@ -239,27 +239,44 @@ export async function updateContent(newContent) {
     const db = client.db('mainStreetOpportunities');
     const collection = db.collection('content');
     
-    // Upsert the content
-    await collection.updateOne(
+    // Validate the content structure
+    if (!newContent || typeof newContent !== 'object') {
+      return { success: false, error: 'Invalid content structure' };
+    }
+    
+    // Upsert the content with better error handling
+    const result = await collection.updateOne(
       { type: 'siteContent' },
       { 
         $set: { 
           data: newContent,
           updatedAt: new Date(),
-          updatedBy: 'admin' // This should be passed from the admin context
+          updatedBy: 'admin'
         }
       },
       { upsert: true }
     );
     
+    // Verify the update was successful
+    if (result.matchedCount === 0 && result.upsertedCount === 0) {
+      return { success: false, error: 'Failed to update content in database' };
+    }
+    
     // Clear cache to force refresh
     contentCache = null;
     lastCacheUpdate = 0;
     
-    return { success: true };
+    // Verify the content was actually saved by fetching it back
+    const savedContent = await collection.findOne({ type: 'siteContent' });
+    if (!savedContent || !savedContent.data) {
+      return { success: false, error: 'Content was not properly saved to database' };
+    }
+    
+    console.log('✅ Content updated successfully in database');
+    return { success: true, message: 'Content updated successfully' };
   } catch (error) {
     console.error('Error updating content:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Database update failed' };
   }
 }
 
