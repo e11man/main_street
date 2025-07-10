@@ -420,125 +420,96 @@ export default function ContentAdmin({ initialContent }) {
         <title>Content Management - Admin</title>
         <meta name="description" content="Manage site content" />
       </Head>
-
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">🎨 Content Management</h1>
-                <p className="mt-1 text-sm text-gray-500">
-                  Manage all text content across the site with ease
-                </p>
-              </div>
-              
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleInitialize}
-                  disabled={saving}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                  {saving ? '🔄 Initializing...' : '🚀 Initialize Content'}
-                </button>
-                
-                <button
-                  onClick={refreshContent}
-                  disabled={saving}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                  🔄 Refresh Content
-                </button>
-                
-                <button
-                  onClick={handleSave}
-                  disabled={saving || !editingContent}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                  {saving ? '💾 Saving...' : '💾 Save Changes'}
-                </button>
-                
-                <button
-                  onClick={() => window.open('/', '_blank')}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  👁️ View Site
-                </button>
-              </div>
+      <div className="min-h-screen bg-surface flex flex-col">
+        {/* HERO HEADER */}
+        <div className="bg-primary-color text-white py-8 px-4 shadow-lg rounded-b-3xl mb-6">
+          <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold mb-2 tracking-tight">🎨 Content Management</h1>
+            <p className="text-lg sm:text-xl font-source-serif text-accent1-color mb-4">Manage all text content across the site with ease</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <button
+                onClick={handleInitialize}
+                disabled={saving}
+                className="bg-accent1-color hover:bg-accent1-light text-white font-semibold px-4 py-2 rounded-lg shadow transition disabled:opacity-50"
+              >
+                {saving ? '🔄 Initializing...' : '🚀 Initialize Content'}
+              </button>
+              <button
+                onClick={refreshContent}
+                disabled={saving}
+                className="bg-white text-primary border border-primary font-semibold px-4 py-2 rounded-lg shadow hover:bg-surface transition disabled:opacity-50"
+              >
+                🔄 Refresh Content
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || !editingContent}
+                className="bg-primary-color hover:bg-primary-dark text-white font-semibold px-4 py-2 rounded-lg shadow transition disabled:opacity-50"
+              >
+                {saving ? '💾 Saving...' : '💾 Save Changes'}
+              </button>
+              <button
+                onClick={() => window.open('/', '_blank')}
+                className="bg-surface text-primary border border-primary font-semibold px-4 py-2 rounded-lg shadow hover:bg-white transition"
+              >
+                👁️ View Site
+              </button>
             </div>
           </div>
         </div>
-
         {/* Message */}
         {message && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            <div className={`p-4 rounded-md ${
-              message.includes('Error') 
-                ? 'bg-red-50 border border-red-200 text-red-700' 
-                : 'bg-green-50 border border-green-200 text-green-700'
-            }`}>
-              {message}
-            </div>
+          <div className="max-w-2xl mx-auto px-2 sm:px-4 mt-2">
+            <div className={`p-4 rounded-lg shadow text-center font-semibold ${message.includes('Error') ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>{message}</div>
           </div>
         )}
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-          {/* Quick Navigation */}
-          <QuickNav 
-            sections={contentSections}
-            activeSection={activeTab}
-            onSectionClick={(section) => {
-              setActiveTab(section);
-              setExpandedSections(new Set([section]));
-            }}
-            searchTerm={searchTerm}
-            searchResults={searchResults}
-          />
-
+        {/* Main Content */}
+        <div className="flex-1 w-full max-w-4xl mx-auto px-2 sm:px-4 py-4 flex flex-col gap-6">
+          {/* Quick Navigation - horizontally scrollable on mobile */}
+          <div className="overflow-x-auto scrollbar-hide">
+            <QuickNav 
+              sections={contentSections}
+              activeSection={activeTab}
+              onSectionClick={(section) => {
+                setActiveTab(section);
+                setExpandedSections(new Set([section]));
+              }}
+              searchTerm={searchTerm}
+              searchResults={searchResults}
+            />
+          </div>
           {/* Search Bar */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <div className="mb-4">
-              <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-                🔍 Search Content
-              </label>
-              <input
-                type="text"
-                id="search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search for specific content, titles, or descriptions..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-              />
-            </div>
-
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-2 flex flex-col gap-2">
+            <label htmlFor="search" className="block text-base font-montserrat text-primary mb-1">🔍 Search Content</label>
+            <input
+              type="text"
+              id="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search for specific content, titles, or descriptions..."
+              className="w-full px-4 py-3 border border-border rounded-lg shadow-sm focus:ring-2 focus:ring-accent1 focus:border-accent1 text-lg font-source-serif"
+            />
             {/* Search Results */}
             {searchTerm && searchResults.length > 0 && (
-              <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">
-                  🔍 Search Results ({searchResults.length})
-                </h3>
+              <div className="mt-2">
+                <h3 className="text-base font-montserrat text-primary mb-1">🔍 Search Results ({searchResults.length})</h3>
                 <div className="space-y-2">
                   {searchResults.slice(0, 5).map((result, index) => (
-                    <div key={index} className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                      <div className="text-sm font-medium text-blue-900">{result.label}</div>
-                      <div className="text-xs text-blue-700 mt-1">{result.path}</div>
-                      <div className="text-sm text-blue-800 mt-1">
-                        &ldquo;{result.value.substring(0, 100)}{result.value.length > 100 ? '...' : ''}&rdquo;
-                      </div>
+                    <div key={index} className="p-3 bg-accent1-light/10 border border-accent1 rounded-lg">
+                      <div className="text-base font-semibold text-accent1">{result.label}</div>
+                      <div className="text-xs text-primary mt-1">{result.path}</div>
+                      <div className="text-sm text-primary mt-1">&ldquo;{result.value.substring(0, 100)}{result.value.length > 100 ? '...' : ''}&rdquo;</div>
                     </div>
                   ))}
                   {searchResults.length > 5 && (
-                    <div className="text-sm text-gray-500">
-                      ... and {searchResults.length - 5} more results
-                    </div>
+                    <div className="text-sm text-gray-500">... and {searchResults.length - 5} more results</div>
                   )}
                 </div>
               </div>
             )}
           </div>
-
-          {/* Content Sections */}
-          <div className="space-y-6">
+          {/* Content Sections - cards, mobile stack */}
+          <div className="flex flex-col gap-6">
             {filteredSections.map(([sectionKey, sectionData]) => {
               const sectionInfo = contentSections[sectionKey] || {
                 title: sectionKey,
@@ -546,14 +517,17 @@ export default function ContentAdmin({ initialContent }) {
                 icon: '📄',
                 color: 'gray'
               };
-              return renderContentSection(sectionKey, sectionData, sectionInfo);
+              return (
+                <div key={sectionKey} className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 flex flex-col gap-2">
+                  {renderContentSection(sectionKey, sectionData, sectionInfo)}
+                </div>
+              );
             })}
           </div>
-
           {filteredSections.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-lg shadow">
+            <div className="text-center py-12 bg-white rounded-xl shadow">
               <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-montserrat font-bold text-primary mb-2">
                 {searchTerm ? 'No content found' : 'No content available'}
               </h3>
               <p className="text-gray-500">
@@ -565,20 +539,10 @@ export default function ContentAdmin({ initialContent }) {
             </div>
           )}
         </div>
-
-        {/* Quick Actions Footer */}
-        <div className="mt-12 bg-white border-t border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-500">
-                💡 Tip: Use the search to quickly find specific content
-              </div>
-              <div className="flex space-x-4 text-sm text-gray-500">
-                <span>📊 {Object.keys(editingContent || {}).length} sections</span>
-                <span>📝 {Object.values(editingContent || {}).flatMap(Object.values).filter(v => typeof v === 'string').length} text fields</span>
-              </div>
-            </div>
-          </div>
+        {/* Quick Actions Footer - sticky on mobile */}
+        <div className="mt-8 bg-surface border-t border-border sticky bottom-0 z-10 w-full py-4 px-2 sm:px-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-gray-500 shadow-taylor-purple-focus">
+          <span>💡 Tip: Use the search to quickly find specific content</span>
+          <span>📊 {Object.keys(editingContent || {}).length} sections | 📝 {Object.values(editingContent || {}).flatMap(Object.values).filter(v => typeof v === 'string').length} text fields</span>
         </div>
       </div>
     </>

@@ -20,73 +20,56 @@ const QuickNav = ({ sections, activeSection, onSectionClick, searchTerm, searchR
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-6">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">🚀 Quick Navigation</h3>
-      
-      {/* Section Navigation */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
+    <div className="bg-surface rounded-xl shadow-md p-2 sm:p-4 mb-4 flex flex-col gap-2 min-w-[320px]">
+      <h3 className="text-base font-montserrat text-primary mb-2">🚀 Quick Navigation</h3>
+      {/* Section Navigation - horizontal scroll on mobile */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
         {/* Show All Button */}
         <button
           onClick={() => onSectionClick('all')}
-          className={`p-3 rounded-lg text-center transition-all duration-200 ${
-            activeSection === 'all'
-              ? 'bg-gray-100 border-2 border-gray-300'
-              : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
-          }`}
+          className={`min-w-[80px] p-3 rounded-lg text-center font-montserrat font-semibold transition-all duration-200 shadow border-2 ${activeSection === 'all' ? 'bg-accent1-color text-white border-accent1' : 'bg-white text-primary border-transparent hover:bg-surface'}`}
         >
           <div className="text-2xl mb-1">📋</div>
-          <div className="text-xs font-medium text-gray-700">All</div>
+          <div className="text-xs font-medium">All</div>
         </button>
-        
         {Object.entries(sections).map(([key, info]) => (
           <button
             key={key}
             onClick={() => onSectionClick(key)}
-            className={`p-3 rounded-lg text-center transition-all duration-200 ${
-              activeSection === key
-                ? `bg-${info.color}-100 border-2 border-${info.color}-300`
-                : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
-            }`}
+            className={`min-w-[80px] p-3 rounded-lg text-center font-montserrat font-semibold transition-all duration-200 shadow border-2 ${activeSection === key ? `bg-accent1-color text-white border-accent1` : 'bg-white text-primary border-transparent hover:bg-surface'}`}
           >
             <div className="text-2xl mb-1">{info.icon}</div>
-            <div className="text-xs font-medium text-gray-700">{info.title.split(' ')[1]}</div>
+            <div className="text-xs font-medium">{info.title.split(' ')[1]}</div>
           </button>
         ))}
       </div>
-
       {/* Search Results Quick Access */}
       {searchTerm && searchResults.length > 0 && (
-        <div className="border-t pt-4">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">
-            🔍 Quick Access to Search Results
-          </h4>
+        <div className="border-t pt-2 mt-2">
+          <h4 className="text-xs font-montserrat text-primary mb-1">🔍 Quick Access to Search Results</h4>
           <div className="flex flex-wrap gap-2">
             {searchResults.slice(0, 8).map((result, index) => (
               <button
                 key={index}
                 onClick={() => {
-                  // Extract section from path and expand it
                   const section = result.path.split('.')[0];
                   onSectionClick(section);
                 }}
-                className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full hover:bg-blue-200 transition-colors"
+                className="px-3 py-1 bg-accent1-light/20 text-accent1 text-xs rounded-full hover:bg-accent1-light/40 font-montserrat transition-colors"
                 title={result.path}
               >
                 {result.label}
               </button>
             ))}
             {searchResults.length > 8 && (
-              <span className="px-3 py-1 text-xs text-gray-500">
-                +{searchResults.length - 8} more
-              </span>
+              <span className="px-3 py-1 text-xs text-gray-500">+{searchResults.length - 8} more</span>
             )}
           </div>
         </div>
       )}
-
       {/* Quick Stats */}
-      <div className="border-t pt-4 mt-4">
-        <div className="flex justify-between text-xs text-gray-500">
+      <div className="border-t pt-2 mt-2">
+        <div className="flex flex-wrap justify-between text-xs text-gray-500 gap-2">
           <span>📊 {Object.keys(sections).length} sections</span>
           <span>🔍 {searchResults.length} search results</span>
           <span>📝 Content ready to edit</span>
