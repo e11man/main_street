@@ -42,7 +42,7 @@ const GuidelinesModal = ({ isOpen, onClose, userType = 'user' }) => {
         <div className="mt-6 pt-4 border-t border-gray-200">
           <div className="flex justify-between items-center">
             <p className="text-sm text-gray-600">
-              These guidelines are designed to ensure everyone's safety and well-being.
+              These guidelines are designed to ensure everyone&apos;s safety and well-being.
             </p>
             <button
               onClick={onClose}

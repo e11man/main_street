@@ -35,7 +35,7 @@ const UserGuidelines = () => {
         
         <div className="flex items-start">
           <span className="text-red-500 font-bold mr-2">•</span>
-          <span><strong>Let someone know:</strong> Tell a friend or family member where you're going and when you'll be back</span>
+          <span><strong>Let someone know:</strong> Tell a friend or family member where you&apos;re going and when you&apos;ll be back</span>
         </div>
         
         <div className="flex items-start">

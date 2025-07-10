@@ -25,7 +25,7 @@ export default function GuidelinesPage() {
               Safety Guidelines
             </h1>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              These guidelines are designed to ensure everyone's safety and well-being while participating in volunteer opportunities.
+              These guidelines are designed to ensure everyone&apos;s safety and well-being while participating in volunteer opportunities.
             </p>
           </div>
 
