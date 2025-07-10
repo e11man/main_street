@@ -6,6 +6,7 @@ import Header from '../components/Header/Header.jsx';
 import Modal from '../components/Modal/Modal.jsx';
 import ChatModal from '../components/Modal/ChatModal.jsx'; // Import ChatModal
 import GooglePlacesAutocomplete from '../components/GooglePlacesAutocomplete';
+import OrganizationGuidelines from '../components/Guidelines/OrganizationGuidelines.jsx';
 
 export default function OrganizationDashboard() {
   const router = useRouter();
@@ -387,6 +388,7 @@ export default function OrganizationDashboard() {
         title={currentOpportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
       >
         <div className="p-4">
+          {!currentOpportunity && <OrganizationGuidelines />}
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
               <span className="text-red-500">*</span> indicates required fields

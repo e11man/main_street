@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from './Modal/Modal.jsx';
 import axios from 'axios';
 import { useRouter } from 'next/router';
+import OrganizationGuidelines from './Guidelines/OrganizationGuidelines.jsx';
 
 const CompanyAuthModal = ({ onClose, onSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -131,6 +132,7 @@ const CompanyAuthModal = ({ onClose, onSuccess }) => {
   return (
     <Modal onClose={onClose} title={isLogin ? 'Company Login' : 'Company Registration'}>
       <div className="p-6">
+        {!isLogin && <OrganizationGuidelines />}
         <form onSubmit={handleSubmit}>
           {!isLogin && (
             <div className="mb-4">

@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Button from '../ui/Button';
 
-const MobileNav = ({ isOpen, navLinks, closeMenu, openModal }) => {
+const MobileNav = ({ isOpen, navLinks, closeMenu, openModal, openGuidelines }) => {
   const navRef = useRef(null);
 
   // Trap focus inside mobile nav when open (accessibility)
@@ -104,6 +104,21 @@ const MobileNav = ({ isOpen, navLinks, closeMenu, openModal }) => {
             </li>
           ))}
         </ul>
+        {/* Guidelines Link */}
+        <button
+          onClick={() => {
+            closeMenu();
+            if (openGuidelines) openGuidelines();
+          }}
+          className="w-full px-4 py-3 text-left text-base font-medium text-blue-600 hover:bg-blue-50 rounded-xl transition-colors flex items-center gap-2"
+          tabIndex={isOpen ? 0 : -1}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Safety Guidelines
+        </button>
+        
         {/* CTA Button */}
         <Button
           onClick={() => {

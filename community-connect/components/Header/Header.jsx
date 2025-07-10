@@ -6,16 +6,19 @@ import { useContent } from '../../contexts/ContentContext.js';
 import Button from '../ui/Button';
 import MobileMenuButton from './MobileMenuButton';
 import MobileNav from './MobileNav';
+import GuidelinesModal from '../Guidelines/GuidelinesModal.jsx';
 
 const Header = ({ openModal }) => {
   const { getContent } = useContent();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showGuidelines, setShowGuidelines] = useState(false);
 
   // Navigation links with dynamic content
   const NAV_LINKS = [
     { name: getContent('navigation.home', 'Home'), href: '/' },
     { name: getContent('navigation.about', 'About'), href: '/about' },
     { name: getContent('navigation.opportunities', 'Opportunities'), href: '/#opportunities' },
+    { name: 'Safety Guidelines', href: '/guidelines' },
     { name: getContent('navigation.contact', 'Contact'), href: '/#contact' },
   ];
 
@@ -56,6 +59,15 @@ const Header = ({ openModal }) => {
               </li>
             ))}
           </ul>
+          <button
+            onClick={() => setShowGuidelines(true)}
+            className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+            title="Safety Guidelines"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
           <Button
             onClick={openModal}
             variant="primary"
@@ -68,6 +80,15 @@ const Header = ({ openModal }) => {
 
         {/* Mobile: CTA + Hamburger */}
         <div className="md:hidden flex items-center gap-2">
+          <button
+            onClick={() => setShowGuidelines(true)}
+            className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
+            title="Safety Guidelines"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
           <Button
             onClick={openModal}
             variant="primary"
@@ -84,6 +105,14 @@ const Header = ({ openModal }) => {
         navLinks={NAV_LINKS}
         closeMenu={() => setMobileOpen(false)}
         openModal={openModal}
+        openGuidelines={() => setShowGuidelines(true)}
+      />
+      
+      {/* Guidelines Modal */}
+      <GuidelinesModal
+        isOpen={showGuidelines}
+        onClose={() => setShowGuidelines(false)}
+        userType="user"
       />
     </header>
   );

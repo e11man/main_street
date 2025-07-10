@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Header from '../components/Header/Header.jsx';
 import Footer from '../components/Footer/Footer.jsx';
 import axios from 'axios';
+import OrganizationGuidelines from '../components/Guidelines/OrganizationGuidelines.jsx';
 
 const OrganizationLogin = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -130,6 +131,7 @@ const OrganizationLogin = () => {
               {isLogin ? 'Organization Login' : 'Organization Registration'}
             </h2>
           </div>
+          {!isLogin && <OrganizationGuidelines />}
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             {!isLogin && (
               <div>
