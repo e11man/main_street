@@ -76,6 +76,9 @@ const AuthModal = ({ onClose, onSuccess }) => {
   const [passwordResetCode, setPasswordResetCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  
+  // State for blocked status
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -220,6 +223,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
       const data = await response.json();
 
       if (data.blocked) {
+        setIsBlocked(true);
         setPendingMessage('Your account has been created and is pending admin approval. You will be notified when your account is approved.');
         if (!isLogin) setFormData({ name: '', email: '', password: '', dorm: '', wing: '' });
         setIsSubmitting(false);
@@ -328,7 +332,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
               </svg>
               <div>
                 <p className="font-bold mb-1">
-                  {showTaylorVerificationInput ? "Verify Your Email" : (isLogin && data.blocked ? "Account Blocked" : "Account Pending Approval")}
+                  {showTaylorVerificationInput ? "Verify Your Email" : (isLogin && isBlocked ? "Account Blocked" : "Account Pending Approval")}
                 </p>
                 <p>{pendingMessage}</p>
               </div>
