@@ -6,7 +6,7 @@ import { getFieldDescriptions } from '../lib/contentManager.js';
 import QuickNav from '../components/ContentAdmin/QuickNav.jsx';
 
 export default function ContentAdmin({ initialContent }) {
-  const { content, loading, error, updateContent, initializeContent } = useContent();
+  const { content, loading, error, updateContent, initializeContent, refreshContent } = useContent();
   const [editingContent, setEditingContent] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -14,13 +14,45 @@ export default function ContentAdmin({ initialContent }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [showPreview, setShowPreview] = useState(false);
-  const fieldDescriptions = getFieldDescriptions();
+  const [pageError, setPageError] = useState(null);
+  
+  let fieldDescriptions = {};
+  try {
+    fieldDescriptions = getFieldDescriptions();
+  } catch (error) {
+    console.error('Error loading field descriptions:', error);
+    fieldDescriptions = {};
+  }
 
   useEffect(() => {
     if (content) {
-      setEditingContent(JSON.parse(JSON.stringify(content)));
+      try {
+        setEditingContent(JSON.parse(JSON.stringify(content)));
+      } catch (error) {
+        console.error('Error setting editing content:', error);
+        setPageError('Failed to load content for editing');
+      }
     }
   }, [content]);
+
+  // Handle errors
+  if (pageError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">❌</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Content Management Error</h1>
+          <p className="text-red-600 mb-4">{pageError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleSave = async () => {
     if (!editingContent) return;
@@ -368,7 +400,15 @@ export default function ContentAdmin({ initialContent }) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600">Error: {error}</p>
+          <div className="text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Content Loading Error</h1>
+          <p className="text-red-600 mb-4">Error: {error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -559,9 +599,49 @@ export async function getServerSideProps(context) {
       };
     }
 
-    // Import here to avoid issues with SSR
-    const { getContent } = await import('../lib/contentManager.js');
-    const content = await getContent();
+    // Get content directly without dynamic import
+    let content = null;
+    try {
+      const { getContent } = require('../lib/contentManager.js');
+      content = await getContent();
+    } catch (contentError) {
+      console.error('Error loading content:', contentError);
+      // Return default content structure if there's an error
+      content = {
+        homepage: {
+          hero: {
+            title: "Make the Connection",
+            subtitle: "Connect with meaningful opportunities that create lasting impact in upland.",
+            ctaPrimary: "Find Opportunities",
+            ctaSecondary: "Learn More"
+          }
+        },
+        about: {
+          hero: {
+            title: "About Us",
+            subtitle: "Learn more about our mission and impact."
+          }
+        },
+        navigation: {
+          home: "Home",
+          about: "About",
+          opportunities: "Opportunities"
+        },
+        footer: {
+          description: "Connecting passionate volunteers with meaningful opportunities."
+        },
+        common: {
+          loading: "Loading...",
+          error: "An error occurred. Please try again."
+        },
+        modals: {
+          auth: {
+            title: "Sign In",
+            subtitle: "Access your account"
+          }
+        }
+      };
+    }
 
     return {
       props: {
@@ -571,8 +651,9 @@ export async function getServerSideProps(context) {
   } catch (error) {
     console.error('Error in getServerSideProps:', error);
     return {
-      props: {
-        initialContent: null,
+      redirect: {
+        destination: '/admin',
+        permanent: false,
       },
     };
   }
