@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useContent } from '../contexts/ContentContext.js';
 import Header from '../components/Header/Header.jsx';
 import HeroSection from '../components/Hero/HeroSection.jsx';
 import FloatingCardSection from '../components/FloatingCard/FloatingCardSection.jsx';
@@ -487,4 +488,26 @@ export default function Home() {
       )}
     </>
   );
+}
+
+// Server-side props for content loading
+export async function getServerSideProps() {
+  try {
+    // Import here to avoid issues with SSR
+    const { getContent } = await import('../lib/contentManager.js');
+    const content = await getContent();
+
+    return {
+      props: {
+        initialContent: content,
+      },
+    };
+  } catch (error) {
+    console.error('Error in getServerSideProps:', error);
+    return {
+      props: {
+        initialContent: null,
+      },
+    };
+  }
 }
