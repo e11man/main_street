@@ -57,6 +57,44 @@ export async function sendVerificationEmail(toEmail, code) {
 }
 
 /**
+ * Sends a password reset email to the user.
+ * @param {string} toEmail - The recipient's email address.
+ * @param {string} code - The verification code.
+ * @returns {Promise<void>}
+ * @throws {Error} If sending email fails.
+ */
+export async function sendPasswordResetEmail(toEmail, code) {
+  const mailOptions = {
+    from: `"Community Connect" <${process.env.EMAIL_USER}>`, // Sender address
+    to: toEmail, // List of receivers
+    subject: 'Reset Your Password - Community Connect', // Subject line
+    text: `You requested a password reset for your Community Connect account. Your verification code is: ${code}\n\nThis code will expire in 15 minutes.\n\nIf you did not request this password reset, please ignore this email.`, // Plain text body
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h2 style="color: #333;">Password Reset Request</h2>
+        <p>You requested a password reset for your Community Connect account. Please use the following verification code to reset your password:</p>
+        <p style="font-size: 24px; font-weight: bold; color: #dc2626;">${code}</p>
+        <p>This code will expire in <strong>15 minutes</strong>.</p>
+        <p style="color: #dc2626; font-weight: bold;">If you did not request this password reset, please ignore this email and your password will remain unchanged.</p>
+        <hr style="border: none; border-top: 1px solid #eee;" />
+        <p style="font-size: 0.9em; color: #777;">
+          Community Connect<br />
+          Connecting volunteers with opportunities.
+        </p>
+      </div>
+    `, // HTML body
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Password reset email sent: %s', info.messageId);
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    throw new Error('Failed to send password reset email.'); // Propagate error to be handled by caller
+  }
+}
+
+/**
  * Checks if a user should receive an email notification based on rate limiting (30 minutes)
  * @param {string} opportunityId - The opportunity ID
  * @param {string} recipientEmail - The recipient's email address

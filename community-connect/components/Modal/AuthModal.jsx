@@ -69,6 +69,14 @@ const AuthModal = ({ onClose, onSuccess }) => {
   const [verificationCode, setVerificationCode] = useState('');
   const [taylorUserEmail, setTaylorUserEmail] = useState('');
 
+  // State for Password Reset
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [passwordResetEmail, setPasswordResetEmail] = useState('');
+  const [showPasswordResetVerification, setShowPasswordResetVerification] = useState(false);
+  const [passwordResetCode, setPasswordResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => {
@@ -84,12 +92,111 @@ const AuthModal = ({ onClose, onSuccess }) => {
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
     setError('');
+    setPendingMessage('');
     // Reset Taylor verification state if mode is toggled
     setShowTaylorVerificationInput(false);
     setVerificationCode('');
-    // Keep taylorUserEmail as it might be needed if user toggles back and forth,
-    // or reset it based on desired UX. For now, let's reset it.
     setTaylorUserEmail('');
+    // Reset password reset state
+    setShowPasswordReset(false);
+    setShowPasswordResetVerification(false);
+    setPasswordResetEmail('');
+    setPasswordResetCode('');
+    setNewPassword('');
+    setConfirmNewPassword('');
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError('');
+    setPendingMessage('');
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/users/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: passwordResetEmail })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send reset code');
+      }
+
+      setShowPasswordReset(false);
+      setShowPasswordResetVerification(true);
+      setPendingMessage(data.message || 'Password reset code sent to your email.');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    setError('');
+    setPendingMessage('');
+    setIsSubmitting(true);
+
+    // Validate passwords match
+    if (newPassword !== confirmNewPassword) {
+      setError('Passwords do not match');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters long');
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/users/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: passwordResetEmail,
+          verificationCode: passwordResetCode,
+          newPassword
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reset password');
+      }
+
+      // Reset successful - show success message and switch to login
+      setPendingMessage(data.message || 'Password reset successful! You can now log in.');
+      setShowPasswordResetVerification(false);
+      setShowPasswordReset(false);
+      setIsLogin(true);
+      // Clear password reset data
+      setPasswordResetEmail('');
+      setPasswordResetCode('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBackToLogin = () => {
+    setShowPasswordReset(false);
+    setShowPasswordResetVerification(false);
+    setError('');
+    setPendingMessage('');
+    setPasswordResetEmail('');
+    setPasswordResetCode('');
+    setNewPassword('');
+    setConfirmNewPassword('');
   };
 
   const handleSubmit = async (e) => {
@@ -191,7 +298,10 @@ const AuthModal = ({ onClose, onSuccess }) => {
     <>
       <div className="px-6 pt-6 flex justify-between items-center">
         <h2 className="font-montserrat text-2xl font-bold text-primary m-0">
-          {isLogin ? 'Log In' : 'Sign Up'}
+          {showPasswordReset ? 'Reset Password' : 
+           showPasswordResetVerification ? 'Enter Reset Code' :
+           showTaylorVerificationInput ? 'Verify Email' :
+           isLogin ? 'Log In' : 'Sign Up'}
         </h2>
         <button
           className="bg-none border-none text-2xl cursor-pointer text-text-secondary p-2 rounded-md transition-all duration-200 hover:bg-surface hover:text-text-primary"
@@ -282,6 +392,137 @@ const AuthModal = ({ onClose, onSuccess }) => {
                 disabled={isSubmitting}
               >
                 Back to Sign Up Form
+              </button>
+            </div>
+          </form>
+        ) : showPasswordReset ? (
+          // Password Reset Email Input Form
+          <form onSubmit={handleForgotPassword} className="animate-fadeIn">
+            <div className="mb-4">
+              <label htmlFor="passwordResetEmail" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
+                Email Address
+              </label>
+              <Input
+                type="email"
+                id="passwordResetEmail"
+                name="passwordResetEmail"
+                value={passwordResetEmail}
+                onChange={(e) => setPasswordResetEmail(e.target.value)}
+                required
+                disabled={isSubmitting}
+                placeholder="Enter your email address"
+              />
+              <p className="text-xs text-text-secondary mt-1">
+                We&apos;ll send a verification code to reset your password.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Button
+                type="submit"
+                variant="secondary"
+                className="w-full py-3 rounded-md"
+                disabled={isSubmitting || !passwordResetEmail}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </span>
+                ) : (
+                  'Send Reset Code'
+                )}
+              </Button>
+              <button
+                type="button"
+                className="text-center text-sm text-accent1 hover:text-primary font-medium focus:outline-none py-2"
+                onClick={handleBackToLogin}
+                disabled={isSubmitting}
+              >
+                Back to Login
+              </button>
+            </div>
+          </form>
+        ) : showPasswordResetVerification ? (
+          // Password Reset Verification Form
+          <form onSubmit={handlePasswordReset} className="animate-fadeIn">
+            <div className="mb-4">
+              <label htmlFor="passwordResetCode" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
+                Verification Code
+              </label>
+              <Input
+                type="text"
+                id="passwordResetCode"
+                name="passwordResetCode"
+                value={passwordResetCode}
+                onChange={(e) => setPasswordResetCode(e.target.value)}
+                required
+                disabled={isSubmitting}
+                placeholder="Enter 6-digit code"
+                maxLength={6}
+              />
+              <p className="text-xs text-text-secondary mt-1">
+                A code was sent to: <strong>{passwordResetEmail}</strong>
+              </p>
+            </div>
+            <div className="mb-4">
+              <label htmlFor="newPassword" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
+                New Password
+              </label>
+              <Input
+                type="password"
+                id="newPassword"
+                name="newPassword"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                disabled={isSubmitting}
+                placeholder="Enter new password"
+              />
+            </div>
+            <div className="mb-6">
+              <label htmlFor="confirmNewPassword" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
+                Confirm New Password
+              </label>
+              <Input
+                type="password"
+                id="confirmNewPassword"
+                name="confirmNewPassword"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                required
+                disabled={isSubmitting}
+                placeholder="Confirm new password"
+              />
+            </div>
+            <div className="flex flex-col gap-3">
+              <Button
+                type="submit"
+                variant="secondary"
+                className="w-full py-3 rounded-md"
+                disabled={isSubmitting || passwordResetCode.length !== 6 || !newPassword || !confirmNewPassword}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Resetting...
+                  </span>
+                ) : (
+                  'Reset Password'
+                )}
+              </Button>
+              <button
+                type="button"
+                className="text-center text-sm text-accent1 hover:text-primary font-medium focus:outline-none py-2"
+                onClick={handleBackToLogin}
+                disabled={isSubmitting}
+              >
+                Back to Login
               </button>
             </div>
           </form>
@@ -389,6 +630,21 @@ const AuthModal = ({ onClose, onSuccess }) => {
                 Do <span className="underline">NOT</span> use the same password as your Taylor account!
               </div>
             )}
+            {isLogin && (
+              <div className="mt-2 text-right">
+                <button
+                  type="button"
+                  className="text-sm text-accent1 hover:text-primary font-medium focus:outline-none"
+                  onClick={() => {
+                    setShowPasswordReset(true);
+                    setPasswordResetEmail(formData.email);
+                  }}
+                  disabled={isSubmitting}
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-3 animate-slideUp" style={{ animationDelay: '150ms' }}>
@@ -417,7 +673,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
                 type="button"
                 className="ml-1 text-accent1 hover:text-primary font-medium focus:outline-none"
                 onClick={toggleAuthMode}
-                disabled={isSubmitting || showTaylorVerificationInput} // Disable toggle when verification is shown
+                disabled={isSubmitting || showTaylorVerificationInput || showPasswordReset || showPasswordResetVerification} // Disable toggle when verification or password reset is shown
               >
                 {isLogin ? 'Sign Up' : 'Log In'}
               </button>

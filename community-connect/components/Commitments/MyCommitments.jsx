@@ -499,6 +499,16 @@ const DormManagement = ({ currentUser, onDormUpdate }) => {
   const [selectedWing, setSelectedWing] = useState(currentUser?.wing || '');
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState('');
+  
+  // Password update states
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState('');
 
   // Organized dorm data with cascading structure
   const DORM_DATA = {
@@ -604,18 +614,97 @@ const DormManagement = ({ currentUser, onDormUpdate }) => {
     setSelectedWing(''); // Reset wing when dorm changes
   };
 
+  // Password update functions
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordMessage('All fields are required.');
+      return;
+    }
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordMessage('New passwords do not match.');
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 6) {
+      setPasswordMessage('New password must be at least 6 characters long.');
+      return;
+    }
+    
+    setIsUpdatingPassword(true);
+    setPasswordMessage('');
+    
+    try {
+      const response = await fetch('/api/users/update-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: currentUser._id,
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        setPasswordMessage('Password updated successfully!');
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setTimeout(() => {
+          setIsPasswordModalOpen(false);
+          setPasswordMessage('');
+        }, 2000);
+      } else {
+        setPasswordMessage(result.error || 'Failed to update password.');
+      }
+    } catch (error) {
+      console.error('Error updating password:', error);
+      setPasswordMessage('Failed to update password. Please try again.');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  const handlePasswordModalClose = () => {
+    setIsPasswordModalOpen(false);
+    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setPasswordMessage('');
+  };
+
   return (
     <div className="mt-6 pt-4 border-t border-border/30">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
         <h4 className="font-montserrat text-lg font-bold text-primary">My Dorm/Wing</h4>
         {!isEditing && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="ml-2 flex items-center gap-1 px-3 py-1.5 rounded-full bg-accent1 text-white font-semibold text-xs shadow hover:bg-accent1/90 transition-colors duration-200"
-            aria-label="Change Dorm/Wing"
-          >
-            <Icon path="M12 4v16m8-8H4" className="w-4 h-4" /> Change
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-accent1 text-white font-semibold text-xs shadow hover:bg-accent1/90 transition-colors duration-200"
+              aria-label="Change Dorm/Wing"
+            >
+              <Icon path="M12 4v16m8-8H4" className="w-4 h-4" /> Change Dorm
+            </button>
+            <button
+              onClick={() => setIsPasswordModalOpen(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-600 text-white font-semibold text-xs shadow hover:bg-blue-700 transition-colors duration-200"
+              aria-label="Update Password"
+            >
+              <Icon path="M12 1l3 3-3 3m0-6H9a4 4 0 000 8h3" className="w-4 h-4" /> Update Password
+            </button>
+          </div>
         )}
       </div>
 
@@ -702,6 +791,107 @@ const DormManagement = ({ currentUser, onDormUpdate }) => {
               'No dorm/wing selected'
             )}
           </span>
+        </div>
+      )}
+      
+      {/* Password Update Modal */}
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-primary font-montserrat">Update Password</h3>
+                <button
+                  onClick={handlePasswordModalClose}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Close modal"
+                >
+                  <Icon path="M6 18L18 6M6 6l12 12" className="w-6 h-6" />
+                </button>
+              </div>
+              
+              {passwordMessage && (
+                <div className={`mb-4 p-3 rounded text-sm ${
+                  passwordMessage.includes('successfully') 
+                    ? 'bg-green-50 text-green-700 border border-green-200' 
+                    : 'bg-red-50 text-red-700 border border-red-200'
+                }`}>
+                  {passwordMessage}
+                </div>
+              )}
+              
+              <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                <div>
+                  <label className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Enter your current password"
+                    disabled={isUpdatingPassword}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Enter your new password"
+                    disabled={isUpdatingPassword}
+                    minLength="6"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Password must be at least 6 characters long</p>
+                </div>
+                
+                <div>
+                  <label className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Confirm your new password"
+                    disabled={isUpdatingPassword}
+                    required
+                  />
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <Button
+                    type="submit"
+                    disabled={isUpdatingPassword}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-semibold"
+                  >
+                    {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handlePasswordModalClose}
+                    disabled={isUpdatingPassword}
+                    variant="outline"
+                    className="flex-1 px-4 py-2 text-sm"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
     </div>
