@@ -4,6 +4,7 @@ import { useContent } from '../contexts/ContentContext.js';
 import { verifyAdminToken } from '../lib/authUtils.js';
 import { getFieldDescriptions } from '../lib/contentManager.js';
 import QuickNav from '../components/ContentAdmin/QuickNav.jsx';
+import Button from '../components/ui/Button';
 
 export default function ContentAdmin({ initialContent }) {
   const { content, loading, error, updateContent, initializeContent, refreshContent } = useContent();
@@ -189,22 +190,24 @@ export default function ContentAdmin({ initialContent }) {
     const description = getFieldDescription(path);
     
     return (
-      <div key={path} className="mb-6 p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-        <div className="flex items-start justify-between mb-2">
+      <div key={path} className="mb-6 p-4 bg-white rounded-lg border border-border hover:border-accent1 transition-colors shadow-sm">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <label className="block text-sm font-semibold text-gray-900 mb-1">
+            <label className="block text-sm font-montserrat font-semibold text-primary mb-1">
               {label}
             </label>
             {description && (
-              <p className="text-xs text-gray-500 mb-2">{description}</p>
+              <p className="text-xs text-text-secondary mb-2">{description}</p>
             )}
           </div>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-sm"
             onClick={() => toggleSection(path)}
-            className="ml-4 text-blue-600 hover:text-blue-800 text-sm font-medium"
           >
-            {isExpanded ? '✏️ Edit' : '👁️ View'}
-          </button>
+            {isExpanded ? 'Edit' : 'View'}
+          </Button>
         </div>
         
         {isExpanded ? (
@@ -212,26 +215,26 @@ export default function ContentAdmin({ initialContent }) {
             <textarea
               value={value || ''}
               onChange={(e) => updateNestedValue(path, e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-accent1 focus:border-accent1 font-source-serif transition-all duration-200"
               rows={value && value.length > 100 ? 4 : 2}
               placeholder={`Enter ${label.toLowerCase()}...`}
             />
-            <div className="flex justify-between items-center text-xs text-gray-500">
+            <div className="flex justify-between items-center text-xs text-text-secondary">
               <span>Characters: {value ? value.length : 0}</span>
               <span>Path: {path}</span>
             </div>
           </div>
         ) : (
-          <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded border">
+          <div className="text-sm text-text-primary bg-surface p-3 rounded border border-border">
             {value ? (
               <div>
-                <div className="font-medium mb-1">Current content:</div>
-                <div className="text-gray-600">
+                <div className="font-montserrat font-medium mb-1 text-primary">Current content:</div>
+                <div className="text-text-secondary font-source-serif">
                   {value.length > 150 ? `${value.substring(0, 150)}...` : value}
                 </div>
               </div>
             ) : (
-              <div className="text-gray-500 italic">No content set</div>
+              <div className="text-text-tertiary italic">No content set</div>
             )}
           </div>
         )}
@@ -243,29 +246,29 @@ export default function ContentAdmin({ initialContent }) {
     const isExpanded = expandedSections.has(sectionKey);
     
     return (
-      <div key={sectionKey} className="border border-gray-200 rounded-lg mb-6 overflow-hidden">
-        <div className={`bg-gradient-to-r from-${sectionInfo.color}-50 to-${sectionInfo.color}-100 px-6 py-4 border-b border-gray-200`}>
+      <div key={sectionKey} className="overflow-hidden">
+        <div className="bg-gradient-to-r from-primary to-primary-light px-6 py-4 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <span className="text-2xl">{sectionInfo.icon}</span>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className="text-lg font-montserrat font-bold text-white">
                   {sectionInfo.title}
                 </h3>
-                <p className="text-sm text-gray-600">{sectionInfo.description}</p>
+                <p className="text-sm text-accent1">{sectionInfo.description}</p>
               </div>
             </div>
-            <button
+            <Button
+              variant="outline"
+              className="text-white border-white hover:bg-white hover:text-primary"
               onClick={() => toggleSection(sectionKey)}
-              className="text-blue-600 hover:text-blue-800 font-medium"
             >
-              {isExpanded ? '▼ Collapse' : '▶ Expand'}
-            </button>
+              {isExpanded ? 'Collapse' : 'Expand'}
+            </Button>
           </div>
         </div>
         
         {isExpanded && (
-          <div className="p-6 bg-gray-50">
+          <div className="p-6 bg-surface">
             {Object.entries(sectionData).map(([key, value]) => {
               const fieldPath = `${sectionKey}.${key}`;
               const fieldLabel = key.replace(/([A-Z])/g, ' $1').trim();
@@ -288,15 +291,17 @@ export default function ContentAdmin({ initialContent }) {
     return (
       <div key={parentPath} className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-md font-semibold text-gray-800 capitalize">
+          <h4 className="text-md font-montserrat font-semibold text-primary capitalize">
             {parentLabel}
           </h4>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-sm"
             onClick={() => toggleSection(parentPath)}
-            className="text-blue-600 hover:text-blue-800 text-sm"
           >
-            {isExpanded ? '▼' : '▶'}
-          </button>
+            {isExpanded ? 'Collapse' : 'Expand'}
+          </Button>
         </div>
         
         {isExpanded && (
@@ -387,10 +392,10 @@ export default function ContentAdmin({ initialContent }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-background to-surface flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading content...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent1 mx-auto"></div>
+          <p className="mt-4 text-text-secondary font-source-serif">Loading content...</p>
         </div>
       </div>
     );
@@ -398,17 +403,16 @@ export default function ContentAdmin({ initialContent }) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-background to-surface flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Content Loading Error</h1>
-          <p className="text-red-600 mb-4">Error: {error}</p>
-          <button
+          <h1 className="text-2xl font-montserrat font-bold text-primary mb-2">Content Loading Error</h1>
+          <p className="text-accent2 mb-6 font-source-serif">Error: {error}</p>
+          <Button
+            variant="primary"
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -420,53 +424,75 @@ export default function ContentAdmin({ initialContent }) {
         <title>Content Management - Admin</title>
         <meta name="description" content="Manage site content" />
       </Head>
-      <div className="min-h-screen bg-surface flex flex-col">
-        {/* HERO HEADER */}
-        <div className="bg-primary-color text-white py-8 px-4 shadow-lg rounded-b-3xl mb-6">
-          <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold mb-2 tracking-tight">🎨 Content Management</h1>
-            <p className="text-lg sm:text-xl font-source-serif text-accent1-color mb-4">Manage all text content across the site with ease</p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <button
+      <div className="min-h-screen bg-gradient-to-b from-background to-surface">
+        {/* HERO HEADER - matching homepage */}
+        <section className="pt-18 relative overflow-hidden bg-gradient-to-b from-primary to-primary-dark">
+          {/* Background pattern */}
+          <div className="absolute inset-0 z-0 opacity-10">
+            <div className="absolute top-0 left-0 right-0 h-full w-full bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+          </div>
+          
+          {/* Decorative elements */}
+          <div className="absolute top-20 left-10 w-24 h-24 bg-accent1/20 rounded-full blur-2xl animate-float"></div>
+          <div className="absolute bottom-20 right-10 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-float animation-delay-1000"></div>
+          
+          <div className="max-w-screen-xl mx-auto px-6 md:px-8 py-16 md:py-20 text-center relative z-10">
+            <h1 className="hero-title relative font-montserrat text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4 md:mb-6 tracking-[-0.025em] text-white leading-tight inline-block">
+              Content Management
+              <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-accent1 to-white rounded-full"></span>
+            </h1>
+            <p className="font-source-serif text-lg md:text-xl font-normal text-accent1 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Manage all text content across the site with ease
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button 
+                variant="secondary" 
+                className="group text-base px-6 py-3 shadow-lg hover:shadow-xl"
                 onClick={handleInitialize}
                 disabled={saving}
-                className="bg-accent1-color hover:bg-accent1-light text-white font-semibold px-4 py-2 rounded-lg shadow transition disabled:opacity-50"
               >
-                {saving ? '🔄 Initializing...' : '🚀 Initialize Content'}
-              </button>
-              <button
+                {saving ? 'Initializing...' : 'Initialize Content'}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="text-base px-6 py-3 border-white text-white hover:text-white"
                 onClick={refreshContent}
                 disabled={saving}
-                className="bg-white text-primary border border-primary font-semibold px-4 py-2 rounded-lg shadow hover:bg-surface transition disabled:opacity-50"
               >
-                🔄 Refresh Content
-              </button>
-              <button
+                Refresh Content
+              </Button>
+              <Button 
+                variant="primary" 
+                className="text-base px-6 py-3 shadow-lg hover:shadow-xl"
                 onClick={handleSave}
                 disabled={saving || !editingContent}
-                className="bg-primary-color hover:bg-primary-dark text-white font-semibold px-4 py-2 rounded-lg shadow transition disabled:opacity-50"
               >
-                {saving ? '💾 Saving...' : '💾 Save Changes'}
-              </button>
-              <button
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="text-base px-6 py-3 border-white text-white hover:text-white"
                 onClick={() => window.open('/', '_blank')}
-                className="bg-surface text-primary border border-primary font-semibold px-4 py-2 rounded-lg shadow hover:bg-white transition"
               >
-                👁️ View Site
-              </button>
+                View Site
+              </Button>
             </div>
           </div>
-        </div>
+        </section>
+
         {/* Message */}
         {message && (
-          <div className="max-w-2xl mx-auto px-2 sm:px-4 mt-2">
-            <div className={`p-4 rounded-lg shadow text-center font-semibold ${message.includes('Error') ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>{message}</div>
+          <div className="max-w-2xl mx-auto px-6 mt-6">
+            <div className={`p-4 rounded-lg shadow-md text-center font-montserrat font-semibold ${message.includes('Error') ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+              {message}
+            </div>
           </div>
         )}
+
         {/* Main Content */}
-        <div className="flex-1 w-full max-w-4xl mx-auto px-2 sm:px-4 py-4 flex flex-col gap-6">
-          {/* Quick Navigation - horizontally scrollable on mobile */}
-          <div className="overflow-x-auto scrollbar-hide">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-8 py-8 md:py-12">
+          {/* Quick Navigation */}
+          <div className="mb-8">
             <QuickNav 
               sections={contentSections}
               activeSection={activeTab}
@@ -478,38 +504,49 @@ export default function ContentAdmin({ initialContent }) {
               searchResults={searchResults}
             />
           </div>
+
           {/* Search Bar */}
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-2 flex flex-col gap-2">
-            <label htmlFor="search" className="block text-base font-montserrat text-primary mb-1">🔍 Search Content</label>
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <label htmlFor="search" className="block text-base font-montserrat font-semibold text-primary mb-3">
+              Search Content
+            </label>
             <input
               type="text"
               id="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search for specific content, titles, or descriptions..."
-              className="w-full px-4 py-3 border border-border rounded-lg shadow-sm focus:ring-2 focus:ring-accent1 focus:border-accent1 text-lg font-source-serif"
+              className="w-full px-4 py-3 border border-border rounded-md shadow-sm focus:ring-2 focus:ring-accent1 focus:border-accent1 text-lg font-source-serif transition-all duration-200"
             />
+            
             {/* Search Results */}
             {searchTerm && searchResults.length > 0 && (
-              <div className="mt-2">
-                <h3 className="text-base font-montserrat text-primary mb-1">🔍 Search Results ({searchResults.length})</h3>
-                <div className="space-y-2">
+              <div className="mt-4">
+                <h3 className="text-base font-montserrat font-semibold text-primary mb-3">
+                  Search Results ({searchResults.length})
+                </h3>
+                <div className="space-y-3">
                   {searchResults.slice(0, 5).map((result, index) => (
-                    <div key={index} className="p-3 bg-accent1-light/10 border border-accent1 rounded-lg">
-                      <div className="text-base font-semibold text-accent1">{result.label}</div>
-                      <div className="text-xs text-primary mt-1">{result.path}</div>
-                      <div className="text-sm text-primary mt-1">&ldquo;{result.value.substring(0, 100)}{result.value.length > 100 ? '...' : ''}&rdquo;</div>
+                    <div key={index} className="p-4 bg-surface border border-border rounded-lg hover:shadow-md transition-shadow">
+                      <div className="text-base font-montserrat font-semibold text-primary">{result.label}</div>
+                      <div className="text-sm text-text-secondary mt-1">{result.path}</div>
+                      <div className="text-sm text-text-primary mt-2">
+                        "{result.value.substring(0, 100)}{result.value.length > 100 ? '...' : ''}"
+                      </div>
                     </div>
                   ))}
                   {searchResults.length > 5 && (
-                    <div className="text-sm text-gray-500">... and {searchResults.length - 5} more results</div>
+                    <div className="text-sm text-text-secondary text-center py-2">
+                      ... and {searchResults.length - 5} more results
+                    </div>
                   )}
                 </div>
               </div>
             )}
           </div>
-          {/* Content Sections - cards, mobile stack */}
-          <div className="flex flex-col gap-6">
+
+          {/* Content Sections */}
+          <div className="space-y-6">
             {filteredSections.map(([sectionKey, sectionData]) => {
               const sectionInfo = contentSections[sectionKey] || {
                 title: sectionKey,
@@ -518,31 +555,38 @@ export default function ContentAdmin({ initialContent }) {
                 color: 'gray'
               };
               return (
-                <div key={sectionKey} className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 flex flex-col gap-2">
+                <div key={sectionKey} className="bg-white rounded-lg shadow-md overflow-hidden">
                   {renderContentSection(sectionKey, sectionData, sectionInfo)}
                 </div>
               );
             })}
           </div>
+
           {filteredSections.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-xl shadow">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-lg font-montserrat font-bold text-primary mb-2">
+            <div className="text-center py-16 bg-white rounded-lg shadow-md">
+              <div className="text-6xl mb-6 text-primary opacity-20">�</div>
+              <h3 className="text-xl font-montserrat font-bold text-primary mb-3">
                 {searchTerm ? 'No content found' : 'No content available'}
               </h3>
-              <p className="text-gray-500">
+              <p className="text-text-secondary max-w-md mx-auto">
                 {searchTerm 
-                  ? `No content matches &ldquo;${searchTerm}&rdquo;. Try a different search term.`
+                  ? `No content matches "${searchTerm}". Try a different search term.`
                   : 'Content will appear here once initialized.'
                 }
               </p>
             </div>
           )}
         </div>
-        {/* Quick Actions Footer - sticky on mobile */}
-        <div className="mt-8 bg-surface border-t border-border sticky bottom-0 z-10 w-full py-4 px-2 sm:px-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-gray-500 shadow-taylor-purple-focus">
-          <span>💡 Tip: Use the search to quickly find specific content</span>
-          <span>📊 {Object.keys(editingContent || {}).length} sections | 📝 {Object.values(editingContent || {}).flatMap(Object.values).filter(v => typeof v === 'string').length} text fields</span>
+
+        {/* Footer */}
+        <div className="bg-surface border-t border-border py-6 px-6">
+          <div className="max-w-screen-xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-text-secondary">
+            <span className="text-center sm:text-left">Tip: Use the search to quickly find specific content</span>
+            <div className="flex flex-wrap justify-center gap-4 text-sm">
+              <span>{Object.keys(editingContent || {}).length} sections</span>
+              <span>{Object.values(editingContent || {}).flatMap(Object.values).filter(v => typeof v === 'string').length} text fields</span>
+            </div>
+          </div>
         </div>
       </div>
     </>
