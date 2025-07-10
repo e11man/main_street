@@ -1,4 +1,9 @@
-import clientPromise from './mongodb.js';
+// Only import MongoDB on the server side
+let clientPromise = null;
+if (typeof window === 'undefined') {
+  // Server-side only
+  clientPromise = require('./mongodb.js').default;
+}
 
 // Content cache for server-side rendering
 let contentCache = null;
@@ -149,6 +154,15 @@ const DEFAULT_CONTENT = {
  */
 export async function fetchAllContent() {
   try {
+    // Only run on server side
+    if (typeof window !== 'undefined') {
+      return DEFAULT_CONTENT;
+    }
+    
+    if (!clientPromise) {
+      return DEFAULT_CONTENT;
+    }
+    
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
     const collection = db.collection('content');
@@ -212,6 +226,15 @@ export async function getContentKey(path, fallback = '') {
  */
 export async function updateContent(newContent) {
   try {
+    // Only run on server side
+    if (typeof window !== 'undefined') {
+      return { success: false, error: 'Cannot update content on client side' };
+    }
+    
+    if (!clientPromise) {
+      return { success: false, error: 'MongoDB not available' };
+    }
+    
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
     const collection = db.collection('content');
@@ -245,6 +268,15 @@ export async function updateContent(newContent) {
  */
 export async function initializeContent() {
   try {
+    // Only run on server side
+    if (typeof window !== 'undefined') {
+      return { success: false, error: 'Cannot initialize content on client side' };
+    }
+    
+    if (!clientPromise) {
+      return { success: false, error: 'MongoDB not available' };
+    }
+    
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
     const collection = db.collection('content');

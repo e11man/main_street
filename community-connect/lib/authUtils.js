@@ -126,6 +126,46 @@ export const protectRoute = (handler, requiredRoles = []) => {
   };
 };
 
+/**
+ * Verifies admin token from request headers or cookies.
+ * @param {object} req - The request object.
+ * @returns {object} Object with success boolean and user data if successful.
+ */
+export const verifyAdminToken = async (req) => {
+  try {
+    let token = null;
+    
+    // Check for token in Authorization header
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.substring(7);
+    }
+    // Check for token in cookies
+    else if (req.cookies && req.cookies.authToken) {
+      token = req.cookies.authToken;
+    }
+    
+    if (!token) {
+      return { success: false, error: 'No token provided' };
+    }
+    
+    const decoded = verifyToken(token);
+    
+    if (!decoded) {
+      return { success: false, error: 'Invalid token' };
+    }
+    
+    // Check if user is admin
+    if (decoded.role !== 'admin') {
+      return { success: false, error: 'Insufficient permissions' };
+    }
+    
+    return { success: true, user: decoded };
+  } catch (error) {
+    console.error('Error verifying admin token:', error);
+    return { success: false, error: 'Token verification failed' };
+  }
+};
+
 // It's crucial to set JWT_SECRET in your .env.local file for development
 // and as a proper environment variable in production.
 // Example .env.local:

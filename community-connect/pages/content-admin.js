@@ -465,7 +465,7 @@ export default function ContentAdmin({ initialContent }) {
                       <div className="text-sm font-medium text-blue-900">{result.label}</div>
                       <div className="text-xs text-blue-700 mt-1">{result.path}</div>
                       <div className="text-sm text-blue-800 mt-1">
-                        "{result.value.substring(0, 100)}{result.value.length > 100 ? '...' : ''}"
+                        &ldquo;{result.value.substring(0, 100)}{result.value.length > 100 ? '...' : ''}&rdquo;
                       </div>
                     </div>
                   ))}
@@ -500,7 +500,7 @@ export default function ContentAdmin({ initialContent }) {
               </h3>
               <p className="text-gray-500">
                 {searchTerm 
-                  ? `No content matches "${searchTerm}". Try a different search term.`
+                  ? `No content matches &ldquo;${searchTerm}&rdquo;. Try a different search term.`
                   : 'Content will appear here once initialized.'
                 }
               </p>
