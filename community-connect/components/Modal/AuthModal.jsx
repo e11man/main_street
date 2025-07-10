@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Icon from '../ui/Icon';
+import UserGuidelines from '../Guidelines/UserGuidelines';
 
 // Organized dorm data with cascading structure
 const DORM_DATA = {
@@ -531,8 +532,10 @@ const AuthModal = ({ onClose, onSuccess }) => {
             </div>
           </form>
         ) : (
-          // Original Login/Signup Form
-          <form onSubmit={handleSubmit}>
+          <>
+            {/* Original Login/Signup Form */}
+            {!isLogin && <UserGuidelines />}
+            <form onSubmit={handleSubmit}>
             {!isLogin && (
             <div className="mb-4 animate-slideUp">
               <label htmlFor="name" className="block font-montserrat font-semibold text-sm text-text-primary mb-2">
@@ -684,6 +687,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
             </div>
           </div>
         </form>
+          </>
         )}
       </div>
     </>
