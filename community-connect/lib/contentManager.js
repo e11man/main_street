@@ -281,3 +281,125 @@ export function getContentStructure() {
     structure: DEFAULT_CONTENT
   };
 }
+
+/**
+ * Get field descriptions for admin interface
+ */
+export function getFieldDescriptions() {
+  return {
+    homepage: {
+      hero: {
+        title: "Main headline on the homepage hero section",
+        subtitle: "Subtitle text below the main headline",
+        ctaPrimary: "Primary call-to-action button text",
+        ctaSecondary: "Secondary call-to-action button text"
+      },
+      search: {
+        placeholder: "Search input placeholder text",
+        filterAll: "Label for 'All' filter option",
+        filterCommunity: "Label for Community filter",
+        filterEducation: "Label for Education filter",
+        filterEnvironment: "Label for Environment filter",
+        filterHealth: "Label for Health filter",
+        filterTechnology: "Label for Technology filter"
+      },
+      testimonials: {
+        title: "Section title for testimonials",
+        subtitle: "Subtitle for testimonials section"
+      },
+      contact: {
+        title: "Contact section title",
+        subtitle: "Contact section subtitle",
+        formTitle: "Form title text",
+        nameLabel: "Name field label",
+        emailLabel: "Email field label",
+        messageLabel: "Message field label",
+        submitButton: "Submit button text",
+        successMessage: "Success message after form submission",
+        errorMessage: "Error message if form submission fails"
+      }
+    },
+    about: {
+      hero: {
+        title: "About page hero title",
+        subtitle: "About page hero subtitle"
+      },
+      mission: {
+        title: "Mission section title",
+        description: "Mission statement and description"
+      },
+      impact: {
+        title: "Impact section title"
+      },
+      whatWeDo: {
+        title: "What We Do section title",
+        description: "Description of what the organization does"
+      }
+    },
+    navigation: {
+      home: "Home menu item text",
+      about: "About menu item text",
+      opportunities: "Opportunities menu item text",
+      login: "Login button text",
+      signup: "Sign up button text",
+      dashboard: "Dashboard menu item text",
+      admin: "Admin menu item text",
+      logout: "Logout button text"
+    },
+    footer: {
+      description: "Footer description text",
+      quickLinks: "Quick links section title",
+      contact: "Contact section title",
+      social: "Social media section title",
+      copyright: "Copyright text"
+    },
+    common: {
+      loading: "Loading state text",
+      error: "Generic error message",
+      success: "Generic success message",
+      cancel: "Cancel button text",
+      save: "Save button text",
+      edit: "Edit button text",
+      delete: "Delete button text",
+      confirm: "Confirm button text",
+      back: "Back button text",
+      next: "Next button text",
+      previous: "Previous button text",
+      close: "Close button text",
+      submit: "Submit button text",
+      search: "Search button text",
+      filter: "Filter button text",
+      clear: "Clear button text",
+      view: "View button text",
+      join: "Join button text",
+      leave: "Leave button text",
+      apply: "Apply button text",
+      learnMore: "Learn more button text",
+      noResults: "No results message",
+      noData: "No data available message"
+    },
+    modals: {
+      auth: {
+        title: "Authentication modal title",
+        subtitle: "Authentication modal subtitle",
+        emailLabel: "Email field label",
+        passwordLabel: "Password field label",
+        loginButton: "Login button text",
+        signupButton: "Sign up button text",
+        forgotPassword: "Forgot password link text",
+        noAccount: "No account message",
+        hasAccount: "Has account message"
+      },
+      volunteer: {
+        title: "Volunteer request modal title",
+        subtitle: "Volunteer request modal subtitle",
+        organizationLabel: "Organization name field label",
+        contactLabel: "Contact person field label",
+        emailLabel: "Email field label",
+        phoneLabel: "Phone field label",
+        descriptionLabel: "Description field label",
+        submitButton: "Submit button text"
+      }
+    }
+  };
+}

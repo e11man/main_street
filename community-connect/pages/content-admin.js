@@ -2,14 +2,19 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useContent } from '../contexts/ContentContext.js';
 import { verifyAdminToken } from '../lib/authUtils.js';
+import { getFieldDescriptions } from '../lib/contentManager.js';
+import QuickNav from '../components/ContentAdmin/QuickNav.jsx';
 
 export default function ContentAdmin({ initialContent }) {
   const { content, loading, error, updateContent, initializeContent } = useContent();
   const [editingContent, setEditingContent] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [expandedSections, setExpandedSections] = useState(new Set());
+  const [expandedSections, setExpandedSections] = useState(new Set(['homepage'])); // Start with homepage expanded
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
+  const [showPreview, setShowPreview] = useState(false);
+  const fieldDescriptions = getFieldDescriptions();
 
   useEffect(() => {
     if (content) {
@@ -27,13 +32,13 @@ export default function ContentAdmin({ initialContent }) {
       const result = await updateContent(editingContent);
       
       if (result.success) {
-        setMessage('Content saved successfully!');
+        setMessage('✅ Content saved successfully!');
         setTimeout(() => setMessage(''), 3000);
       } else {
-        setMessage(`Error: ${result.error}`);
+        setMessage(`❌ Error: ${result.error}`);
       }
     } catch (error) {
-      setMessage(`Error: ${error.message}`);
+      setMessage(`❌ Error: ${error.message}`);
     } finally {
       setSaving(false);
     }
@@ -47,13 +52,13 @@ export default function ContentAdmin({ initialContent }) {
       const result = await initializeContent();
       
       if (result.success) {
-        setMessage('Content initialized successfully!');
+        setMessage('✅ Content initialized successfully!');
         setTimeout(() => setMessage(''), 3000);
       } else {
-        setMessage(`Error: ${result.error}`);
+        setMessage(`❌ Error: ${result.error}`);
       }
     } catch (error) {
-      setMessage(`Error: ${error.message}`);
+      setMessage(`❌ Error: ${error.message}`);
     } finally {
       setSaving(false);
     }
@@ -87,70 +92,151 @@ export default function ContentAdmin({ initialContent }) {
     setExpandedSections(newExpanded);
   };
 
+  // Content organization with descriptions
+  const contentSections = {
+    homepage: {
+      title: "🏠 Homepage",
+      description: "Main landing page content including hero section, search, and CTAs",
+      icon: "🏠",
+      color: "blue"
+    },
+    about: {
+      title: "ℹ️ About Page", 
+      description: "About page content including mission, impact, and program descriptions",
+      icon: "ℹ️",
+      color: "green"
+    },
+    navigation: {
+      title: "🧭 Navigation",
+      description: "Menu items, navigation labels, and header content",
+      icon: "🧭", 
+      color: "purple"
+    },
+    footer: {
+      title: "🦶 Footer",
+      description: "Footer content, links, and social media labels",
+      icon: "🦶",
+      color: "gray"
+    },
+    common: {
+      title: "🔧 Common UI",
+      description: "Reusable UI elements like buttons, messages, and labels",
+      icon: "🔧",
+      color: "orange"
+    },
+    modals: {
+      title: "📋 Modals & Forms",
+      description: "Modal content, form labels, and authentication text",
+      icon: "📋",
+      color: "pink"
+    }
+  };
+
   const renderEditableField = (path, value, label) => {
     const isExpanded = expandedSections.has(path);
     
+    // Get field description from the descriptions object
+    const getFieldDescription = (path) => {
+      const keys = path.split('.');
+      let current = fieldDescriptions;
+      
+      for (const key of keys) {
+        if (current && current[key]) {
+          current = current[key];
+        } else {
+          return '';
+        }
+      }
+      
+      return typeof current === 'string' ? current : '';
+    };
+    
+    const description = getFieldDescription(path);
+    
     return (
-      <div key={path} className="mb-4">
-        <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {label}
-          </label>
+      <div key={path} className="mb-6 p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex-1">
+            <label className="block text-sm font-semibold text-gray-900 mb-1">
+              {label}
+            </label>
+            {description && (
+              <p className="text-xs text-gray-500 mb-2">{description}</p>
+            )}
+          </div>
           <button
             onClick={() => toggleSection(path)}
-            className="text-blue-600 hover:text-blue-800 text-sm"
+            className="ml-4 text-blue-600 hover:text-blue-800 text-sm font-medium"
           >
-            {isExpanded ? 'Collapse' : 'Expand'}
+            {isExpanded ? '✏️ Edit' : '👁️ View'}
           </button>
         </div>
         
-        {isExpanded && (
-          <textarea
-            value={value || ''}
-            onChange={(e) => updateNestedValue(path, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            rows={value && value.length > 100 ? 4 : 2}
-            placeholder={`Enter ${label.toLowerCase()}...`}
-          />
-        )}
-        
-        {!isExpanded && (
-          <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded border">
-            {value ? (value.length > 100 ? `${value.substring(0, 100)}...` : value) : 'No content'}
+        {isExpanded ? (
+          <div className="space-y-3">
+            <textarea
+              value={value || ''}
+              onChange={(e) => updateNestedValue(path, e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows={value && value.length > 100 ? 4 : 2}
+              placeholder={`Enter ${label.toLowerCase()}...`}
+            />
+            <div className="flex justify-between items-center text-xs text-gray-500">
+              <span>Characters: {value ? value.length : 0}</span>
+              <span>Path: {path}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded border">
+            {value ? (
+              <div>
+                <div className="font-medium mb-1">Current content:</div>
+                <div className="text-gray-600">
+                  {value.length > 150 ? `${value.substring(0, 150)}...` : value}
+                </div>
+              </div>
+            ) : (
+              <div className="text-gray-500 italic">No content set</div>
+            )}
           </div>
         )}
       </div>
     );
   };
 
-  const renderSection = (sectionKey, sectionData, parentPath = '') => {
-    const currentPath = parentPath ? `${parentPath}.${sectionKey}` : sectionKey;
-    const isExpanded = expandedSections.has(currentPath);
+  const renderContentSection = (sectionKey, sectionData, sectionInfo) => {
+    const isExpanded = expandedSections.has(sectionKey);
     
     return (
-      <div key={currentPath} className="border border-gray-200 rounded-lg mb-4">
-        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+      <div key={sectionKey} className="border border-gray-200 rounded-lg mb-6 overflow-hidden">
+        <div className={`bg-gradient-to-r from-${sectionInfo.color}-50 to-${sectionInfo.color}-100 px-6 py-4 border-b border-gray-200`}>
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 capitalize">
-              {sectionKey.replace(/([A-Z])/g, ' $1').trim()}
-            </h3>
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl">{sectionInfo.icon}</span>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  {sectionInfo.title}
+                </h3>
+                <p className="text-sm text-gray-600">{sectionInfo.description}</p>
+              </div>
+            </div>
             <button
-              onClick={() => toggleSection(currentPath)}
-              className="text-blue-600 hover:text-blue-800"
+              onClick={() => toggleSection(sectionKey)}
+              className="text-blue-600 hover:text-blue-800 font-medium"
             >
-              {isExpanded ? '▼' : '▶'}
+              {isExpanded ? '▼ Collapse' : '▶ Expand'}
             </button>
           </div>
         </div>
         
         {isExpanded && (
-          <div className="p-4">
+          <div className="p-6 bg-gray-50">
             {Object.entries(sectionData).map(([key, value]) => {
-              const fieldPath = `${currentPath}.${key}`;
+              const fieldPath = `${sectionKey}.${key}`;
               const fieldLabel = key.replace(/([A-Z])/g, ' $1').trim();
               
               if (typeof value === 'object' && value !== null) {
-                return renderSection(key, value, currentPath);
+                return renderNestedSection(key, value, fieldPath, fieldLabel);
               } else {
                 return renderEditableField(fieldPath, value, fieldLabel);
               }
@@ -161,14 +247,60 @@ export default function ContentAdmin({ initialContent }) {
     );
   };
 
-  const filteredContent = editingContent ? 
+  const renderNestedSection = (sectionKey, sectionData, parentPath, parentLabel) => {
+    const isExpanded = expandedSections.has(parentPath);
+    
+    return (
+      <div key={parentPath} className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-md font-semibold text-gray-800 capitalize">
+            {parentLabel}
+          </h4>
+          <button
+            onClick={() => toggleSection(parentPath)}
+            className="text-blue-600 hover:text-blue-800 text-sm"
+          >
+            {isExpanded ? '▼' : '▶'}
+          </button>
+        </div>
+        
+        {isExpanded && (
+          <div className="ml-4 space-y-4">
+            {Object.entries(sectionData).map(([key, value]) => {
+              const fieldPath = `${parentPath}.${key}`;
+              const fieldLabel = key.replace(/([A-Z])/g, ' $1').trim();
+              
+              if (typeof value === 'object' && value !== null) {
+                return renderNestedSection(key, value, fieldPath, fieldLabel);
+              } else {
+                return renderEditableField(fieldPath, value, fieldLabel);
+              }
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const filteredSections = editingContent ? 
     Object.entries(editingContent).filter(([sectionKey, sectionData]) => {
+      // If activeTab is set, only show that section
+      if (activeTab && activeTab !== 'all' && sectionKey !== activeTab) {
+        return false;
+      }
+      
       if (!searchTerm) return true;
       
       const searchLower = searchTerm.toLowerCase();
-      const sectionName = sectionKey.toLowerCase();
+      const sectionInfo = contentSections[sectionKey];
       
-      if (sectionName.includes(searchLower)) return true;
+      // Search in section title and description
+      if (sectionInfo) {
+        if (sectionInfo.title.toLowerCase().includes(searchLower) || 
+            sectionInfo.description.toLowerCase().includes(searchLower)) {
+          return true;
+        }
+      }
       
       // Search within section content
       const searchInSection = (data, path = '') => {
@@ -186,6 +318,37 @@ export default function ContentAdmin({ initialContent }) {
       
       return searchInSection(sectionData);
     }) : [];
+
+  const getSearchResults = () => {
+    if (!searchTerm || !editingContent) return [];
+    
+    const results = [];
+    const searchLower = searchTerm.toLowerCase();
+    
+    const searchInSection = (data, path = '') => {
+      for (const [key, value] of Object.entries(data)) {
+        const currentPath = path ? `${path}.${key}` : key;
+        
+        if (typeof value === 'string' && value.toLowerCase().includes(searchLower)) {
+          results.push({
+            path: currentPath,
+            value: value,
+            label: key.replace(/([A-Z])/g, ' $1').trim()
+          });
+        } else if (typeof value === 'object' && value !== null) {
+          searchInSection(value, currentPath);
+        }
+      }
+    };
+    
+    Object.entries(editingContent).forEach(([sectionKey, sectionData]) => {
+      searchInSection(sectionData, sectionKey);
+    });
+    
+    return results;
+  };
+
+  const searchResults = getSearchResults();
 
   if (loading) {
     return (
@@ -221,9 +384,9 @@ export default function ContentAdmin({ initialContent }) {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Content Management</h1>
+                <h1 className="text-3xl font-bold text-gray-900">🎨 Content Management</h1>
                 <p className="mt-1 text-sm text-gray-500">
-                  Manage all text content across the site
+                  Manage all text content across the site with ease
                 </p>
               </div>
               
@@ -233,7 +396,7 @@ export default function ContentAdmin({ initialContent }) {
                   disabled={saving}
                   className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
-                  {saving ? 'Initializing...' : 'Initialize Content'}
+                  {saving ? '🔄 Initializing...' : '🚀 Initialize Content'}
                 </button>
                 
                 <button
@@ -241,7 +404,7 @@ export default function ContentAdmin({ initialContent }) {
                   disabled={saving || !editingContent}
                   className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? '💾 Saving...' : '💾 Save Changes'}
                 </button>
               </div>
             </div>
@@ -261,35 +424,102 @@ export default function ContentAdmin({ initialContent }) {
           </div>
         )}
 
-        {/* Search */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="mb-6">
+          {/* Quick Navigation */}
+          <QuickNav 
+            sections={contentSections}
+            activeSection={activeTab}
+            onSectionClick={(section) => {
+              setActiveTab(section);
+              setExpandedSections(new Set([section]));
+            }}
+            searchTerm={searchTerm}
+            searchResults={searchResults}
+          />
+
+          {/* Search Bar */}
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <div className="mb-4">
               <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-                Search Content
+                🔍 Search Content
               </label>
               <input
                 type="text"
                 id="search"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search for specific content..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Search for specific content, titles, or descriptions..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
               />
             </div>
 
-            {/* Content Sections */}
-            <div className="space-y-6">
-              {filteredContent.map(([sectionKey, sectionData]) => 
-                renderSection(sectionKey, sectionData)
-              )}
-            </div>
-
-            {filteredContent.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                {searchTerm ? 'No content found matching your search.' : 'No content available.'}
+            {/* Search Results */}
+            {searchTerm && searchResults.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">
+                  🔍 Search Results ({searchResults.length})
+                </h3>
+                <div className="space-y-2">
+                  {searchResults.slice(0, 5).map((result, index) => (
+                    <div key={index} className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <div className="text-sm font-medium text-blue-900">{result.label}</div>
+                      <div className="text-xs text-blue-700 mt-1">{result.path}</div>
+                      <div className="text-sm text-blue-800 mt-1">
+                        "{result.value.substring(0, 100)}{result.value.length > 100 ? '...' : ''}"
+                      </div>
+                    </div>
+                  ))}
+                  {searchResults.length > 5 && (
+                    <div className="text-sm text-gray-500">
+                      ... and {searchResults.length - 5} more results
+                    </div>
+                  )}
+                </div>
               </div>
             )}
+          </div>
+
+          {/* Content Sections */}
+          <div className="space-y-6">
+            {filteredSections.map(([sectionKey, sectionData]) => {
+              const sectionInfo = contentSections[sectionKey] || {
+                title: sectionKey,
+                description: 'Content section',
+                icon: '📄',
+                color: 'gray'
+              };
+              return renderContentSection(sectionKey, sectionData, sectionInfo);
+            })}
+          </div>
+
+          {filteredSections.length === 0 && (
+            <div className="text-center py-12 bg-white rounded-lg shadow">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {searchTerm ? 'No content found' : 'No content available'}
+              </h3>
+              <p className="text-gray-500">
+                {searchTerm 
+                  ? `No content matches "${searchTerm}". Try a different search term.`
+                  : 'Content will appear here once initialized.'
+                }
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions Footer */}
+        <div className="mt-12 bg-white border-t border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-gray-500">
+                💡 Tip: Use the search to quickly find specific content
+              </div>
+              <div className="flex space-x-4 text-sm text-gray-500">
+                <span>📊 {Object.keys(editingContent || {}).length} sections</span>
+                <span>📝 {Object.values(editingContent || {}).flatMap(Object.values).filter(v => typeof v === 'string').length} text fields</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
