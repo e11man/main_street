@@ -95,42 +95,40 @@ const MobileNav = ({ isOpen, navLinks, closeMenu, openModal, openGuidelines }) =
             <li key={link.name}>
               <Link
                 href={link.href}
-                className="block px-4 py-3 rounded-xl font-medium text-base transition-colors duration-200 text-text-secondary hover:bg-surface focus:bg-surface-hover focus:outline-none"
-                onClick={closeMenu}
+                className="block px-4 py-3 rounded-xl font-medium text-base transition-colors duration-200 text-text-secondary hover:bg-surface focus:bg-surface-hover focus:outline-none flex items-center"
+                onClick={(e) => {
+                  if (link.name === 'Safety Guidelines' && openGuidelines) {
+                    e.preventDefault();
+                    openGuidelines();
+                  }
+                  closeMenu();
+                }}
                 tabIndex={isOpen ? 0 : -1}
               >
+                {link.icon && link.icon}
                 {link.name}
               </Link>
             </li>
           ))}
         </ul>
-        {/* Guidelines Link */}
-        <button
-          onClick={() => {
-            closeMenu();
-            if (openGuidelines) openGuidelines();
-          }}
-          className="w-full px-4 py-3 text-left text-base font-medium text-blue-600 hover:bg-blue-50 rounded-xl transition-colors flex items-center gap-2"
-          tabIndex={isOpen ? 0 : -1}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Safety Guidelines
-        </button>
         
         {/* CTA Button */}
-        <Button
-          onClick={() => {
-            closeMenu();
-            if (openModal) openModal();
-          }}
-          variant="primary"
-          className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
-          tabIndex={isOpen ? 0 : -1}
-        >
-          Request Volunteers
-        </Button>
+        <div className="mt-6 mb-2">
+          <Button
+            onClick={() => {
+              closeMenu();
+              if (openModal) openModal();
+            }}
+            variant="primary"
+            className="w-full py-4 text-base font-bold shadow-md hover:shadow-lg rounded-xl bg-accent1 hover:bg-accent1-light border-2 border-accent1 flex items-center justify-center gap-2"
+            tabIndex={isOpen ? 0 : -1}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Request Volunteers
+          </Button>
+        </div>
         <div className="flex-1" />
         {/* Footer */}
         <div className="mt-10 text-xs text-text-tertiary text-center">
@@ -141,4 +139,4 @@ const MobileNav = ({ isOpen, navLinks, closeMenu, openModal, openGuidelines }) =
   );
 };
 
-export default MobileNav; 
+export default MobileNav;

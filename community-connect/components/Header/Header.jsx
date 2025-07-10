@@ -18,8 +18,12 @@ const Header = ({ openModal }) => {
     { name: getContent('navigation.home', 'Home'), href: '/' },
     { name: getContent('navigation.about', 'About'), href: '/about' },
     { name: getContent('navigation.opportunities', 'Opportunities'), href: '/#opportunities' },
-    { name: 'Safety Guidelines', href: '/guidelines' },
     { name: getContent('navigation.contact', 'Contact'), href: '/#contact' },
+    { name: 'Safety Guidelines', href: '/guidelines', icon: (
+      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    )},
   ];
 
   // Lock scroll when mobile nav is open
@@ -51,27 +55,23 @@ const Header = ({ openModal }) => {
               <li key={link.name}>
                 <Link
                   href={link.href}
-                  className="relative px-2 py-1 text-text-secondary hover:text-accent1 font-medium transition-colors duration-200 after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:bg-accent1 after:transition-all after:duration-300 hover:after:w-full"
+                  className="relative px-2 py-1 text-text-secondary hover:text-accent1 font-medium transition-colors duration-200 after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:bg-accent1 after:transition-all after:duration-300 hover:after:w-full flex items-center"
                   style={{ fontFamily: "'Montserrat', sans-serif" }}
+                  onClick={link.name === 'Safety Guidelines' ? (e) => {
+                    e.preventDefault();
+                    setShowGuidelines(true);
+                  } : undefined}
                 >
+                  {link.icon && link.icon}
                   {link.name}
                 </Link>
               </li>
             ))}
           </ul>
-          <button
-            onClick={() => setShowGuidelines(true)}
-            className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
-            title="Safety Guidelines"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
           <Button
             onClick={openModal}
             variant="primary"
-            className="ml-4 shadow-sm hover:shadow-md whitespace-nowrap"
+            className="ml-4 shadow-sm hover:shadow-md whitespace-nowrap bg-accent1 hover:bg-accent1-light"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
           >
             {getContent('modals.volunteer.title', 'Request Volunteers')}
@@ -80,19 +80,10 @@ const Header = ({ openModal }) => {
 
         {/* Mobile: CTA + Hamburger */}
         <div className="md:hidden flex items-center gap-2">
-          <button
-            onClick={() => setShowGuidelines(true)}
-            className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
-            title="Safety Guidelines"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
           <Button
             onClick={openModal}
             variant="primary"
-            className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
+            className="text-xs px-3 py-2 shadow-sm rounded-lg font-semibold transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap bg-accent1 hover:bg-accent1-light border border-accent1"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
           >
             {getContent('modals.volunteer.title', 'Request Volunteers')}
