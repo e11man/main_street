@@ -68,6 +68,11 @@ const Icons = {
     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
     </svg>
+  ),
+  search: () => (
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+    </svg>
   )
 };
 
@@ -81,6 +86,9 @@ export default function ContentAdmin({ initialContent }) {
   const [activeTab, setActiveTab] = useState('all');
   const [showPreview, setShowPreview] = useState(false);
   const [pageError, setPageError] = useState(null);
+  const [filterSection, setFilterSection] = useState('all');
+  const [sortBy, setSortBy] = useState('section');
+  const [viewMode, setViewMode] = useState('sections'); // 'sections' or 'list'
   
   let fieldDescriptions = {};
   try {
@@ -199,13 +207,13 @@ export default function ContentAdmin({ initialContent }) {
   const contentSections = {
     homepage: {
       title: "Homepage",
-      description: "Main landing page content including hero section, search, and CTAs",
+      description: "Main landing page content including hero section, search, opportunities, testimonials, and contact",
       icon: Icons.home,
       color: "blue"
     },
     about: {
       title: "About Page", 
-      description: "About page content including mission, impact, and program descriptions",
+      description: "About page content including mission, impact, what we do, and call-to-action sections",
       icon: Icons.info,
       color: "green"
     },
@@ -223,15 +231,75 @@ export default function ContentAdmin({ initialContent }) {
     },
     common: {
       title: "Common UI",
-      description: "Reusable UI elements like buttons, messages, and labels",
+      description: "Reusable UI elements like buttons, messages, labels, and status text",
       icon: Icons.settings,
       color: "orange"
     },
     modals: {
       title: "Modals & Forms",
-      description: "Modal content, form labels, and authentication text",
+      description: "Modal content, form labels, authentication text, and interactive elements",
       icon: Icons.modal,
       color: "pink"
+    },
+    dashboard: {
+      title: "Dashboard",
+      description: "User and organization dashboard content, profile sections, and management interfaces",
+      icon: Icons.settings,
+      color: "indigo"
+    },
+    admin: {
+      title: "Admin Interface",
+      description: "Administrative interface content, management tools, and admin-specific labels",
+      icon: Icons.settings,
+      color: "red"
+    },
+    forms: {
+      title: "Forms",
+      description: "Form field labels, placeholders, and validation messages for all user inputs",
+      icon: Icons.edit,
+      color: "teal"
+    },
+    errors: {
+      title: "Error Pages",
+      description: "Error page content including 404, 500, 401, and 403 error messages",
+      icon: Icons.error,
+      color: "red"
+    },
+    success: {
+      title: "Success Pages",
+      description: "Success page content for registrations, confirmations, and approvals",
+      icon: Icons.check,
+      color: "green"
+    },
+    emails: {
+      title: "Email Templates",
+      description: "Email template content including subjects, greetings, messages, and footers",
+      icon: Icons.edit,
+      color: "blue"
+    },
+    notifications: {
+      title: "Notifications",
+      description: "Notification system content, settings, and notification types",
+      icon: Icons.info,
+      color: "yellow"
+    },
+    search: {
+      title: "Search & Filters",
+      description: "Search functionality content, filters, sorting options, and search results",
+      icon: Icons.search,
+      color: "purple"
+    },
+    pagination: {
+      title: "Pagination",
+      description: "Pagination controls, page navigation, and results display text",
+      icon: Icons.navigation,
+      color: "gray"
+    },
+    accessibility: {
+      title: "Accessibility",
+      description: "Accessibility features, screen reader text, and inclusive design content",
+      icon: Icons.info,
+      color: "cyan"
     }
   };
 
@@ -451,30 +519,50 @@ export default function ContentAdmin({ initialContent }) {
     }) : [];
 
   const getSearchResults = () => {
-    if (!searchTerm || !editingContent) return [];
+    if (!editingContent) return [];
     
     const results = [];
-    const searchLower = searchTerm.toLowerCase();
     
-    const searchInSection = (data, path = '') => {
-      for (const [key, value] of Object.entries(data)) {
-        const currentPath = path ? `${path}.${key}` : key;
-        
-        if (typeof value === 'string' && value.toLowerCase().includes(searchLower)) {
-          results.push({
-            path: currentPath,
-            value: value,
-            label: key.replace(/([A-Z])/g, ' $1').trim()
-          });
-        } else if (typeof value === 'object' && value !== null) {
-          searchInSection(value, currentPath);
-        }
+    const searchInSection = (data, path = '', section = '') => {
+      if (typeof data === 'object' && data !== null) {
+        Object.entries(data).forEach(([key, value]) => {
+          const currentPath = path ? `${path}.${key}` : key;
+          const currentSection = section || path;
+          
+          if (typeof value === 'object' && value !== null) {
+            searchInSection(value, currentPath, currentSection);
+          } else if (typeof value === 'string') {
+            const label = key.replace(/([A-Z])/g, ' $1').trim();
+            const matchesSearch = !searchTerm || 
+              value.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              currentPath.toLowerCase().includes(searchTerm.toLowerCase());
+            
+            if (matchesSearch) {
+              results.push({
+                path: currentPath,
+                value,
+                label,
+                section: currentSection || 'common'
+              });
+            }
+          }
+        });
       }
     };
     
-    Object.entries(editingContent).forEach(([sectionKey, sectionData]) => {
-      searchInSection(sectionData, sectionKey);
-    });
+    searchInSection(editingContent);
+    
+    // Sort results based on sortBy
+    if (sortBy === 'alphabetical') {
+      results.sort((a, b) => a.label.localeCompare(b.label));
+    } else if (sortBy === 'recent') {
+      // For now, just sort by section since we don't track modification time
+      results.sort((a, b) => a.section.localeCompare(b.section));
+    } else {
+      // Default: sort by section
+      results.sort((a, b) => a.section.localeCompare(b.section));
+    }
     
     return results;
   };
@@ -515,199 +603,227 @@ export default function ContentAdmin({ initialContent }) {
   return (
     <>
       <Head>
-        <title>Content Management - Admin</title>
-        <meta name="description" content="Manage site content" />
+        <title>Content Management - Community Connect</title>
+        <meta name="description" content="Manage all website content including text, labels, and messages" />
       </Head>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-        {/* HERO HEADER */}
-        <section className="pt-18 relative overflow-hidden bg-gradient-to-b from-blue-600 to-blue-800">
-          {/* Background pattern */}
-          <div className="absolute inset-0 z-0 opacity-10">
-            <div className="absolute top-0 left-0 right-0 h-full w-full bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
-          </div>
-          
-          {/* Decorative elements */}
-          <div className="absolute top-20 left-10 w-24 h-24 bg-blue-400/20 rounded-full blur-2xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-pulse animation-delay-1000"></div>
-          
-          <div className="max-w-screen-xl mx-auto px-6 md:px-8 py-16 md:py-20 text-center relative z-10">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4 md:mb-6 tracking-tight text-white leading-tight inline-block">
-              Content Management
-              <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-blue-400 to-white rounded-full"></span>
-            </h1>
-            <p className="text-lg md:text-xl font-normal text-blue-100 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Manage all text content across the site with ease
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Button 
-                variant="secondary" 
-                className="group text-base px-6 py-3 shadow-lg hover:shadow-xl flex items-center gap-2"
-                onClick={handleInitialize}
-                disabled={saving}
-              >
-                {saving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Initializing...
-                  </>
-                ) : (
-                  <>
-                    <Icons.refresh />
-                    Initialize Content
-                  </>
-                )}
-              </Button>
-              <Button 
-                variant="outline" 
-                className="text-base px-6 py-3 border-white text-white hover:text-white flex items-center gap-2"
-                onClick={refreshContent}
-                disabled={saving}
-              >
-                <Icons.refresh />
-                Refresh Content
-              </Button>
-              <Button 
-                variant="primary" 
-                className="text-base px-6 py-3 shadow-lg hover:shadow-xl flex items-center gap-2"
-                onClick={handleSave}
-                disabled={saving || !editingContent}
-              >
-                {saving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Icons.save />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-              <Button 
-                variant="outline" 
-                className="text-base px-6 py-3 border-white text-white hover:text-white flex items-center gap-2"
-                onClick={() => window.open('/', '_blank')}
-              >
-                <Icons.eye />
-                View Site
-              </Button>
+
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Content Management</h1>
+                <p className="text-sm text-gray-600">Manage all website content, text, and labels</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => window.open('/', '_blank')}
+                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  <Icons.eye />
+                  <span className="ml-2">Preview Site</span>
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  <Icons.save />
+                  <span className="ml-2">{saving ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+              </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Message */}
-        {message && (
-          <div className="max-w-2xl mx-auto px-6 mt-6">
-            <div className={`p-4 rounded-lg shadow-md text-center font-semibold flex items-center justify-center gap-2 ${
-              message.includes('Error') 
-                ? 'bg-red-50 text-red-700 border border-red-200' 
-                : 'bg-green-50 text-green-700 border border-green-200'
-            }`}>
-              {message.includes('Error') ? <Icons.error /> : <Icons.check />}
-              {message}
-            </div>
-          </div>
-        )}
-
-        {/* Main Content */}
-        <div className="max-w-screen-xl mx-auto px-6 md:px-8 py-8 md:py-12">
-          {/* Quick Navigation */}
-          <div className="mb-8">
-            <QuickNav 
-              sections={contentSections}
-              activeSection={activeTab}
-              onSectionClick={(section) => {
-                setActiveTab(section);
-                setExpandedSections(new Set([section]));
-              }}
-              searchTerm={searchTerm}
-              searchResults={searchResults}
-            />
-          </div>
-
-          {/* Search Bar */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <label htmlFor="search" className="block text-base font-semibold text-gray-900 mb-3">
-              Search Content
-            </label>
-            <input
-              type="text"
-              id="search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search for specific content, titles, or descriptions..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg transition-all duration-200"
-            />
-            
-            {/* Search Results */}
-            {searchTerm && searchResults.length > 0 && (
-              <div className="mt-4">
-                <h3 className="text-base font-semibold text-gray-900 mb-3">
-                  Search Results ({searchResults.length})
-                </h3>
-                <div className="space-y-3">
-                  {searchResults.slice(0, 5).map((result, index) => (
-                    <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-                      <div className="text-base font-semibold text-gray-900">{result.label}</div>
-                      <div className="text-sm text-gray-600 mt-1">{result.path}</div>
-                      <div className="text-sm text-gray-700 mt-2">
-                        &quot;{result.value.substring(0, 100)}{result.value.length > 100 ? '...' : ''}&quot;
-                      </div>
-                    </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Toolbar */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+              {/* Search and Filters */}
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 flex-1">
+                <div className="relative flex-1 max-w-md">
+                  <input
+                    type="text"
+                    placeholder="Search content by keyword or path..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Icons.search />
+                  </div>
+                </div>
+                
+                <select
+                  value={filterSection}
+                  onChange={(e) => setFilterSection(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Sections</option>
+                  {Object.entries(contentSections).map(([key, section]) => (
+                    <option key={key} value={key}>{section.title}</option>
                   ))}
-                  {searchResults.length > 5 && (
-                    <div className="text-sm text-gray-500 text-center py-2">
-                      ... and {searchResults.length - 5} more results
-                    </div>
-                  )}
+                </select>
+                
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="section">Sort by Section</option>
+                  <option value="alphabetical">Sort Alphabetically</option>
+                  <option value="recent">Recently Modified</option>
+                </select>
+              </div>
+              
+              {/* View Controls */}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-700">View:</span>
+                  <button
+                    onClick={() => setViewMode('sections')}
+                    className={`px-3 py-1 text-sm rounded-md ${
+                      viewMode === 'sections'
+                        ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                        : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                    }`}
+                  >
+                    Sections
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`px-3 py-1 text-sm rounded-md ${
+                      viewMode === 'list'
+                        ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                        : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                    }`}
+                  >
+                    List
+                  </button>
+                </div>
+                
+                <button
+                  onClick={() => setShowPreview(!showPreview)}
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                    showPreview
+                      ? 'bg-green-100 text-green-700 border border-green-300'
+                      : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                  }`}
+                >
+                  <Icons.eye />
+                  <span className="ml-2">Preview</span>
+                </button>
+              </div>
+            </div>
+            
+            {/* Quick Stats */}
+            {editingContent && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex flex-wrap items-center space-x-6 text-sm text-gray-600">
+                  <div className="flex items-center">
+                    <span className="font-medium">Total Fields:</span>
+                    <span className="ml-1">{Object.keys(editingContent).length} sections</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="font-medium">Modified:</span>
+                    <span className="ml-1">{Object.keys(editingContent).filter(key => 
+                      JSON.stringify(editingContent[key]) !== JSON.stringify(content?.[key])
+                    ).length} sections</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="font-medium">Search Results:</span>
+                    <span className="ml-1">{searchTerm ? getSearchResults().length : 'All'} fields</span>
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Content Sections */}
-          <div className="space-y-6">
-            {filteredSections.map(([sectionKey, sectionData]) => {
-              const sectionInfo = contentSections[sectionKey] || {
-                title: sectionKey,
-                description: 'Content section',
-                icon: Icons.settings,
-                color: 'gray'
-              };
-              return (
-                <div key={sectionKey} className="bg-white rounded-lg shadow-md overflow-hidden">
-                  {renderContentSection(sectionKey, sectionData, sectionInfo)}
-                </div>
-              );
-            })}
-          </div>
-
-          {filteredSections.length === 0 && (
-            <div className="text-center py-16 bg-white rounded-lg shadow-md">
-              <div className="text-6xl mb-6 text-primary opacity-20">�</div>
-              <h3 className="text-xl font-montserrat font-bold text-primary mb-3">
-                {searchTerm ? 'No content found' : 'No content available'}
-              </h3>
-              <p className="text-text-secondary max-w-md mx-auto">
-                {searchTerm 
-                  ? `No content matches &quot;${searchTerm}&quot;. Try a different search term.`
-                  : 'Content will appear here once initialized.'
-                }
-              </p>
+          {/* Message Display */}
+          {message && (
+            <div className={`mb-6 p-4 rounded-md ${
+              message.includes('Error') 
+                ? 'bg-red-100 border border-red-400 text-red-700' 
+                : 'bg-green-100 border border-green-400 text-green-700'
+            }`}>
+              <div className="flex items-center">
+                {message.includes('Error') ? <Icons.error /> : <Icons.check />}
+                <span className="ml-2">{message}</span>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Footer */}
-        <div className="bg-surface border-t border-border py-6 px-6">
-          <div className="max-w-screen-xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-text-secondary">
-            <span className="text-center sm:text-left">Tip: Use the search to quickly find specific content</span>
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <span>{Object.keys(editingContent || {}).length} sections</span>
-              <span>{Object.values(editingContent || {}).flatMap(Object.values).filter(v => typeof v === 'string').length} text fields</span>
+          {/* Content Display */}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading content...</p>
+              </div>
             </div>
-          </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-red-500 mb-4">
+                <Icons.error />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Content</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <button
+                onClick={handleInitialize}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Initialize Content
+              </button>
+            </div>
+          ) : editingContent ? (
+            <div className="space-y-6">
+              {viewMode === 'sections' ? (
+                // Section-based view
+                Object.entries(contentSections)
+                  .filter(([key]) => filterSection === 'all' || key === filterSection)
+                  .map(([sectionKey, sectionInfo]) => {
+                    const sectionData = editingContent[sectionKey];
+                    if (!sectionData) return null;
+                    
+                    return renderContentSection(sectionKey, sectionData, sectionInfo);
+                  })
+              ) : (
+                // List view
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 className="text-lg font-medium text-gray-900">All Content Fields</h3>
+                    <p className="text-sm text-gray-600">Edit individual content fields in a list format</p>
+                  </div>
+                  <div className="divide-y divide-gray-200">
+                    {getSearchResults().map(({ path, value, label, section }) => (
+                      <div key={path} className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {section}
+                              </span>
+                              <h4 className="text-sm font-medium text-gray-900">{label}</h4>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">Path: {path}</p>
+                            <textarea
+                              value={value || ''}
+                              onChange={(e) => updateNestedValue(path, e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              rows={2}
+                              placeholder={`Enter ${label.toLowerCase()}...`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
     </>
