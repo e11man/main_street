@@ -652,7 +652,7 @@ const DormManagement = ({ currentUser, onDormUpdate }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: currentUser._id,
+          userId: currentUser._id.toString ? currentUser._id.toString() : currentUser._id,
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword
         }),

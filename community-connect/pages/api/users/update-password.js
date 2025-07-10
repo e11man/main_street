@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
     // Connect to MongoDB
     const client = await clientPromise;
-    const db = client.db('main_street');
+    const db = client.db('mainStreetOpportunities');
     const usersCollection = db.collection('users');
 
     // Find user
