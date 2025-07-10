@@ -2440,6 +2440,12 @@ export default function AdminPage() {
               >
                 Themes
               </button>
+              <button
+                onClick={() => window.open('/content-admin', '_blank')}
+                className="py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              >
+                🎨 Content Management
+              </button>
             </nav>
           </div>
 

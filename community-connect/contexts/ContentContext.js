@@ -73,17 +73,18 @@ export const ContentProvider = ({ children, initialContent = null }) => {
   // Update content (admin only)
   const updateContent = async (newContent) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No admin token found');
+      // Check if admin is authenticated
+      const adminAuth = localStorage.getItem('adminAuth');
+      if (adminAuth !== 'true') {
+        throw new Error('Admin not authenticated');
       }
 
       const response = await fetch('/api/content', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({ content: newContent })
       });
 
@@ -104,16 +105,15 @@ export const ContentProvider = ({ children, initialContent = null }) => {
   // Initialize content (admin only)
   const initializeContent = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('No admin token found');
+      // Check if admin is authenticated
+      const adminAuth = localStorage.getItem('adminAuth');
+      if (adminAuth !== 'true') {
+        throw new Error('Admin not authenticated');
       }
 
       const response = await fetch('/api/content', {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include', // Include cookies for authentication
       });
 
       const result = await response.json();

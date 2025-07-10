@@ -32,8 +32,11 @@ export default function ContentAdmin({ initialContent }) {
       const result = await updateContent(editingContent);
       
       if (result.success) {
-        setMessage('✅ Content saved successfully!');
-        setTimeout(() => setMessage(''), 3000);
+        setMessage('✅ Content saved successfully! Changes are now live on the site.');
+        setTimeout(() => setMessage(''), 5000);
+        
+        // Refresh the content to ensure we have the latest version
+        await refreshContent();
       } else {
         setMessage(`❌ Error: ${result.error}`);
       }
@@ -400,11 +403,26 @@ export default function ContentAdmin({ initialContent }) {
                 </button>
                 
                 <button
+                  onClick={refreshContent}
+                  disabled={saving}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  🔄 Refresh Content
+                </button>
+                
+                <button
                   onClick={handleSave}
                   disabled={saving || !editingContent}
                   className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
                   {saving ? '💾 Saving...' : '💾 Save Changes'}
+                </button>
+                
+                <button
+                  onClick={() => window.open('/', '_blank')}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  👁️ View Site
                 </button>
               </div>
             </div>
