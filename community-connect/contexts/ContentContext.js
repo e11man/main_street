@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { staticContent } from '../lib/content/index.js';
 
 // Create the context
 const ContentContext = createContext();
@@ -14,37 +15,17 @@ export const useContent = () => {
 
 // Content provider component
 export const ContentProvider = ({ children, initialContent = null }) => {
-  const [content, setContent] = useState(initialContent);
-  const [loading, setLoading] = useState(!initialContent);
+  const [content, setContent] = useState(initialContent || staticContent);
+  const [loading, setLoading] = useState(!initialContent && !staticContent);
   const [error, setError] = useState(null);
 
-  // Fetch content on client side if not provided initially
+  // Use static content if no initial content provided
   useEffect(() => {
-    if (!initialContent) {
-      fetchContent();
-    }
-  }, [initialContent]);
-
-  const fetchContent = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await fetch('/api/content');
-      const result = await response.json();
-      
-      if (result.success) {
-        setContent(result.data);
-      } else {
-        setError(result.error || 'Failed to fetch content');
-      }
-    } catch (err) {
-      setError('Failed to fetch content');
-      console.error('Error fetching content:', err);
-    } finally {
+    if (!initialContent && !content) {
+      setContent(staticContent);
       setLoading(false);
     }
-  };
+  }, [initialContent, content]);
 
   // Get content by path (e.g., 'homepage.hero.title')
   const getContent = (path, fallback = '') => {
@@ -70,64 +51,23 @@ export const ContentProvider = ({ children, initialContent = null }) => {
     return content[section] || {};
   };
 
-  // Update content (admin only)
+  // Update content (now just a stub since content is static)
   const updateContent = async (newContent) => {
-    try {
-      // Check if admin is authenticated
-      const adminAuth = localStorage.getItem('adminAuth');
-      if (adminAuth !== 'true') {
-        throw new Error('Admin not authenticated');
-      }
-
-      const response = await fetch('/api/content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include', // Include cookies for authentication
-        body: JSON.stringify({ content: newContent })
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        setContent(newContent);
-        return { success: true };
-      } else {
-        return { success: false, error: result.error };
-      }
-    } catch (err) {
-      console.error('Error updating content:', err);
-      return { success: false, error: err.message };
-    }
+    console.warn('Content is now static and cannot be updated dynamically. Please edit the content files directly.');
+    return { success: false, error: 'Content is now static and cannot be updated dynamically' };
   };
 
-  // Initialize content (admin only)
+  // Initialize content (now just a stub since content is static)
   const initializeContent = async () => {
-    try {
-      // Check if admin is authenticated
-      const adminAuth = localStorage.getItem('adminAuth');
-      if (adminAuth !== 'true') {
-        throw new Error('Admin not authenticated');
-      }
+    console.warn('Content is now static and does not need initialization.');
+    return { success: true, message: 'Content is already static' };
+  };
 
-      const response = await fetch('/api/content', {
-        method: 'PUT',
-        credentials: 'include', // Include cookies for authentication
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        await fetchContent(); // Refresh content after initialization
-        return { success: true };
-      } else {
-        return { success: false, error: result.error };
-      }
-    } catch (err) {
-      console.error('Error initializing content:', err);
-      return { success: false, error: err.message };
-    }
+  // Refresh content (now just returns static content)
+  const refreshContent = async () => {
+    setContent(staticContent);
+    setLoading(false);
+    setError(null);
   };
 
   const value = {
@@ -138,7 +78,7 @@ export const ContentProvider = ({ children, initialContent = null }) => {
     getSection,
     updateContent,
     initializeContent,
-    refreshContent: fetchContent
+    refreshContent
   };
 
   return (

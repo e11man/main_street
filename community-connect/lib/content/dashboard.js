@@ -1,0 +1,41 @@
+export const dashboardContent = {
+  user: {
+    title: "My Dashboard",
+    subtitle: "Manage your volunteer activities and opportunities",
+    welcome: "Welcome back",
+    upcomingOpportunities: "Upcoming Opportunities",
+    pastOpportunities: "Past Opportunities",
+    savedOpportunities: "Saved Opportunities",
+    profile: "My Profile",
+    settings: "Settings",
+    noUpcoming: "No upcoming opportunities",
+    noPast: "No past opportunities",
+    noSaved: "No saved opportunities",
+    viewAll: "View All",
+    editProfile: "Edit Profile",
+    changePassword: "Change Password",
+    notifications: "Notifications",
+    preferences: "Preferences"
+  },
+  organization: {
+    title: "Organization Dashboard",
+    subtitle: "Manage your volunteer opportunities and volunteers",
+    welcome: "Welcome back",
+    activeOpportunities: "Active Opportunities",
+    pendingOpportunities: "Pending Opportunities",
+    completedOpportunities: "Completed Opportunities",
+    volunteers: "Volunteers",
+    analytics: "Analytics",
+    settings: "Settings",
+    noActive: "No active opportunities",
+    noPending: "No pending opportunities",
+    noCompleted: "No completed opportunities",
+    noVolunteers: "No volunteers yet",
+    createOpportunity: "Create Opportunity",
+    editOpportunity: "Edit Opportunity",
+    deleteOpportunity: "Delete Opportunity",
+    viewVolunteers: "View Volunteers",
+    exportData: "Export Data",
+    organizationProfile: "Organization Profile"
+  }
+};

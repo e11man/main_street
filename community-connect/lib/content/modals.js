@@ -1,0 +1,81 @@
+export const modalsContent = {
+  auth: {
+    title: "Sign In",
+    subtitle: "Access your account to join opportunities",
+    emailLabel: "Email",
+    passwordLabel: "Password",
+    loginButton: "Sign In",
+    signupButton: "Create Account",
+    forgotPassword: "Forgot Password?",
+    noAccount: "Don't have an account?",
+    hasAccount: "Already have an account?",
+    signupTitle: "Create Account",
+    signupSubtitle: "Join our community of volunteers",
+    firstNameLabel: "First Name",
+    lastNameLabel: "Last Name",
+    confirmPasswordLabel: "Confirm Password",
+    termsAgreement: "I agree to the Terms of Service and Privacy Policy",
+    emailPlaceholder: "Enter your email",
+    passwordPlaceholder: "Enter your password",
+    firstNamePlaceholder: "Enter your first name",
+    lastNamePlaceholder: "Enter your last name",
+    confirmPasswordPlaceholder: "Confirm your password"
+  },
+  volunteer: {
+    title: "Request Volunteer Opportunity",
+    subtitle: "Tell us about your organization and volunteer needs",
+    organizationLabel: "Organization Name",
+    contactLabel: "Contact Person",
+    emailLabel: "Email",
+    phoneLabel: "Phone",
+    descriptionLabel: "Opportunity Description",
+    submitButton: "Submit Request",
+    organizationPlaceholder: "Enter your organization name",
+    contactPlaceholder: "Enter contact person name",
+    emailPlaceholder: "Enter your email address",
+    phonePlaceholder: "Enter your phone number",
+    descriptionPlaceholder: "Describe the volunteer opportunity",
+    successMessage: "Thank you! Your request has been submitted successfully.",
+    errorMessage: "Sorry, there was an error submitting your request. Please try again."
+  },
+  companyAuth: {
+    title: "Organization Login",
+    subtitle: "Access your organization dashboard",
+    emailLabel: "Email",
+    passwordLabel: "Password",
+    loginButton: "Sign In",
+    forgotPassword: "Forgot Password?",
+    noAccount: "Don't have an organization account?",
+    contactAdmin: "Contact Admin",
+    emailPlaceholder: "Enter your email",
+    passwordPlaceholder: "Enter your password"
+  },
+  groupSignup: {
+    title: "Group Signup",
+    subtitle: "Sign up multiple people for this opportunity",
+    participantLabel: "Participant",
+    addParticipant: "Add Participant",
+    removeParticipant: "Remove Participant",
+    submitButton: "Submit Group Signup",
+    successMessage: "Group signup submitted successfully!",
+    errorMessage: "Error submitting group signup. Please try again.",
+    participantPlaceholder: "Enter participant name",
+    emailPlaceholder: "Enter participant email"
+  },
+  companyInfo: {
+    title: "Organization Information",
+    closeButton: "Close",
+    website: "Website",
+    phone: "Phone",
+    email: "Email",
+    address: "Address",
+    description: "Description",
+    contactPerson: "Contact Person"
+  },
+  messageBox: {
+    title: "Message",
+    okButton: "OK",
+    cancelButton: "Cancel",
+    confirmButton: "Confirm"
+  }
+};
