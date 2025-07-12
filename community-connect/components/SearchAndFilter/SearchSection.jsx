@@ -4,9 +4,14 @@ import Icon from '../ui/Icon';
 import FilterTabs from './FilterTabs';
 import { toast } from 'react-hot-toast';
 import MyCommitments from '../Commitments/MyCommitments';
+import useContent from '../../lib/useContent';
 
-const SearchSection = ({ filter, setFilter, searchTerm, setSearchTerm, currentUser, opportunities, openAuthModal, onJoinOpportunity, onUserUpdate }) => {
+const SearchSection = ({ filter, setFilter, searchTerm, setSearchTerm, currentUser, opportunities, openAuthModal, onJoinOpportunity, onUserUpdate, content }) => {
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+  
+  const getContent = (key, defaultValue = '') => {
+    return content?.[key] || defaultValue;
+  };
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -95,15 +100,19 @@ const SearchSection = ({ filter, setFilter, searchTerm, setSearchTerm, currentUs
       {/* Search Section */}
       <div className="bg-gradient-to-r from-surface/20 via-white to-surface/20 rounded-3xl p-8 border border-border/30 shadow-lg mb-12">
         <div className="text-center mb-6">
-          <h2 className="font-montserrat text-2xl font-bold text-primary mb-2">Find Your Perfect Opportunity</h2>
-          <p className="text-text-secondary font-medium">Search and filter through meaningful volunteer opportunities</p>
+          <h2 className="font-montserrat text-2xl font-bold text-primary mb-2">
+{getContent('search.title', 'Find Your Perfect Opportunity')}
+          </h2>
+          <p className="text-text-secondary font-medium">
+{getContent('search.subtitle', 'Search and filter through meaningful volunteer opportunities')}
+          </p>
         </div>
         
         {/* Search Bar */}
         <div className="relative bg-white rounded-2xl shadow-lg border-2 border-border/40 mb-8 transition-all duration-300 hover:shadow-xl hover:border-accent1/50 group max-w-2xl mx-auto">
           <Input
             type="text"
-            placeholder="Search by title, description, or category..."
+            placeholder={getContent('search.placeholder', 'Search by title, description, or category...')}
             className="h-16 pl-16 pr-6 focus:ring-0 focus:border-accent1 focus:shadow-[0_0_0_4px_rgba(0,175,206,0.15)] rounded-2xl font-montserrat text-text-primary text-lg"
             value={localSearchTerm}
             onChange={(e) => setLocalSearchTerm(e.target.value)}
@@ -128,7 +137,7 @@ const SearchSection = ({ filter, setFilter, searchTerm, setSearchTerm, currentUs
           )}
         </div>
 
-        <FilterTabs currentFilter={filter} setFilter={setFilter} />
+        <FilterTabs currentFilter={filter} setFilter={setFilter} content={content} />
       </div>
     </section>
   );
