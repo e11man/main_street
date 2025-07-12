@@ -34,8 +34,40 @@ export default async function handler(req, res) {
       console.error('Error updating content:', error);
       res.status(500).json({ error: 'Failed to update content' });
     }
+  } else if (req.method === 'DELETE') {
+    try {
+      const { key } = req.body;
+      
+      if (!key) {
+        return res.status(400).json({ error: 'Key is required' });
+      }
+      
+      const { getAllContent, initializeDefaultContent } = require('../../../lib/contentManager');
+      
+      // Initialize default content if needed
+      await initializeDefaultContent();
+      
+      // Get database connection
+      const { MongoClient } = require('mongodb');
+      const client = new MongoClient(process.env.MAINSTREETCONTENT);
+      await client.connect();
+      const db = client.db();
+      const collection = db.collection('site_content');
+      
+      // Delete the content
+      const result = await collection.deleteOne({ key });
+      
+      if (result.deletedCount > 0) {
+        res.status(200).json({ message: 'Content deleted successfully' });
+      } else {
+        res.status(404).json({ error: 'Content not found' });
+      }
+    } catch (error) {
+      console.error('Error deleting content:', error);
+      res.status(500).json({ error: 'Failed to delete content' });
+    }
   } else {
-    res.setHeader('Allow', ['GET', 'POST']);
+    res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
