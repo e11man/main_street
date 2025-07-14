@@ -1,65 +1,136 @@
 const { MongoClient } = require('mongodb');
 
-let client;
-let db;
-
+// Force fresh connections every time - no caching
 async function connectToContentDB() {
-  if (!client) {
-    client = new MongoClient(process.env.MAINSTREETCONTENT);
-    await client.connect();
-    db = client.db();
-  }
-  return db;
+  // Always create a completely fresh connection
+  const client = new MongoClient(process.env.MAINSTREETCONTENT, {
+    // Disable all connection pooling and caching
+    maxPoolSize: 1,
+    minPoolSize: 0,
+    maxIdleTimeMS: 0,
+    // Force primary reads with no caching
+    readPreference: 'primary',
+    // Force immediate reads
+    readConcern: { level: 'local' },
+    // Force immediate writes
+    writeConcern: { w: 1, j: true },
+    // Disable all caching
+    retryWrites: false,
+    retryReads: false,
+    // Force fresh connections
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 30000,
+    // Disable connection reuse
+    maxConnecting: 1
+  });
+  
+  await client.connect();
+  const db = client.db();
+  return { client, db };
 }
 
 async function getContent(key, defaultValue = '') {
+  let client = null;
   try {
-    const database = await connectToContentDB();
-    const collection = database.collection('site_content');
-    const document = await collection.findOne({ key });
+    const { client: mongoClient, db } = await connectToContentDB();
+    client = mongoClient;
+    const collection = db.collection('site_content');
+    
+    // Force fresh read with no caching
+    const document = await collection.findOne(
+      { key },
+      { 
+        readPreference: 'primary',
+        readConcern: { level: 'local' },
+        // Disable any query caching
+        hint: null
+      }
+    );
+    
     return document ? document.value : defaultValue;
   } catch (error) {
     console.error('Error fetching content:', error);
     return defaultValue;
+  } finally {
+    // Always close connection to ensure fresh data next time
+    if (client) {
+      await client.close();
+    }
   }
 }
 
 async function setContent(key, value) {
+  let client = null;
   try {
-    const database = await connectToContentDB();
-    const collection = database.collection('site_content');
+    const { client: mongoClient, db } = await connectToContentDB();
+    client = mongoClient;
+    const collection = db.collection('site_content');
+    
+    // Force immediate write with no caching
     await collection.updateOne(
       { key },
       { $set: { key, value, updatedAt: new Date() } },
-      { upsert: true }
+      { 
+        upsert: true,
+        writeConcern: { w: 1, j: true },
+        // Disable any query caching
+        hint: null
+      }
     );
+    
     return true;
   } catch (error) {
     console.error('Error setting content:', error);
     return false;
+  } finally {
+    // Always close connection to ensure fresh data next time
+    if (client) {
+      await client.close();
+    }
   }
 }
 
 async function getAllContent() {
+  let client = null;
   try {
-    const database = await connectToContentDB();
-    const collection = database.collection('site_content');
-    const documents = await collection.find({}).toArray();
+    const { client: mongoClient, db } = await connectToContentDB();
+    client = mongoClient;
+    const collection = db.collection('site_content');
+    
+    // Force fresh read with no caching
+    const documents = await collection.find(
+      {},
+      { 
+        readPreference: 'primary',
+        readConcern: { level: 'local' },
+        // Disable any query caching
+        hint: null
+      }
+    ).toArray();
+    
     const content = {};
     documents.forEach(doc => {
       content[doc.key] = doc.value;
     });
+    
     return content;
   } catch (error) {
     console.error('Error fetching all content:', error);
     return {};
+  } finally {
+    // Always close connection to ensure fresh data next time
+    if (client) {
+      await client.close();
+    }
   }
 }
 
 async function initializeDefaultContent() {
+  let client = null;
   try {
-    const database = await connectToContentDB();
-    const collection = database.collection('site_content');
+    const { client: mongoClient, db } = await connectToContentDB();
+    client = mongoClient;
+    const collection = db.collection('site_content');
     
     const defaultContent = {
       // Hero Section
@@ -237,6 +308,11 @@ async function initializeDefaultContent() {
   } catch (error) {
     console.error('Error initializing default content:', error);
     return false;
+  } finally {
+    // Always close connection to ensure fresh data next time
+    if (client) {
+      await client.close();
+    }
   }
 }
 

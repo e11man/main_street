@@ -1,6 +1,34 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Completely disable all caching to ensure fresh MongoDB data
+  experimental: {
+    // Disable static optimization
+    staticPageGenerationTimeout: 0,
+    // Disable ISR (Incremental Static Regeneration)
+    isrMemoryCacheSize: 0,
+    // Disable static generation
+    workerThreads: false,
+    cpus: 1
+  },
+  // Disable image optimization caching
+  images: {
+    unoptimized: true,
+    // Disable image caching
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+  // Disable static generation caching
+  generateEtags: false,
+  // Disable compression to avoid caching issues
+  compress: false,
+  // Disable powered by header
+  poweredByHeader: false,
+  // Force server-side rendering for all pages
+  trailingSlash: false,
+  // Disable static exports
+  output: 'standalone',
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {

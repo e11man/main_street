@@ -1,15 +1,30 @@
 import { getAllContent, initializeDefaultContent } from '../../../lib/contentManager';
 
 export default async function handler(req, res) {
+  // Disable all caching - force fresh data from MongoDB
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  
+  // Add cache-busting timestamp
+  const timestamp = Date.now();
+  res.setHeader('X-Cache-Timestamp', timestamp.toString());
+
   if (req.method === 'GET') {
     try {
       // Initialize default content if needed
       await initializeDefaultContent();
       
-      // Get all content
+      // Get all content with fresh database connection
       const content = await getAllContent();
       
-      res.status(200).json(content);
+      // Add timestamp to response to ensure client knows it's fresh
+      res.status(200).json({
+        ...content,
+        _timestamp: timestamp,
+        _fresh: true
+      });
     } catch (error) {
       console.error('Error fetching content:', error);
       res.status(500).json({ error: 'Failed to fetch content' });
@@ -26,7 +41,11 @@ export default async function handler(req, res) {
       const success = await setContent(key, value);
       
       if (success) {
-        res.status(200).json({ message: 'Content updated successfully' });
+        res.status(200).json({ 
+          message: 'Content updated successfully',
+          timestamp: timestamp,
+          fresh: true
+        });
       } else {
         res.status(500).json({ error: 'Failed to update content' });
       }
@@ -58,7 +77,11 @@ export default async function handler(req, res) {
       const result = await collection.deleteOne({ key });
       
       if (result.deletedCount > 0) {
-        res.status(200).json({ message: 'Content deleted successfully' });
+        res.status(200).json({ 
+          message: 'Content deleted successfully',
+          timestamp: timestamp,
+          fresh: true
+        });
       } else {
         res.status(404).json({ error: 'Content not found' });
       }

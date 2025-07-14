@@ -14,7 +14,8 @@
         "check-cancellations": "node scripts/check-cancellations.js",
         "setup-email-notifications": "node scripts/setup-email-notifications.js",
         "validate-emails": "node scripts/validate-email-addresses.js",
-        "init-metrics": "node scripts/initialize-metrics.js"
+        "init-metrics": "node scripts/initialize-metrics.js",
+        "fresh-start": "./clear-cache-and-restart.sh"
     },
     "keywords": [],
     "author": "",

@@ -75,6 +75,16 @@ import clientPromise from '../../lib/mongodb';
 import { asyncHandler, AppError, ErrorTypes, handleDatabaseError } from '../../lib/errorHandler';
 
 export default asyncHandler(async function handler(req, res) {
+  // Disable all caching - force fresh data from MongoDB
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  
+  // Add cache-busting timestamp
+  const timestamp = Date.now();
+  res.setHeader('X-Cache-Timestamp', timestamp.toString());
+
   try {
     // Only handle GET requests
     if (req.method !== 'GET') {
@@ -117,8 +127,12 @@ export default asyncHandler(async function handler(req, res) {
     // Ensure we always return an array
     const result = Array.isArray(currentOpportunities) ? currentOpportunities : [];
     
-    // Return the filtered data as JSON
-    return res.status(200).json(result);
+    // Return the filtered data as JSON with cache-busting info
+    return res.status(200).json({
+      opportunities: result,
+      _timestamp: timestamp,
+      _fresh: true
+    });
   } catch (error) {
     // If this is already an AppError, re-throw it
     if (error instanceof AppError) {

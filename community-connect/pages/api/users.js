@@ -421,6 +421,16 @@ async function handleResendVerificationCode(req, res, taylorVerificationCollecti
 }
 
 export default async function handler(req, res) {
+  // Disable all caching for user data - force fresh data from MongoDB
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  
+  // Add cache-busting timestamp
+  const timestamp = Date.now();
+  res.setHeader('X-Cache-Timestamp', timestamp.toString());
+
   try {
     // Connect to MongoDB
     const client = await clientPromise;
