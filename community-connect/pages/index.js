@@ -14,8 +14,9 @@ import CompanyAuthModal from '../components/CompanyAuthModal.jsx';
 import CustomMessageBox from '../components/Modal/CustomMessageBox.jsx';
 import GroupSignupModal from '../components/Opportunities/GroupSignupModal.jsx';
 import { useScrollTriggeredAnimation, useSmoothScroll, useParallaxEffect } from '../lib/hooks.js';
+import { getAllContent } from '../lib/contentManager';
 
-export default function Home() {
+export default function Home({ content }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCompanyAuthModalOpen, setIsCompanyAuthModalOpen] = useState(false);
@@ -360,10 +361,10 @@ export default function Home() {
 
   return (
     <>
-      <Header openModal={openModal} />
+      <Header openModal={openModal} content={content} />
       <main>
-        <HeroSection ref={heroContentRef} />
-        <FloatingCardSection />
+        <HeroSection ref={heroContentRef} content={content} />
+        <FloatingCardSection content={content} />
         <SearchSection
         filter={filter}
         setFilter={setFilter}
@@ -374,6 +375,7 @@ export default function Home() {
         openAuthModal={() => openAuthModal(null)}
         onJoinOpportunity={handleJoinOpportunity}
         onUserUpdate={handleUserUpdate}
+        content={content}
       />
         <div id="opportunities">
           <OpportunitiesGrid
@@ -383,14 +385,15 @@ export default function Home() {
             onLearnMoreClick={handleLearnMoreClick}
             onGroupSignupClick={handleGroupSignupClick}
             currentUser={currentUser}
+            content={content}
           />
         </div>
-        <TestimonialsSection testimonialRefs={testimonialRefs} />
+        <TestimonialsSection testimonialRefs={testimonialRefs} content={content} />
         <div id="contact">
-          <ContactSection />
+          <ContactSection content={content} />
         </div>
       </main>
-      <Footer />
+      <Footer content={content} />
 
       <Modal isOpen={isModalOpen} onClose={closeModal}>
         {messageBox ? (
@@ -487,4 +490,29 @@ export default function Home() {
       )}
     </>
   );
+}
+
+export async function getServerSideProps() {
+  try {
+    const { getAllContent, initializeDefaultContent } = require('../lib/contentManager');
+    
+    // Initialize default content if needed
+    await initializeDefaultContent();
+    
+    // Get all content
+    const content = await getAllContent();
+    
+    return {
+      props: {
+        content,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching content:', error);
+    return {
+      props: {
+        content: {},
+      },
+    };
+  }
 }

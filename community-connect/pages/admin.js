@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import ChatModal from '../components/Modal/ChatModal'; // Import ChatModal
 import { useTheme } from '../contexts/ThemeContext';
+import ContentManager from '../components/Admin/ContentManager';
 
 // Add the full dorm list constant after imports
 const DORM_DATA = {
@@ -2440,6 +2441,16 @@ export default function AdminPage() {
               >
                 Themes
               </button>
+              <button
+                onClick={() => setActiveTab('content')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'content'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Content
+              </button>
             </nav>
           </div>
 
@@ -3130,6 +3141,11 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Content Management Tab */}
+          {activeTab === 'content' && (
+            <ContentManager />
           )}
 
         </div>

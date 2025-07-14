@@ -9,10 +9,15 @@ import VolunteerRequestForm from '../components/Modal/VolunteerRequestForm';
 import Icon from '../components/ui/Icon';
 import MetricsDisplay from '../components/Metrics/MetricsDisplay';
 import { useScrollTriggeredAnimationCallback } from '../lib/hooks';
+import useContent from '../lib/useContent';
 
-export default function About() {
+export default function About({ content }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVisible, setIsVisible] = useState({});
+  
+  const getContent = (key, defaultValue = '') => {
+    return content?.[key] || defaultValue;
+  };
   
   // Refs for scroll animations
   const heroRef = useRef(null);
@@ -82,7 +87,7 @@ export default function About() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Header openModal={openModal} />
+      <Header openModal={openModal} content={content} />
 
       <main className="min-h-screen">
         {/* Hero Section */}
@@ -114,12 +119,12 @@ export default function About() {
               isVisible.hero ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
               <h1 className="hero-title relative font-montserrat text-clamp-36-64 font-extrabold mb-8 md:mb-10 tracking-[-0.025em] text-white leading-tight inline-block">
-                Make the Connection
+{getContent('about.hero.title', 'Make the Connection')}
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h1>
               
               <p className="font-source-serif text-clamp-18-24 font-normal text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Connect with meaningful opportunities that create lasting impact in upland.
+{getContent('about.hero.subtitle', 'Connect with meaningful opportunities that create lasting impact in upland.')}
               </p>
               
               <div className="flex flex-wrap justify-center gap-4">
@@ -154,11 +159,11 @@ export default function About() {
               isVisible.mission ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
               <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary relative inline-block">
-                Our Mission
+{getContent('about.mission.title', 'Our Mission')}
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
               <p className="font-source-serif text-lg text-text-secondary max-w-4xl mx-auto leading-relaxed">
-                Community Connect is dedicated to fostering meaningful relationships between passionate volunteers and impactful opportunities. We believe that when individuals come together with shared purpose, they can create transformative change that extends far beyond individual efforts. Our platform serves as a bridge, connecting hearts and hands to build stronger, more resilient upland through collective action.
+{getContent('about.mission.text', 'Community Connect is dedicated to fostering meaningful relationships between passionate volunteers and impactful opportunities. We believe that when individuals come together with shared purpose, they can create transformative change that extends far beyond individual efforts. Our platform serves as a bridge, connecting hearts and hands to build stronger, more resilient upland through collective action.')}
               </p>
             </div>
           </div>
@@ -174,7 +179,7 @@ export default function About() {
               isVisible.impact ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
               <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary relative inline-block">
-                Our Impact
+{getContent('about.impact.title', 'Our Impact')}
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
             </div>
@@ -197,11 +202,11 @@ export default function About() {
               isVisible.whatWeDo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
               <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary relative inline-block">
-                What We Do
+{getContent('about.what_we_do.title', 'What We Do')}
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
               <p className="font-source-serif text-lg text-text-secondary max-w-4xl mx-auto leading-relaxed">
-                Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in upland.
+{getContent('about.what_we_do.text', 'Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in upland.')}
               </p>
             </div>
 
@@ -367,11 +372,11 @@ export default function About() {
               isVisible.contact ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
               <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary relative inline-block">
-                Get In Touch
+{getContent('about.contact.title', 'Get In Touch')}
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
               <p className="font-source-serif text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed mb-8">
-                Have questions or want to learn more about how you can get involved? We&apos;d love to hear from you and help you find the perfect opportunity to make a difference.
+{getContent('about.contact.text', 'Have questions or want to learn more about how you can get involved? We\'d love to hear from you and help you find the perfect opportunity to make a difference.')}
               </p>
               
               <div className="mb-8">
@@ -391,7 +396,7 @@ export default function About() {
         
       </main>
 
-      <Footer />
+      <Footer content={content} />
 
       {/* Modal */}
       <Modal isOpen={isModalOpen} onClose={closeModal}>
@@ -399,4 +404,29 @@ export default function About() {
       </Modal>
     </>
   );
+}
+
+export async function getServerSideProps() {
+  try {
+    const { getAllContent, initializeDefaultContent } = require('../lib/contentManager');
+    
+    // Initialize default content if needed
+    await initializeDefaultContent();
+    
+    // Get all content
+    const content = await getAllContent();
+    
+    return {
+      props: {
+        content,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching content:', error);
+    return {
+      props: {
+        content: {},
+      },
+    };
+  }
 }

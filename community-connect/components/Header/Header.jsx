@@ -5,16 +5,21 @@ import Link from 'next/link';
 import Button from '../ui/Button';
 import MobileMenuButton from './MobileMenuButton';
 import MobileNav from './MobileNav';
+import useContent from '../../lib/useContent';
 
-const NAV_LINKS = [
-  { name: 'Home', href: '/' },
-  { name: 'About', href: '/about' },
-  { name: 'Opportunities', href: '/#opportunities' },
-  { name: 'Contact', href: '/#contact' },
-];
-
-const Header = ({ openModal }) => {
+const Header = ({ openModal, content }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  
+  const getContent = (key, defaultValue = '') => {
+    return content?.[key] || defaultValue;
+  };
+  
+  const NAV_LINKS = [
+    { name: getContent('nav.home', 'Home'), href: '/' },
+    { name: getContent('nav.about', 'About'), href: '/about' },
+    { name: getContent('nav.opportunities', 'Opportunities'), href: '/#opportunities' },
+    { name: getContent('nav.contact', 'Contact'), href: '/#contact' },
+  ];
 
   // Lock scroll when mobile nav is open
   useEffect(() => {
@@ -59,7 +64,7 @@ const Header = ({ openModal }) => {
             className="ml-4 shadow-sm hover:shadow-md whitespace-nowrap"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
           >
-            Request Volunteers
+            {getContent('nav.request_volunteers', 'Request Volunteers')}
           </Button>
         </nav>
 
@@ -71,7 +76,7 @@ const Header = ({ openModal }) => {
             className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
           >
-            Request Volunteers
+            {getContent('nav.request_volunteers', 'Request Volunteers')}
           </Button>
           <MobileMenuButton isOpen={mobileOpen} toggleMenu={() => setMobileOpen(v => !v)} />
         </div>

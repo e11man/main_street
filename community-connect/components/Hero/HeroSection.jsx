@@ -3,9 +3,14 @@ import Link from 'next/link';
 import HeroStats from './HeroStats';
 import Button from '../ui/Button';
 import Icon from '../ui/Icon';
+import useContent from '../../lib/useContent';
 
-const HeroSection = forwardRef((props, ref) => {
+const HeroSection = forwardRef(({ content, ...props }, ref) => {
   const [isVisible, setIsVisible] = useState(false);
+  
+  const getContent = (key, defaultValue = '') => {
+    return content?.[key] || defaultValue;
+  };
   
   useEffect(() => {
     setIsVisible(true);
@@ -42,12 +47,12 @@ const HeroSection = forwardRef((props, ref) => {
 
           
           <h1 className="hero-title relative font-montserrat text-clamp-36-64 font-extrabold mb-8 md:mb-10 tracking-[-0.025em] text-primary leading-tight inline-block">
-            Make the Connection
+{getContent('hero.title', 'Make the Connection')}
             <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
           </h1>
           
           <p className="font-source-serif text-clamp-18-24 font-normal text-text-secondary mb-10 max-w-2xl mx-auto leading-relaxed">
-            Connect with meaningful opportunities that create lasting impact in upland.
+{getContent('hero.subtitle', 'Connect with meaningful opportunities that create lasting impact in upland.')}
           </p>
           
           <div className="flex flex-wrap justify-center gap-4 mb-16">
@@ -56,7 +61,7 @@ const HeroSection = forwardRef((props, ref) => {
               className="group text-base px-8 py-4 shadow-lg hover:shadow-xl"
               onClick={scrollToOpportunities}
             >
-              Find Opportunities
+{getContent('hero.cta.primary', 'Find Opportunities')}
               <Icon 
                 path="M13 7l5 5m0 0l-5 5m5-5H6" 
                 className="ml-2 w-5 h-5 inline-block transition-transform group-hover:translate-x-1"
@@ -67,11 +72,11 @@ const HeroSection = forwardRef((props, ref) => {
                 variant="outline" 
                 className="text-base px-8 py-4"
               >
-                Learn More
+{getContent('hero.cta.secondary', 'Learn More')}
               </Button>
             </Link>
           </div>
-          <HeroStats />
+          <HeroStats content={content} />
         </div>
       </div>
     </section>

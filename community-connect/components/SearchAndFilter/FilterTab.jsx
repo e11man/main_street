@@ -1,7 +1,12 @@
 import React from 'react';
 import Icon from '../ui/Icon';
+import useContent from '../../lib/useContent';
 
-const FilterTab = ({ category, isActive, onClick }) => {
+const FilterTab = ({ category, isActive, onClick, content }) => {
+  const getContent = (key, defaultValue = '') => {
+    return content?.[key] || defaultValue;
+  };
+  
   // Define icons for each category
   const getCategoryIcon = (cat) => {
     switch(cat) {
@@ -45,7 +50,9 @@ const FilterTab = ({ category, isActive, onClick }) => {
         path={getCategoryIcon(category)} 
         className={`w-4 h-4 md:w-5 md:h-5 ${isActive ? 'text-white' : 'text-accent1 group-hover:text-white'} transition-all duration-300`} 
       />
-      <span className="relative z-10 font-bold">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+      <span className="relative z-10 font-bold">
+{getContent(`search.filter.${category}`, category.charAt(0).toUpperCase() + category.slice(1))}
+      </span>
       
       {/* Animated background shimmer effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
