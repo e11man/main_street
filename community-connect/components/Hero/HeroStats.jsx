@@ -1,37 +1,28 @@
 import React, { useEffect, useRef, useState } from 'react';
 import StatItem from './StatItem';
-import { fetchMetrics } from '../../lib/metricsUtils';
 import useContent from '../../lib/useContent';
 
 const HeroStats = ({ content }) => {
   const statsRef = useRef(null);
   const [metrics, setMetrics] = useState({
-    volunteersConnected: 0,
-    organizationsInvolved: 0,
-    hoursServed: 0
+    volunteersConnected: parseInt(getContent('stats.volunteers', '5')),
+    organizationsInvolved: parseInt(getContent('stats.organizations', '4')),
+    hoursServed: parseInt(getContent('stats.impact', '0'))
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   
   const getContent = (key, defaultValue = '') => {
     return content?.[key] || defaultValue;
   };
   
   useEffect(() => {
-    const loadMetrics = async () => {
-      try {
-        setLoading(true);
-        const fetchedMetrics = await fetchMetrics();
-        setMetrics(fetchedMetrics);
-      } catch (error) {
-        console.error('Error loading metrics:', error);
-        // Keep default values if fetch fails
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMetrics();
-  }, []);
+    // Update metrics when content changes
+    setMetrics({
+      volunteersConnected: parseInt(getContent('stats.volunteers', '5')),
+      organizationsInvolved: parseInt(getContent('stats.organizations', '4')),
+      hoursServed: parseInt(getContent('stats.impact', '0'))
+    });
+  }, [content]);
 
   useEffect(() => {
     if (statsRef.current && !loading) {

@@ -1,22 +1,26 @@
 import React from 'react';
 import TestimonialCard from './TestimonialCard';
 
-const TestimonialsSection = ({ testimonialRefs }) => {
+const TestimonialsSection = ({ testimonialRefs, content }) => {
+  const getContent = (key, defaultValue = '') => {
+    return content?.[key] || defaultValue;
+  };
+  
   const testimonials = [
     {
       id: 1,
-      text: "Community Connect helped me find the perfect volunteer opportunity. I've made lifelong friends while making a real difference in upland.",
-      author: 'Sarah Johnson, Volunteer',
+      text: getContent('testimonials.sarah.quote', "Community Connect helped me find the perfect volunteer opportunity. I've made lifelong friends while making a real difference in upland."),
+      author: `${getContent('testimonials.sarah.name', 'Sarah Johnson')}, ${getContent('testimonials.sarah.role', 'Volunteer')}`,
     },
     {
       id: 2,
-      text: "The platform made it so easy to find volunteers for our literacy program. We've been able to reach twice as many students this year.",
-      author: 'Marcus Chen, Program Director',
+      text: getContent('testimonials.marcus.quote', "The platform made it so easy to find volunteers for our literacy program. We've been able to reach twice as many students this year."),
+      author: `${getContent('testimonials.marcus.name', 'Marcus Chen')}, ${getContent('testimonials.marcus.role', 'Program Director')}`,
     },
     {
       id: 3,
-      text: "I love how the opportunities are categorized and filtered. It's never been easier to find causes I'm passionate about.",
-      author: 'Emma Rodriguez, Student',
+      text: getContent('testimonials.emma.quote', "I love how the opportunities are categorized and filtered. It's never been easier to find causes I'm passionate about."),
+      author: `${getContent('testimonials.emma.name', 'Emma Rodriguez')}, ${getContent('testimonials.emma.role', 'Student')}`,
     },
   ];
 
@@ -30,11 +34,11 @@ const TestimonialsSection = ({ testimonialRefs }) => {
         {/* Section header with improved styling */}
         <div className="text-center mb-16 relative">
           <h2 className="testimonials h2 font-montserrat text-3xl md:text-4xl font-extrabold mb-4 text-primary inline-block relative">
-            Stories of Impact
+            {getContent('testimonials.title', 'Stories of Impact')}
             <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
           </h2>
           <p className="text-text-secondary max-w-2xl mx-auto mt-6">
-            Discover how Community Connect is bringing people together and making a difference in upland.
+            {getContent('testimonials.subtitle', 'Discover how Community Connect is bringing people together and making a difference in upland.')}
           </p>
         </div>
         

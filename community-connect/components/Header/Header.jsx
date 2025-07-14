@@ -39,8 +39,8 @@ const Header = ({ openModal, content }) => {
       <div className="max-w-screen-xl mx-auto flex items-center justify-between h-16 px-4 md:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 font-bold text-primary text-lg md:text-xl tracking-tight">
-          <img src="/logo.svg" alt="Community Connect Logo" className="h-9 w-auto object-contain" />
-          <span className="hidden sm:inline text-base md:text-xl">Community Connect</span>
+          <img src="/logo.svg" alt={getContent('brand.logo.alt', 'Community Connect Logo')} className="h-9 w-auto object-contain" />
+          <span className="hidden sm:inline text-base md:text-xl">{getContent('brand.name', 'Community Connect')}</span>
         </Link>
 
         {/* Desktop Nav */}

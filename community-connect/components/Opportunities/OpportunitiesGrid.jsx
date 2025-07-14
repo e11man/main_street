@@ -2,7 +2,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import OpportunityCard from './OpportunityCard';
 import Icon from '../ui/Icon';
 
-const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLearnMoreClick, onGroupSignupClick, currentUser }) => {
+const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLearnMoreClick, onGroupSignupClick, currentUser, content }) => {
+  const getContent = (key, defaultValue = '') => {
+    return content?.[key] || defaultValue;
+  };
   const gridRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -57,11 +60,11 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
     <section className="content max-w-screen-xl mx-auto px-6 md:px-8 pb-24 pt-16 bg-gradient-to-b from-surface/30 to-transparent">
       <div className="text-center mb-16">
         <h2 className="feed-title font-montserrat text-clamp-32-48 font-extrabold mb-5 tracking-[-0.025em] text-primary relative inline-block">
-          Opportunities
+          {getContent('opportunities.title', 'Opportunities')}
           <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
         </h2>
         <p className="font-montserrat text-lg font-normal text-text-secondary max-w-xl mx-auto leading-relaxed mt-8">
-          Find ways to make a meaningful difference in upland.
+          {getContent('opportunities.subtitle', 'Find ways to make a meaningful difference in upland.')}
         </p>
       </div>
 
@@ -110,6 +113,7 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
                   onLearnMoreClick={onLearnMoreClick}
                   onGroupSignupClick={onGroupSignupClick}
                   currentUser={currentUser}
+                  content={content}
                 />
               </div>
             </div>
@@ -120,7 +124,7 @@ const OpportunitiesGrid = ({ opportunities, opportunityRefs, onJoinClick, onLear
         <div className="flex flex-col items-center mt-6 gap-3">
           <div className="flex items-center gap-2 bg-accent1/10 px-3 md:px-4 py-2 rounded-full border border-accent1/20">
             <Icon path="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M7 4h10M9 9l2 2 4-4" className="w-4 h-4 text-accent1" />
-            <span className="text-xs md:text-sm font-medium text-accent1 text-center">Use arrow buttons or swipe to explore more opportunities</span>
+            <span className="text-xs md:text-sm font-medium text-accent1 text-center">{getContent('opportunities.carousel.navigation', 'Use arrow buttons or swipe to explore more opportunities')}</span>
           </div>
           {/* Scroll Progress Indicator */}
           <div className="flex gap-1">

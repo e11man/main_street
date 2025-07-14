@@ -69,13 +69,13 @@ async function initializeDefaultContent() {
       'hero.cta.secondary': 'Learn More',
       
       // Stats
-      'stats.volunteers': '2,500+',
+      'stats.volunteers': '5',
       'stats.volunteers.label': 'Active Volunteers',
       'stats.opportunities': '150+',
       'stats.opportunities.label': 'Opportunities',
-      'stats.organizations': '50+',
+      'stats.organizations': '4',
       'stats.organizations.label': 'Partner Organizations',
-      'stats.impact': '10,000+',
+      'stats.impact': '0',
       'stats.impact.label': 'Hours Volunteered',
       
       // Navigation
@@ -89,6 +89,10 @@ async function initializeDefaultContent() {
       'nav.logout': 'Logout',
       'nav.request_volunteers': 'Request Volunteers',
       'nav.org_login': 'Organization Login',
+      
+      // Logo and Brand
+      'brand.logo.alt': 'Community Connect Logo',
+      'brand.name': 'Community Connect',
       
       // Search Section
       'search.title': 'Find Your Perfect Volunteer Opportunity',
@@ -105,9 +109,28 @@ async function initializeDefaultContent() {
       'search.filter.fundraising': 'Fundraising',
       'search.filter.other': 'Other',
       
+      // Floating Card Section
+      'floating_card.title': 'Community garden and volunteer activities',
+      'floating_card.subtitle': 'Join Our Upland',
+      'floating_card.description': 'Be part of something bigger',
+      
+      // Commitments Section
+      'commitments.title': 'My Commitments',
+      'commitments.subtitle': 'Sign in to view and manage your volunteer commitments',
+      'commitments.login_button': 'Log In',
+      
       // Testimonials
-      'testimonials.title': 'What Our Volunteers Say',
-      'testimonials.subtitle': 'Hear from amazing volunteers who are making a difference in their communities.',
+      'testimonials.title': 'Stories of Impact',
+      'testimonials.subtitle': 'Discover how Community Connect is bringing people together and making a difference in upland.',
+      'testimonials.sarah.quote': 'Community Connect helped me find the perfect volunteer opportunity. I\'ve made lifelong friends while making a real difference in upland.',
+      'testimonials.sarah.name': 'Sarah Johnson',
+      'testimonials.sarah.role': 'Volunteer',
+      'testimonials.marcus.quote': 'The platform made it so easy to find volunteers for our literacy program. We\'ve been able to reach twice as many students this year.',
+      'testimonials.marcus.name': 'Marcus Chen',
+      'testimonials.marcus.role': 'Program Director',
+      'testimonials.emma.quote': 'I love how the opportunities are categorized and filtered. It\'s never been easier to find causes I\'m passionate about.',
+      'testimonials.emma.name': 'Emma Rodriguez',
+      'testimonials.emma.role': 'Student',
       
       // Contact Section
       'contact.title': 'Get In Touch',
@@ -125,6 +148,10 @@ async function initializeDefaultContent() {
       'footer.privacy': 'Privacy Policy',
       'footer.terms': 'Terms of Service',
       'footer.contact': 'Contact Us',
+      'footer.supporting_upland': 'Supporting Upland',
+      'footer.creating_impact': 'Creating Impact',
+      'footer.in_partnership_with': 'In partnership with',
+      'footer.taylor_university_logo_alt': 'Taylor University Logo',
       
       // About Page
       'about.title': 'About Community Connect',
@@ -140,12 +167,13 @@ async function initializeDefaultContent() {
       'about.contact.text': 'Have questions or want to learn more about how you can get involved? We\'d love to hear from you and help you find the perfect opportunity to make a difference.',
       
       // Opportunities
-      'opportunities.title': 'Volunteer Opportunities',
-      'opportunities.subtitle': 'Find the perfect way to give back to your community',
+      'opportunities.title': 'Opportunities',
+      'opportunities.subtitle': 'Find ways to make a meaningful difference in upland.',
       'opportunities.card.learn_more': 'Learn More',
       'opportunities.card.sign_up': 'Sign Up',
       'opportunities.card.spots_left': 'spots left',
       'opportunities.card.volunteers_needed': 'volunteers needed',
+      'opportunities.carousel.navigation': 'Use arrow buttons or swipe to explore more opportunities',
       
       // Auth
       'auth.login.title': 'Welcome Back',

@@ -90,7 +90,10 @@ const ensureOpportunityId = (opportunity) => {
   return opportunityCopy;
 };
 
-const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit }) => {
+const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit, content }) => {
+  const getContent = (key, defaultValue = '') => {
+    return content?.[key] || defaultValue;
+  };
   const [userCommitments, setUserCommitments] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const scrollContainerRef = useRef(null);
@@ -128,16 +131,16 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
     return (
       <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-border/60 p-6 mb-6 transition-all duration-300 hover:shadow-xl">
         <div className="flex flex-col items-center justify-center text-center">
-          <h3 className="font-montserrat text-xl font-bold mb-3 text-primary tracking-tight">My Commitments</h3>
+          <h3 className="font-montserrat text-xl font-bold mb-3 text-primary tracking-tight">{getContent('commitments.title', 'My Commitments')}</h3>
           <p className="text-text-secondary font-source-serif text-sm leading-relaxed mb-4">
-            Sign in to view and manage your volunteer commitments
+            {getContent('commitments.subtitle', 'Sign in to view and manage your volunteer commitments')}
           </p>
           <Button 
             variant="secondary" 
             className="py-3 px-6 rounded-full bg-accent1 hover:bg-accent1/90 font-semibold text-base min-w-[120px] transition-all duration-200 hover:scale-105 active:scale-95"
             onClick={onLoginClick}
           >
-            Log In
+            {getContent('commitments.login_button', 'Log In')}
           </Button>
         </div>
       </div>
@@ -146,7 +149,7 @@ const MyCommitments = ({ currentUser, opportunities, onLoginClick, onDecommit })
 
   return (
     <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-border/60 p-6 mb-6 transition-all duration-300 hover:shadow-xl">
-      <h3 className="font-montserrat text-xl font-bold mb-4 text-primary tracking-tight">My Commitments</h3>
+      <h3 className="font-montserrat text-xl font-bold mb-4 text-primary tracking-tight">{getContent('commitments.title', 'My Commitments')}</h3>
       
       {userCommitments.length === 0 ? (
         <div className="text-center py-4">

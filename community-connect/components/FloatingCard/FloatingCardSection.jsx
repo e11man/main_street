@@ -1,7 +1,10 @@
 import React from 'react';
 import Icon from '../ui/Icon';
 
-const FloatingCardSection = () => {
+const FloatingCardSection = ({ content }) => {
+  const getContent = (key, defaultValue = '') => {
+    return content?.[key] || defaultValue;
+  };
   return (
     <section id="about" className="max-w-screen-xl mx-auto mt-[-60px] md:mt-[-100px] mb-20 md:mb-20 px-6 md:px-8 relative z-20">
       <div className="group rounded-xl md:rounded-2xl overflow-hidden shadow-xl transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] bg-white relative z-10
@@ -13,7 +16,7 @@ const FloatingCardSection = () => {
           
           <img
             src="/IMG_2700.jpg"
-            alt="Community garden and volunteer activities"
+            alt={getContent('floating_card.title', 'Community garden and volunteer activities')}
             className="w-full h-full object-cover transition-transform duration-700 ease-in-out
                        group-hover:scale-[1.05]"
           />
@@ -23,8 +26,8 @@ const FloatingCardSection = () => {
             <div className="translate-y-2 opacity-90 transition-all duration-400 ease-in-out
                             group-hover:translate-y-0 group-hover:opacity-100 w-full">
               <h3 className="text-2xl md:text-3xl font-bold mb-2 text-white font-montserrat
-                             bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent drop-shadow-sm">Join Our Upland</h3>
-              <p className="text-base md:text-lg text-white/90 font-source-serif mb-6">Be part of something bigger</p>
+                             bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent drop-shadow-sm">{getContent('floating_card.subtitle', 'Join Our Upland')}</h3>
+              <p className="text-base md:text-lg text-white/90 font-source-serif mb-6">{getContent('floating_card.description', 'Be part of something bigger')}</p>
               
     
             </div>

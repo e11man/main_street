@@ -19,6 +19,11 @@ const ContentManager = () => {
 
   // Content sections for organization
   const contentSections = {
+    brand: {
+      title: 'Brand & Logo',
+      icon: 'M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M7 4h10M9 9l2 2 4-4',
+      keys: ['brand.logo.alt', 'brand.name']
+    },
     navigation: {
       title: 'Navigation',
       icon: 'M4 6h16M4 12h16M4 18h16',
@@ -32,12 +37,32 @@ const ContentManager = () => {
     statistics: {
       title: 'Statistics',
       icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-      keys: ['stats.volunteers.label', 'stats.opportunities.label', 'stats.organizations.label', 'stats.impact.label']
+      keys: ['stats.volunteers', 'stats.volunteers.label', 'stats.opportunities', 'stats.opportunities.label', 'stats.organizations', 'stats.organizations.label', 'stats.impact', 'stats.impact.label']
+    },
+    floating_card: {
+      title: 'Floating Card',
+      icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z',
+      keys: ['floating_card.title', 'floating_card.subtitle', 'floating_card.description']
+    },
+    commitments: {
+      title: 'Commitments',
+      icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+      keys: ['commitments.title', 'commitments.subtitle', 'commitments.login_button']
     },
     search: {
       title: 'Search & Filters',
       icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
       keys: ['search.title', 'search.subtitle', 'search.placeholder', 'search.filter.title', 'search.filter.subtitle', 'search.filter.all', 'search.filter.community', 'search.filter.education', 'search.filter.environment', 'search.filter.health', 'search.filter.fundraising', 'search.filter.other']
+    },
+    opportunities: {
+      title: 'Opportunities',
+      icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
+      keys: ['opportunities.title', 'opportunities.subtitle', 'opportunities.carousel.navigation']
+    },
+    testimonials: {
+      title: 'Testimonials',
+      icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+      keys: ['testimonials.title', 'testimonials.subtitle', 'testimonials.sarah.quote', 'testimonials.sarah.name', 'testimonials.sarah.role', 'testimonials.marcus.quote', 'testimonials.marcus.name', 'testimonials.marcus.role', 'testimonials.emma.quote', 'testimonials.emma.name', 'testimonials.emma.role']
     },
     contact: {
       title: 'Contact Section',
@@ -47,7 +72,7 @@ const ContentManager = () => {
     footer: {
       title: 'Footer',
       icon: 'M19 14l-7 7m0 0l-7-7m7 7V3',
-      keys: ['footer.tagline', 'footer.copyright']
+      keys: ['footer.tagline', 'footer.copyright', 'footer.supporting_upland', 'footer.creating_impact', 'footer.in_partnership_with', 'footer.taylor_university_logo_alt']
     },
     about: {
       title: 'About Page',

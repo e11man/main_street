@@ -62,7 +62,10 @@ const getPriority = (dateStr) => {
   }
 };
 
-const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick, onGroupSignupClick, currentUser }, ref) => {
+const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick, onGroupSignupClick, currentUser, content }, ref) => {
+  const getContent = (key, defaultValue = '') => {
+    return content?.[key] || defaultValue;
+  };
   // Early return if opportunity is null or undefined
   if (!opportunity) {
     return null;
@@ -198,7 +201,7 @@ const OpportunityCard = forwardRef(({ opportunity, onJoinClick, onLearnMoreClick
           </div>
           <ProgressBar progress={progress} />
           <div className="font-montserrat text-xs font-medium text-accent1/80 uppercase tracking-wider">
-            Volunteers Signed Up
+            {spotsTotal > 0 ? `${spotsTotal - spotsFilled} ${getContent('opportunities.card.spots_left', 'spots left')}` : getContent('opportunities.card.volunteers_needed', 'volunteers needed')}
           </div>
         </div>
         
