@@ -216,7 +216,33 @@ async function initializeDefaultContent() {
       'admin.organizations': 'Organizations',
       'admin.opportunities': 'Opportunities',
       'admin.reports': 'Reports',
-      'admin.settings': 'Settings'
+      'admin.settings': 'Settings',
+      
+      // Safety Information for Users
+      'safety.user.title': 'Safety Guidelines for Volunteers',
+      'safety.user.subtitle': 'Your safety is our top priority. Please review these important guidelines before volunteering.',
+      'safety.user.never_alone': 'Never volunteer alone - always ensure you have a partner or are in a group setting',
+      'safety.user.no_abuse': 'Do not tolerate or participate in any form of abuse, harassment, or inappropriate behavior',
+      'safety.user.trust_instincts': 'Trust your instincts - if something feels unsafe, remove yourself from the situation immediately',
+      'safety.user.emergency_contact': 'Always have emergency contact information readily available',
+      'safety.user.report_concerns': 'Report any safety concerns or inappropriate behavior to the organization or platform administrators',
+      'safety.user.personal_info': 'Be cautious about sharing personal information and maintain appropriate boundaries',
+      'safety.user.safe_environment': 'Ensure the volunteer environment is safe and well-lit, especially for evening activities',
+      'safety.user.transportation': 'Plan safe transportation to and from volunteer locations',
+      'safety.user.acknowledge': 'I have read and understand the safety guidelines',
+      
+      // Safety Information for Organizations
+      'safety.org.title': 'Safety Guidelines for Organizations',
+      'safety.org.subtitle': 'As an organization hosting volunteers, you have important responsibilities for everyone\'s safety.',
+      'safety.org.background_checks': 'Conduct appropriate background checks on staff and volunteers who will be working with vulnerable populations',
+      'safety.org.supervision': 'Provide adequate supervision and ensure volunteers are never left alone with vulnerable individuals',
+      'safety.org.safe_environment': 'Maintain a safe, clean, and well-lit environment for all volunteer activities',
+      'safety.org.emergency_procedures': 'Have clear emergency procedures and contact information posted and accessible',
+      'safety.org.training': 'Provide appropriate training and orientation for volunteers before they begin their service',
+      'safety.org.reporting': 'Establish clear reporting procedures for any safety incidents or concerns',
+      'safety.org.insurance': 'Ensure adequate insurance coverage for volunteer activities and liability protection',
+      'safety.org.communication': 'Maintain open communication with volunteers and address any safety concerns promptly',
+      'safety.org.acknowledge': 'I acknowledge my organization\'s responsibility for volunteer safety and agree to follow these guidelines'
     };
     
     // Check if content already exists

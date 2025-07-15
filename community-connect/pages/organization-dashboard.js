@@ -6,6 +6,7 @@ import Header from '../components/Header/Header.jsx';
 import Modal from '../components/Modal/Modal.jsx';
 import ChatModal from '../components/Modal/ChatModal.jsx'; // Import ChatModal
 import GooglePlacesAutocomplete from '../components/GooglePlacesAutocomplete';
+import SafetyInfoModal from '../components/Safety/SafetyInfoModal';
 
 export default function OrganizationDashboard() {
   const router = useRouter();
@@ -44,6 +45,8 @@ export default function OrganizationDashboard() {
   });
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [selectedOpportunityForChat, setSelectedOpportunityForChat] = useState(null);
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [safetyContent, setSafetyContent] = useState({});
 
   useEffect(() => {
     // Check if organization is logged in
@@ -159,6 +162,26 @@ export default function OrganizationDashboard() {
       return;
     }
 
+    // For new opportunities, show safety modal first
+    if (!currentOpportunity) {
+      try {
+        const response = await fetch('/api/content');
+        if (response.ok) {
+          const content = await response.json();
+          setSafetyContent(content);
+          setShowSafetyModal(true);
+          return;
+        }
+      } catch (error) {
+        console.error('Error fetching safety content:', error);
+      }
+    }
+
+    // If safety content fetch fails or it's an update, proceed without safety modal
+    await performOpportunitySubmit();
+  };
+
+  const performOpportunitySubmit = async () => {
     try {
       const opportunityData = {
         ...opportunityFormData,
@@ -189,6 +212,11 @@ export default function OrganizationDashboard() {
       console.error('Error saving opportunity:', error);
       setError(error.response?.data?.error || 'Failed to save opportunity');
     }
+  };
+
+  const handleSafetyAcknowledge = async () => {
+    setShowSafetyModal(false);
+    await performOpportunitySubmit();
   };
 
   const handleDeleteOpportunity = async (id) => {
@@ -822,6 +850,15 @@ export default function OrganizationDashboard() {
           isOrganization={true} // Indicate that the sender is an organization
         />
       )}
+
+      {/* Safety Information Modal */}
+      <SafetyInfoModal
+        isOpen={showSafetyModal}
+        onClose={() => setShowSafetyModal(false)}
+        onAcknowledge={handleSafetyAcknowledge}
+        type="org"
+        content={safetyContent}
+      />
     </div>
   );
 }
