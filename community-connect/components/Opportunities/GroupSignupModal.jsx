@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../ui/Icon';
 import Button from '../ui/Button';
+import SafetyInfoModal from '../Safety/SafetyInfoModal';
 
 const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSignup }) => {
   const [floorUsers, setFloorUsers] = useState([]);
@@ -10,6 +11,8 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
   const [error, setError] = useState('');
   const [showOnlyDorm, setShowOnlyDorm] = useState(false);
   const [signMyselfUp, setSignMyselfUp] = useState(false);
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [safetyContent, setSafetyContent] = useState({});
 
   const fetchFloorUsers = async () => {
     try {
@@ -62,6 +65,14 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
       return;
     }
 
+    // Show safety information first
+    setSafetyContent({}); // You can pass content from props if needed
+    setShowSafetyModal(true);
+  };
+  
+  const handleSafetyAcknowledge = async () => {
+    setShowSafetyModal(false);
+    
     try {
       setLoading(true);
       setError('');
@@ -308,6 +319,15 @@ const GroupSignupModal = ({ isOpen, onClose, opportunity, currentUser, onGroupSi
           </div>
         </div>
       </div>
+      
+      {/* Safety Information Modal */}
+      <SafetyInfoModal
+        isOpen={showSafetyModal}
+        onClose={() => setShowSafetyModal(false)}
+        onAcknowledge={handleSafetyAcknowledge}
+        type="user"
+        content={safetyContent}
+      />
     </div>
   );
 };
