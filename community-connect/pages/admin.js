@@ -108,6 +108,11 @@ export default function AdminPage() {
   const [emailBody, setEmailBody] = useState('');
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const [selectAllStatus, setSelectAllStatus] = useState({
+    users: false,
+    organizations: false,
+    pas: false
+  });
   const router = useRouter();
 
   // Check if already authenticated on page load
@@ -1075,6 +1080,47 @@ export default function AdminPage() {
       ...prev,
       [type]: items
     }));
+    
+    // Update select all status
+    const totalCount = type === 'users' ? users.length : 
+                      type === 'organizations' ? organizations.length : 
+                      getPAs().length;
+    
+    setSelectAllStatus(prev => ({
+      ...prev,
+      [type]: items.length === totalCount
+    }));
+  };
+
+  const handleSelectAll = (type) => {
+    const currentStatus = selectAllStatus[type];
+    const allItems = type === 'users' ? users.map(user => ({
+      _id: user._id,
+      name: user.name,
+      email: user.email
+    })) : 
+    type === 'organizations' ? organizations.map(org => ({
+      _id: org._id,
+      name: org.name,
+      email: org.email
+    })) : 
+    getPAs().map(pa => ({
+      _id: pa._id,
+      name: pa.name,
+      email: pa.email
+    }));
+
+    if (currentStatus) {
+      // Deselect all
+      handleRecipientSelection(type, []);
+    } else {
+      // Select all
+      handleRecipientSelection(type, allItems);
+    }
+  };
+
+  const handleDeselectAll = (type) => {
+    handleRecipientSelection(type, []);
   };
 
   const handleEventSelection = (events) => {
@@ -1137,15 +1183,51 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
 
       if (response.ok) {
         const data = await response.json();
-        window.open(data.mailtoLink, '_blank');
+        
+        // Create a temporary link element and trigger it for better cross-device compatibility
+        const link = document.createElement('a');
+        link.href = data.mailtoLink;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        
+        // Try multiple methods to open email client
+        try {
+          // Method 1: Click the link
+          link.click();
+          
+          // Method 2: Fallback for mobile devices - use window.location
+          setTimeout(() => {
+            if (!window.open) {
+              window.location.href = data.mailtoLink;
+            }
+          }, 100);
+          
+          // Method 3: Final fallback - direct location change
+          setTimeout(() => {
+            window.location.href = data.mailtoLink;
+          }, 500);
+          
+        } catch (e) {
+          // If all else fails, try direct location change
+          window.location.href = data.mailtoLink;
+        }
+        
+        // Clean up
+        setTimeout(() => {
+          if (document.body.contains(link)) {
+            document.body.removeChild(link);
+          }
+        }, 1000);
         
         // Reset form
         setEmailRecipients({ users: [], organizations: [], pas: [] });
         setSelectedEvents([]);
         setEmailSubject('');
         setEmailBody('');
+        setShowEmailModal(false);
         
-        alert(`Email prepared for ${data.recipientCount} recipients. Your email client should open automatically.`);
+        // Show success message
+        alert(`Email prepared for ${data.recipientCount} recipients. Your email client should open automatically. If it doesn't open, please check your email app or copy the mailto link manually.`);
       } else {
         const errorData = await response.json();
         alert(errorData.error || 'Failed to prepare email');
@@ -3279,30 +3361,78 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Recipients Selection */}
                 <div className="bg-white p-6 rounded-lg shadow-md">
-                  <h3 className="text-lg font-semibold mb-4">Select Recipients</h3>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">Select Recipients</h3>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allUsers = users.map(user => ({ _id: user._id, name: user.name, email: user.email }));
+                          const allPAs = getPAs().map(pa => ({ _id: pa._id, name: pa.name, email: pa.email }));
+                          const allOrgs = organizations.map(org => ({ _id: org._id, name: org.name, email: org.email }));
+                          
+                          setEmailRecipients({
+                            users: allUsers,
+                            organizations: allOrgs,
+                            pas: allPAs
+                          });
+                          
+                          setSelectAllStatus({
+                            users: true,
+                            organizations: true,
+                            pas: true
+                          });
+                        }}
+                        className="text-xs bg-green-500 hover:bg-green-700 text-white px-3 py-1 rounded"
+                      >
+                        Select All Recipients
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEmailRecipients({ users: [], organizations: [], pas: [] });
+                          setSelectAllStatus({ users: false, organizations: false, pas: false });
+                        }}
+                        className="text-xs bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                  </div>
                   
                   {/* Users */}
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-2">
-                      <label className="block text-sm font-medium">Users ({users.length})</label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const allUsers = users.map(user => ({
-                            _id: user._id,
-                            name: user.name,
-                            email: user.email
-                          }));
-                          handleRecipientSelection('users', allUsers);
-                        }}
-                        className="text-xs bg-blue-500 hover:bg-blue-700 text-white px-2 py-1 rounded"
-                      >
-                        Select All
-                      </button>
+                      <label className="block text-sm font-medium">
+                        Users ({users.length}) - Selected: {emailRecipients.users.length}
+                      </label>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSelectAll('users')}
+                          className={`text-xs px-2 py-1 rounded ${
+                            selectAllStatus.users 
+                              ? 'bg-red-500 hover:bg-red-700 text-white' 
+                              : 'bg-blue-500 hover:bg-blue-700 text-white'
+                          }`}
+                        >
+                          {selectAllStatus.users ? 'Deselect All' : 'Select All'}
+                        </button>
+                        {emailRecipients.users.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeselectAll('users')}
+                            className="text-xs bg-gray-500 hover:bg-gray-700 text-white px-2 py-1 rounded"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <select
                       multiple
                       className="w-full p-2 border rounded-md h-32"
+                      value={emailRecipients.users.map(user => user._id)}
                       onChange={(e) => {
                         const selectedOptions = Array.from(e.target.selectedOptions, option => ({
                           _id: option.value,
@@ -3323,25 +3453,36 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
                   {/* PAs */}
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-2">
-                      <label className="block text-sm font-medium">PAs ({getPAs().length})</label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const allPAs = getPAs().map(pa => ({
-                            _id: pa._id,
-                            name: pa.name,
-                            email: pa.email
-                          }));
-                          handleRecipientSelection('pas', allPAs);
-                        }}
-                        className="text-xs bg-blue-500 hover:bg-blue-700 text-white px-2 py-1 rounded"
-                      >
-                        Select All
-                      </button>
+                      <label className="block text-sm font-medium">
+                        PAs ({getPAs().length}) - Selected: {emailRecipients.pas.length}
+                      </label>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSelectAll('pas')}
+                          className={`text-xs px-2 py-1 rounded ${
+                            selectAllStatus.pas 
+                              ? 'bg-red-500 hover:bg-red-700 text-white' 
+                              : 'bg-blue-500 hover:bg-blue-700 text-white'
+                          }`}
+                        >
+                          {selectAllStatus.pas ? 'Deselect All' : 'Select All'}
+                        </button>
+                        {emailRecipients.pas.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeselectAll('pas')}
+                            className="text-xs bg-gray-500 hover:bg-gray-700 text-white px-2 py-1 rounded"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <select
                       multiple
                       className="w-full p-2 border rounded-md h-32"
+                      value={emailRecipients.pas.map(pa => pa._id)}
                       onChange={(e) => {
                         const selectedOptions = Array.from(e.target.selectedOptions, option => ({
                           _id: option.value,
@@ -3362,25 +3503,36 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
                   {/* Organizations */}
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-2">
-                      <label className="block text-sm font-medium">Organizations ({organizations.length})</label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const allOrgs = organizations.map(org => ({
-                            _id: org._id,
-                            name: org.name,
-                            email: org.email
-                          }));
-                          handleRecipientSelection('organizations', allOrgs);
-                        }}
-                        className="text-xs bg-blue-500 hover:bg-blue-700 text-white px-2 py-1 rounded"
-                      >
-                        Select All
-                      </button>
+                      <label className="block text-sm font-medium">
+                        Organizations ({organizations.length}) - Selected: {emailRecipients.organizations.length}
+                      </label>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSelectAll('organizations')}
+                          className={`text-xs px-2 py-1 rounded ${
+                            selectAllStatus.organizations 
+                              ? 'bg-red-500 hover:bg-red-700 text-white' 
+                              : 'bg-blue-500 hover:bg-blue-700 text-white'
+                          }`}
+                        >
+                          {selectAllStatus.organizations ? 'Deselect All' : 'Select All'}
+                        </button>
+                        {emailRecipients.organizations.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeselectAll('organizations')}
+                            className="text-xs bg-gray-500 hover:bg-gray-700 text-white px-2 py-1 rounded"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <select
                       multiple
                       className="w-full p-2 border rounded-md h-32"
+                      value={emailRecipients.organizations.map(org => org._id)}
                       onChange={(e) => {
                         const selectedOptions = Array.from(e.target.selectedOptions, option => ({
                           _id: option.value,
@@ -3482,9 +3634,39 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
                   </div>
 
                   <div className="mb-4">
-                    <label className="block text-sm font-medium mb-2">Selected Events</label>
-                    <div className="text-sm text-gray-600">
-                      {selectedEvents.length} events selected
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium">Selected Events</label>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedEvents.length === opportunities.length) {
+                              setSelectedEvents([]);
+                            } else {
+                              setSelectedEvents([...opportunities]);
+                            }
+                          }}
+                          className={`text-xs px-2 py-1 rounded ${
+                            selectedEvents.length === opportunities.length 
+                              ? 'bg-red-500 hover:bg-red-700 text-white' 
+                              : 'bg-blue-500 hover:bg-blue-700 text-white'
+                          }`}
+                        >
+                          {selectedEvents.length === opportunities.length ? 'Deselect All' : 'Select All'}
+                        </button>
+                        {selectedEvents.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedEvents([])}
+                            className="text-xs bg-gray-500 hover:bg-gray-700 text-white px-2 py-1 rounded"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600 mb-2">
+                      {selectedEvents.length} of {opportunities.length} events selected
                     </div>
                     {selectedEvents.length > 0 && (
                       <div className="mt-2 p-3 bg-gray-50 rounded-md text-xs">
@@ -3516,13 +3698,57 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
                     )}
                   </div>
 
-                  <button
-                    onClick={openEmailClient}
-                    disabled={emailLoading}
-                    className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-                  >
-                    {emailLoading ? 'Preparing Email...' : 'Open in Email Client'}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={openEmailClient}
+                      disabled={emailLoading}
+                      className="flex-1 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                    >
+                      {emailLoading ? 'Preparing Email...' : 'Open in Email Client'}
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const recipients = [
+                          ...emailRecipients.users.map(user => ({ type: 'user', id: user._id, email: user.email })),
+                          ...emailRecipients.organizations.map(org => ({ type: 'organization', id: org._id, email: org.email })),
+                          ...emailRecipients.pas.map(pa => ({ type: 'pa', id: pa._id, email: pa.email }))
+                        ].filter(r => r.email);
+
+                        if (recipients.length === 0) {
+                          alert('Please select at least one recipient');
+                          return;
+                        }
+
+                        try {
+                          const response = await fetch('/api/admin/email', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                              recipients,
+                              events: selectedEvents,
+                              subject: emailSubject || 'Community Connect Update',
+                              body: emailBody
+                            }),
+                          });
+
+                          if (response.ok) {
+                            const data = await response.json();
+                            navigator.clipboard.writeText(data.mailtoLink);
+                            alert('Mailto link copied to clipboard! You can paste it into your email client.');
+                          } else {
+                            alert('Failed to generate mailto link');
+                          }
+                        } catch (error) {
+                          alert('Error generating mailto link');
+                        }
+                      }}
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                      title="Copy mailto link to clipboard"
+                    >
+                      📋
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
