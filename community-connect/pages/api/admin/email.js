@@ -1,25 +1,44 @@
 import clientPromise from '../../../lib/mongodb';
 import { ObjectId } from 'mongodb';
-import { protectRoute } from '../../../lib/authUtils';
+import { verifyToken } from '../../../lib/authUtils';
 
 export default async function handler(req, res) {
   try {
-    // Protect the route - only admins can access
-    await protectRoute(req, res, { requireAdmin: true });
+    // Check if cookies exist
+    if (!req.cookies) {
+      return res.status(401).json({ error: 'Unauthorized: No cookies available' });
+    }
+
+    const token = req.cookies.authToken;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized: No token provided' });
+    }
+
+    const decoded = verifyToken(token);
+
+    if (!decoded) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    }
+
+    // Check if user is admin
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    }
     
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
     
     if (req.method === 'POST') {
-      const { recipients, events, subject, body } = req.body;
+      const { recipients, events, subject, body = '' } = req.body;
       
       // Validate input
       if (!recipients || !Array.isArray(recipients)) {
         return res.status(400).json({ error: 'Recipients array is required' });
       }
       
-      if (!subject || !body) {
-        return res.status(400).json({ error: 'Subject and body are required' });
+      if (!subject) {
+        return res.status(400).json({ error: 'Subject is required' });
       }
       
       // Get recipient details from database
@@ -49,17 +68,21 @@ export default async function handler(req, res) {
       if (events && events.length > 0) {
         const eventsInfo = events.map(event => {
           return `
-Event: ${event.title}
-Date: ${event.date}
-Time: ${event.arrivalTime} - ${event.departureTime}
-Location: ${event.location}
-Description: ${event.description}
-Organization: ${event.organizationName}
-Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTotal}
+📅 **${event.title}**
+📅 Date: ${event.date}
+⏰ Time: ${event.arrivalTime} - ${event.departureTime}
+📍 Location: ${event.location}
+📝 Description: ${event.description}
+🏢 Organization: ${event.organizationName}
+👥 Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTotal}
           `.trim();
-        }).join('\n\n');
+        }).join('\n\n---\n\n');
         
-        emailContent += `\n\n${eventsInfo}`;
+        if (emailContent) {
+          emailContent += '\n\n' + eventsInfo;
+        } else {
+          emailContent = eventsInfo;
+        }
       }
       
       // Create mailto link
@@ -67,8 +90,8 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
       
       // Log the email action for audit purposes
       const emailLog = {
-        adminId: req.user.adminId,
-        adminEmail: req.user.email,
+        adminId: decoded.adminId || decoded.userId,
+        adminEmail: decoded.email,
         recipients: emailAddresses,
         subject,
         body: emailContent,
@@ -90,6 +113,6 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error('Admin email API error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
 }

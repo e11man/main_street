@@ -3283,7 +3283,23 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
                   
                   {/* Users */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium mb-2">Users ({users.length})</label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium">Users ({users.length})</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allUsers = users.map(user => ({
+                            _id: user._id,
+                            name: user.name,
+                            email: user.email
+                          }));
+                          handleRecipientSelection('users', allUsers);
+                        }}
+                        className="text-xs bg-blue-500 hover:bg-blue-700 text-white px-2 py-1 rounded"
+                      >
+                        Select All
+                      </button>
+                    </div>
                     <select
                       multiple
                       className="w-full p-2 border rounded-md h-32"
@@ -3306,7 +3322,23 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
 
                   {/* PAs */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium mb-2">PAs ({getPAs().length})</label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium">PAs ({getPAs().length})</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allPAs = getPAs().map(pa => ({
+                            _id: pa._id,
+                            name: pa.name,
+                            email: pa.email
+                          }));
+                          handleRecipientSelection('pas', allPAs);
+                        }}
+                        className="text-xs bg-blue-500 hover:bg-blue-700 text-white px-2 py-1 rounded"
+                      >
+                        Select All
+                      </button>
+                    </div>
                     <select
                       multiple
                       className="w-full p-2 border rounded-md h-32"
@@ -3329,7 +3361,23 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
 
                   {/* Organizations */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium mb-2">Organizations ({organizations.length})</label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium">Organizations ({organizations.length})</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allOrgs = organizations.map(org => ({
+                            _id: org._id,
+                            name: org.name,
+                            email: org.email
+                          }));
+                          handleRecipientSelection('organizations', allOrgs);
+                        }}
+                        className="text-xs bg-blue-500 hover:bg-blue-700 text-white px-2 py-1 rounded"
+                      >
+                        Select All
+                      </button>
+                    </div>
                     <select
                       multiple
                       className="w-full p-2 border rounded-md h-32"
@@ -3412,13 +3460,16 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
                   </div>
 
                   <div className="mb-4">
-                    <label className="block text-sm font-medium mb-2">Body</label>
+                    <label className="block text-sm font-medium mb-2">Body (Optional)</label>
                     <textarea
                       value={emailBody}
                       onChange={(e) => setEmailBody(e.target.value)}
-                      placeholder="Enter email body..."
+                      placeholder="Enter custom email body (optional - events will be automatically formatted)..."
                       className="w-full p-2 border rounded-md h-32"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Leave empty to send only event information
+                    </p>
                   </div>
 
                   <div className="mb-4">
@@ -3435,6 +3486,34 @@ Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTot
                     <div className="text-sm text-gray-600">
                       {selectedEvents.length} events selected
                     </div>
+                    {selectedEvents.length > 0 && (
+                      <div className="mt-2 p-3 bg-gray-50 rounded-md text-xs">
+                        <div className="font-medium mb-2">Email Preview:</div>
+                        <div className="whitespace-pre-line text-gray-700">
+                          {emailBody && (
+                            <>
+                              {emailBody}
+                              <br />
+                              <br />
+                              ---
+                              <br />
+                              <br />
+                            </>
+                          )}
+                          {selectedEvents.map(event => (
+                            <div key={event._id} className="mb-3">
+                              📅 <strong>{event.title}</strong><br />
+                              📅 Date: {event.date}<br />
+                              ⏰ Time: {event.arrivalTime} - {event.departureTime}<br />
+                              📍 Location: {event.location}<br />
+                              📝 Description: {event.description}<br />
+                              🏢 Organization: {event.organizationName}<br />
+                              👥 Spots Available: {event.spotsTotal - (event.spotsFilled || 0)}/{event.spotsTotal}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <button
