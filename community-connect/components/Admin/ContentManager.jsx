@@ -53,6 +53,11 @@ const ContentManager = () => {
       title: 'About Page',
       icon: 'M13 16h-1v-4h-1V9h2v3h1v4zm-1-14C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z',
       keys: ['about.hero.title', 'about.hero.subtitle', 'about.mission.title', 'about.mission.text', 'about.impact.title', 'about.what_we_do.title', 'about.what_we_do.text', 'about.contact.title', 'about.contact.text']
+    },
+    safety: {
+      title: 'Safety Guidelines',
+      icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+      keys: ['safety.user.title', 'safety.user.subtitle', 'safety.user.never_alone', 'safety.user.no_abuse', 'safety.user.trust_instincts', 'safety.user.emergency_contact', 'safety.user.report_concerns', 'safety.user.personal_info', 'safety.user.safe_environment', 'safety.user.transportation', 'safety.user.acknowledge', 'safety.org.title', 'safety.org.subtitle', 'safety.org.background_checks', 'safety.org.supervision', 'safety.org.safe_environment', 'safety.org.emergency_procedures', 'safety.org.training', 'safety.org.reporting', 'safety.org.insurance', 'safety.org.communication', 'safety.org.acknowledge']
     }
   };
 

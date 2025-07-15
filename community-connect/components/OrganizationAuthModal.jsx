@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from './Modal/Modal.jsx';
 import axios from 'axios';
 import { useRouter } from 'next/router';
+import SafetyInfoModal from '../Safety/SafetyInfoModal';
 
 const OrganizationAuthModal = ({ onClose, onSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,6 +17,8 @@ const OrganizationAuthModal = ({ onClose, onSuccess }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [safetyContent, setSafetyContent] = useState({});
   const router = useRouter();
 
   useEffect(() => {
@@ -76,7 +79,7 @@ const OrganizationAuthModal = ({ onClose, onSuccess }) => {
         // Redirect to organization dashboard
         router.push('/organization-dashboard');
       } else {
-        // Handle signup
+        // Handle signup - show safety modal first
         const { name, email, password, confirmPassword, description, website, phone } = formData;
         
         // Validate input
@@ -92,25 +95,22 @@ const OrganizationAuthModal = ({ onClose, onSuccess }) => {
           return;
         }
 
-        const response = await axios.post('/api/organizations?signup=true', {
-          name,
-          email,
-          password,
-          description,
-          website,
-          phone
-        });
-
-        // Store organization data in localStorage
-        localStorage.setItem('organizationData', JSON.stringify(response.data));
-        
-        // Call onSuccess callback
-        if (onSuccess) {
-          onSuccess(response.data);
+        // Fetch safety content and show modal
+        try {
+          const contentResponse = await fetch('/api/content');
+          if (contentResponse.ok) {
+            const content = await contentResponse.json();
+            setSafetyContent(content);
+            setShowSafetyModal(true);
+            setLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Error fetching safety content:', error);
         }
-        
-        // Redirect to organization dashboard
-        router.push('/organization-dashboard');
+
+        // If safety content fetch fails, proceed without safety modal
+        await performOrganizationSignup();
       }
 
       // Close modal after successful login/signup
@@ -121,6 +121,46 @@ const OrganizationAuthModal = ({ onClose, onSuccess }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const performOrganizationSignup = async () => {
+    setLoading(true);
+    try {
+      const { name, email, password, description, website, phone } = formData;
+      
+      const response = await axios.post('/api/organizations?signup=true', {
+        name,
+        email,
+        password,
+        description,
+        website,
+        phone
+      });
+
+      // Store organization data in localStorage
+      localStorage.setItem('organizationData', JSON.stringify(response.data));
+      
+      // Call onSuccess callback
+      if (onSuccess) {
+        onSuccess(response.data);
+      }
+      
+      // Redirect to organization dashboard
+      router.push('/organization-dashboard');
+      
+      // Close modal after successful signup
+      onClose();
+    } catch (error) {
+      console.error('Organization signup error:', error);
+      setError(error.response?.data?.error || 'Signup failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSafetyAcknowledge = async () => {
+    setShowSafetyModal(false);
+    await performOrganizationSignup();
   };
 
   const toggleAuthMode = () => {
@@ -267,6 +307,15 @@ const OrganizationAuthModal = ({ onClose, onSuccess }) => {
           </div>
         </form>
       </div>
+      
+      {/* Safety Information Modal */}
+      <SafetyInfoModal
+        isOpen={showSafetyModal}
+        onClose={() => setShowSafetyModal(false)}
+        onAcknowledge={handleSafetyAcknowledge}
+        type="org"
+        content={safetyContent}
+      />
     </Modal>
   );
 };

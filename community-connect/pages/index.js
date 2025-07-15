@@ -13,6 +13,7 @@ import AuthModal from '../components/Modal/AuthModal.jsx';
 import CompanyAuthModal from '../components/CompanyAuthModal.jsx';
 import CustomMessageBox from '../components/Modal/CustomMessageBox.jsx';
 import GroupSignupModal from '../components/Opportunities/GroupSignupModal.jsx';
+import SafetyInfoModal from '../components/Safety/SafetyInfoModal.jsx';
 import { useScrollTriggeredAnimation, useSmoothScroll, useParallaxEffect } from '../lib/hooks.js';
 import { getAllContent } from '../lib/contentManager';
 
@@ -32,6 +33,9 @@ export default function Home({ content }) {
   const [isGroupSignupModalOpen, setIsGroupSignupModalOpen] = useState(false);
   const [selectedOpportunityForGroup, setSelectedOpportunityForGroup] = useState(null);
   const [isGroupSignupRequested, setIsGroupSignupRequested] = useState(false);
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [safetyContent, setSafetyContent] = useState({});
+  const [pendingOpportunityJoin, setPendingOpportunityJoin] = useState(null);
 
   useEffect(() => {
     // Fetch opportunities on component mount
@@ -259,16 +263,30 @@ export default function Home({ content }) {
       return;
     }
     
+    // Check if user already has 2 commitments
+    if (currentUser.commitments && currentUser.commitments.length >= 2) {
+      setMessageBox({
+        message: `You've already committed to the maximum number of opportunities (2). Please complete or withdraw from an existing commitment before joining a new one.`,
+        callback: () => setMessageBox(null)
+      });
+      return;
+    }
+    
+    // Show safety information first
+    setPendingOpportunityJoin(opportunity);
+    setSafetyContent(content);
+    setShowSafetyModal(true);
+  };
+  
+  // Handle safety acknowledgment and proceed with joining
+  const handleSafetyAcknowledge = async () => {
+    const opportunity = pendingOpportunityJoin;
+    setShowSafetyModal(false);
+    setPendingOpportunityJoin(null);
+    
+    if (!opportunity) return;
+    
     try {
-      // Check if user already has 2 commitments
-      if (currentUser.commitments && currentUser.commitments.length >= 2) {
-        setMessageBox({
-          message: `You've already committed to the maximum number of opportunities (2). Please complete or withdraw from an existing commitment before joining a new one.`,
-          callback: () => setMessageBox(null)
-        });
-        return;
-      }
-      
       // Show loading message
       setMessageBox({
         message: `Joining opportunity "${opportunity.title}"...`,
@@ -480,6 +498,15 @@ export default function Home({ content }) {
         opportunity={selectedOpportunityForGroup}
         currentUser={currentUser}
         onGroupSignup={handleGroupSignupSuccess}
+      />
+
+      {/* Safety Information Modal */}
+      <SafetyInfoModal
+        isOpen={showSafetyModal}
+        onClose={() => setShowSafetyModal(false)}
+        onAcknowledge={handleSafetyAcknowledge}
+        type="user"
+        content={safetyContent}
       />
 
       {/* Message box for notifications */}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Icon from '../ui/Icon';
+import SafetyInfoModal from '../Safety/SafetyInfoModal';
 
 // Organized dorm data with cascading structure
 const DORM_DATA = {
@@ -79,6 +80,10 @@ const AuthModal = ({ onClose, onSuccess }) => {
   
   // State for blocked status
   const [isBlocked, setIsBlocked] = useState(false);
+  
+  // State for safety modal
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [safetyContent, setSafetyContent] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -206,18 +211,39 @@ const AuthModal = ({ onClose, onSuccess }) => {
     e.preventDefault();
     setError('');
     setPendingMessage('');
+    
+    // For signup, show safety modal first
+    if (!isLogin) {
+      // Fetch safety content
+      try {
+        const response = await fetch('/api/content');
+        if (response.ok) {
+          const content = await response.json();
+          setSafetyContent(content);
+          setShowSafetyModal(true);
+        } else {
+          // If content fetch fails, proceed without safety modal
+          await performSignup();
+        }
+      } catch (error) {
+        console.error('Error fetching safety content:', error);
+        // If content fetch fails, proceed without safety modal
+        await performSignup();
+      }
+      return;
+    }
+    
+    // For login, proceed normally
+    await performLogin();
+  };
+
+  const performSignup = async () => {
     setIsSubmitting(true);
-
     try {
-      const endpoint = isLogin ? '/api/users?login=true' : '/api/users?signup=true';
-      const payload = isLogin
-        ? { email: formData.email, password: formData.password }
-        : formData;
-
-      const response = await fetch(endpoint, {
+      const response = await fetch('/api/users?signup=true', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(formData)
       });
 
       const data = await response.json();
@@ -225,13 +251,13 @@ const AuthModal = ({ onClose, onSuccess }) => {
       if (data.blocked) {
         setIsBlocked(true);
         setPendingMessage('Your account has been created and is pending admin approval. You will be notified when your account is approved.');
-        if (!isLogin) setFormData({ name: '', email: '', password: '', dorm: '', wing: '' });
+        setFormData({ name: '', email: '', password: '', dorm: '', wing: '' });
         setIsSubmitting(false);
         return;
       }
 
       // Handle Taylor email verification step
-      if (!isLogin && response.status === 202 && data.requiresTaylorVerification) {
+      if (response.status === 202 && data.requiresTaylorVerification) {
         setTaylorUserEmail(formData.email);
         setShowTaylorVerificationInput(true);
         setPendingMessage(data.message || 'Please check your email for a verification code.');
@@ -246,7 +272,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
 
       if (response.status === 202 && data.pending) {
         setPendingMessage(data.message || 'Your account is pending admin approval.');
-        if (!isLogin) setFormData({ name: '', email: '', password: '', dorm: '', wing: '' });
+        setFormData({ name: '', email: '', password: '', dorm: '', wing: '' });
       } else {
         onSuccess(data);
         onClose();
@@ -256,6 +282,35 @@ const AuthModal = ({ onClose, onSuccess }) => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const performLogin = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/users?login=true', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, password: formData.password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Authentication failed');
+      }
+
+      onSuccess(data);
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSafetyAcknowledge = async () => {
+    setShowSafetyModal(false);
+    await performSignup();
   };
 
   const handleTaylorVerifySubmit = async (e) => {
@@ -686,6 +741,15 @@ const AuthModal = ({ onClose, onSuccess }) => {
         </form>
         )}
       </div>
+      
+      {/* Safety Information Modal */}
+      <SafetyInfoModal
+        isOpen={showSafetyModal}
+        onClose={() => setShowSafetyModal(false)}
+        onAcknowledge={handleSafetyAcknowledge}
+        type="user"
+        content={safetyContent}
+      />
     </>
   );
 };
