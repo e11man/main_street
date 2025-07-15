@@ -96,6 +96,18 @@ export default function AdminPage() {
     blockedEmails: '',
     themes: ''
   });
+  
+  // Email management states
+  const [emailRecipients, setEmailRecipients] = useState({
+    users: [],
+    organizations: [],
+    pas: []
+  });
+  const [selectedEvents, setSelectedEvents] = useState([]);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
   const router = useRouter();
 
   // Check if already authenticated on page load
@@ -1055,6 +1067,99 @@ export default function AdminPage() {
       theme.fonts?.primary?.toLowerCase().includes(term) ||
       theme.fonts?.secondary?.toLowerCase().includes(term)
     );
+  };
+
+  // Email management functions
+  const handleRecipientSelection = (type, items) => {
+    setEmailRecipients(prev => ({
+      ...prev,
+      [type]: items
+    }));
+  };
+
+  const handleEventSelection = (events) => {
+    setSelectedEvents(events);
+  };
+
+  const generateEmailBody = () => {
+    let body = emailBody;
+    
+    if (selectedEvents.length > 0) {
+      const eventsInfo = selectedEvents.map(event => {
+        return `
+Event: ${event.title}
+Date: ${event.date}
+Time: ${event.arrivalTime} - ${event.departureTime}
+Location: ${event.location}
+Description: ${event.description}
+Organization: ${event.organizationName}
+Spots Available: ${event.spotsTotal - (event.spotsFilled || 0)}/${event.spotsTotal}
+        `.trim();
+      }).join('\n\n');
+      
+      body += `\n\n${eventsInfo}`;
+    }
+    
+    return body;
+  };
+
+  const openEmailClient = async () => {
+    const recipients = [
+      ...emailRecipients.users.map(user => ({ type: 'user', id: user._id, email: user.email })),
+      ...emailRecipients.organizations.map(org => ({ type: 'organization', id: org._id, email: org.email })),
+      ...emailRecipients.pas.map(pa => ({ type: 'pa', id: pa._id, email: pa.email }))
+    ].filter(r => r.email);
+
+    if (recipients.length === 0) {
+      alert('Please select at least one recipient');
+      return;
+    }
+
+    const subject = emailSubject || 'Community Connect Update';
+    const body = emailBody || '';
+
+    setEmailLoading(true);
+    
+    try {
+      const response = await fetch('/api/admin/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          recipients,
+          events: selectedEvents,
+          subject,
+          body
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        window.open(data.mailtoLink, '_blank');
+        
+        // Reset form
+        setEmailRecipients({ users: [], organizations: [], pas: [] });
+        setSelectedEvents([]);
+        setEmailSubject('');
+        setEmailBody('');
+        
+        alert(`Email prepared for ${data.recipientCount} recipients. Your email client should open automatically.`);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to prepare email');
+      }
+    } catch (error) {
+      console.error('Error preparing email:', error);
+      alert('Error preparing email. Please try again.');
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const getPAs = () => {
+    return users.filter(user => user.isPA || user.role === 'PA');
   };
 
   // Get filtered data
@@ -2451,6 +2556,16 @@ export default function AdminPage() {
               >
                 Content
               </button>
+              <button
+                onClick={() => setActiveTab('email')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'email'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Email
+              </button>
             </nav>
           </div>
 
@@ -3138,6 +3253,197 @@ export default function AdminPage() {
                       )}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Email Management Tab */}
+          {activeTab === 'email' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold">Email Management</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    📧 Send emails to users, PAs, and organizations with event information
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowEmailModal(true)}
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  Compose Email
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Recipients Selection */}
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-lg font-semibold mb-4">Select Recipients</h3>
+                  
+                  {/* Users */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Users ({users.length})</label>
+                    <select
+                      multiple
+                      className="w-full p-2 border rounded-md h-32"
+                      onChange={(e) => {
+                        const selectedOptions = Array.from(e.target.selectedOptions, option => ({
+                          _id: option.value,
+                          name: option.text,
+                          email: option.getAttribute('data-email')
+                        }));
+                        handleRecipientSelection('users', selectedOptions);
+                      }}
+                    >
+                      {users.map(user => (
+                        <option key={user._id} value={user._id} data-email={user.email}>
+                          {user.name} ({user.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* PAs */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">PAs ({getPAs().length})</label>
+                    <select
+                      multiple
+                      className="w-full p-2 border rounded-md h-32"
+                      onChange={(e) => {
+                        const selectedOptions = Array.from(e.target.selectedOptions, option => ({
+                          _id: option.value,
+                          name: option.text,
+                          email: option.getAttribute('data-email')
+                        }));
+                        handleRecipientSelection('pas', selectedOptions);
+                      }}
+                    >
+                      {getPAs().map(pa => (
+                        <option key={pa._id} value={pa._id} data-email={pa.email}>
+                          {pa.name} ({pa.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Organizations */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Organizations ({organizations.length})</label>
+                    <select
+                      multiple
+                      className="w-full p-2 border rounded-md h-32"
+                      onChange={(e) => {
+                        const selectedOptions = Array.from(e.target.selectedOptions, option => ({
+                          _id: option.value,
+                          name: option.text,
+                          email: option.getAttribute('data-email')
+                        }));
+                        handleRecipientSelection('organizations', selectedOptions);
+                      }}
+                    >
+                      {organizations.map(org => (
+                        <option key={org._id} value={org._id} data-email={org.email}>
+                          {org.name} ({org.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Event Selection */}
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-lg font-semibold mb-4">Select Events (Optional)</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Selected events will be included in the email body
+                  </p>
+                  
+                  <select
+                    multiple
+                    className="w-full p-2 border rounded-md h-64"
+                    onChange={(e) => {
+                      const selectedOptions = Array.from(e.target.selectedOptions, option => ({
+                        _id: option.value,
+                        title: option.text,
+                        date: option.getAttribute('data-date'),
+                        arrivalTime: option.getAttribute('data-arrival-time'),
+                        departureTime: option.getAttribute('data-departure-time'),
+                        location: option.getAttribute('data-location'),
+                        description: option.getAttribute('data-description'),
+                        organizationName: option.getAttribute('data-org-name'),
+                        spotsTotal: option.getAttribute('data-spots-total'),
+                        spotsFilled: option.getAttribute('data-spots-filled')
+                      }));
+                      handleEventSelection(selectedOptions);
+                    }}
+                  >
+                    {opportunities.map(opp => (
+                      <option 
+                        key={opp._id} 
+                        value={opp._id}
+                        data-date={opp.date}
+                        data-arrival-time={opp.arrivalTime}
+                        data-departure-time={opp.departureTime}
+                        data-location={opp.location}
+                        data-description={opp.description}
+                        data-org-name={opp.organizationName}
+                        data-spots-total={opp.spotsTotal}
+                        data-spots-filled={opp.spotsFilled}
+                      >
+                        {opp.title} - {opp.date} ({opp.organizationName})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Email Preview */}
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-lg font-semibold mb-4">Email Preview</h3>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Subject</label>
+                    <input
+                      type="text"
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                      placeholder="Enter email subject..."
+                      className="w-full p-2 border rounded-md"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Body</label>
+                    <textarea
+                      value={emailBody}
+                      onChange={(e) => setEmailBody(e.target.value)}
+                      placeholder="Enter email body..."
+                      className="w-full p-2 border rounded-md h-32"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Selected Recipients</label>
+                    <div className="text-sm text-gray-600">
+                      <div>Users: {emailRecipients.users.length}</div>
+                      <div>PAs: {emailRecipients.pas.length}</div>
+                      <div>Organizations: {emailRecipients.organizations.length}</div>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Selected Events</label>
+                    <div className="text-sm text-gray-600">
+                      {selectedEvents.length} events selected
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={openEmailClient}
+                    disabled={emailLoading}
+                    className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                  >
+                    {emailLoading ? 'Preparing Email...' : 'Open in Email Client'}
+                  </button>
                 </div>
               </div>
             </div>
