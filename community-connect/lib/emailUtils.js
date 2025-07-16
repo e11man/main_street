@@ -107,7 +107,7 @@ async function shouldSendEmailNotification(opportunityId, recipientEmail, recipi
     const db = client.db('mainStreetOpportunities');
     const emailNotificationsCollection = db.collection('emailNotifications');
 
-    // If recipient is a company/organization, check their notification preferences
+    // Check notification preferences for both users and organizations
     if (recipientType === 'company') {
       const companiesCollection = db.collection('companies');
       const organization = await companiesCollection.findOne({ email: recipientEmail.toLowerCase().trim() });
@@ -118,6 +118,50 @@ async function shouldSendEmailNotification(opportunityId, recipientEmail, recipi
         // If notifications are disabled, don't send
         if (notificationFrequency === 'never') {
           console.log(`Notifications disabled for organization: ${recipientEmail}`);
+          return false;
+        }
+        
+        // For immediate notifications, check only the basic rate limit
+        if (notificationFrequency === 'immediate') {
+          const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+          const recentNotification = await emailNotificationsCollection.findOne({
+            opportunityId: new ObjectId(opportunityId),
+            recipientEmail: recipientEmail.toLowerCase().trim(),
+            lastSentAt: { $gte: thirtyMinutesAgo }
+          });
+          return !recentNotification;
+        }
+        
+        // For batched notifications (5min, 30min), check the specific interval
+        let intervalMinutes;
+        if (notificationFrequency === '5min') {
+          intervalMinutes = 5;
+        } else if (notificationFrequency === '30min') {
+          intervalMinutes = 30;
+        } else {
+          // Default to 30 minutes for unknown frequencies
+          intervalMinutes = 30;
+        }
+        
+        const intervalAgo = new Date(Date.now() - intervalMinutes * 60 * 1000);
+        const recentNotification = await emailNotificationsCollection.findOne({
+          opportunityId: new ObjectId(opportunityId),
+          recipientEmail: recipientEmail.toLowerCase().trim(),
+          lastSentAt: { $gte: intervalAgo }
+        });
+        
+        return !recentNotification;
+      }
+    } else if (recipientType === 'user') {
+      const usersCollection = db.collection('users');
+      const user = await usersCollection.findOne({ email: recipientEmail.toLowerCase().trim() });
+      
+      if (user) {
+        const notificationFrequency = user.chatNotificationFrequency || 'immediate';
+        
+        // If notifications are disabled, don't send
+        if (notificationFrequency === 'never') {
+          console.log(`Notifications disabled for user: ${recipientEmail}`);
           return false;
         }
         
@@ -275,7 +319,8 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
             participants.push({
               email: companyEmail,
               name: company.name || 'Organization',
-              type: 'company'
+              type: 'company',
+              chatNotificationFrequency: company.chatNotificationFrequency || 'immediate'
             });
           }
         } 
@@ -284,7 +329,8 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
           participants.push({
             email: companyEmail,
             name: company.name || 'Organization',
-            type: 'company'
+            type: 'company',
+            chatNotificationFrequency: company.chatNotificationFrequency || 'immediate'
           });
         }
         // For user: always notify company
@@ -292,7 +338,8 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
           participants.push({
             email: companyEmail,
             name: company.name || 'Organization',
-            type: 'company'
+            type: 'company',
+            chatNotificationFrequency: company.chatNotificationFrequency || 'immediate'
           });
         }
       } else if (company.email) {
@@ -317,7 +364,8 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
         participants.push({
           email: userEmail,
           name: user.name || 'Volunteer',
-          type: 'user'
+          type: 'user',
+          chatNotificationFrequency: user.chatNotificationFrequency || 'immediate'
         });
       } else if (!userEmail && user.email) {
         console.warn(`Invalid user email format for user ${user._id}: ${user.email}`);
@@ -339,7 +387,7 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
  * @param {string} messagePreview - Preview of the message (first 100 chars)
  * @returns {Promise<Object>} - Result object with success status and error details
  */
-async function sendChatNotificationEmail(participant, opportunity, senderName, messagePreview) {
+export async function sendChatNotificationEmail(participant, opportunity, senderName, messagePreview) {
   try {
     // Validate participant email before attempting to send
     const sanitizedEmail = sanitizeEmail(participant.email);

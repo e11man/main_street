@@ -24,6 +24,7 @@ export async function processBatchedNotifications(frequency) {
     const pendingNotificationsCollection = db.collection('pendingNotifications');
     const emailNotificationsCollection = db.collection('emailNotifications');
     const companiesCollection = db.collection('companies');
+    const usersCollection = db.collection('users');
     const opportunitiesCollection = db.collection('opportunities');
     const chatMessagesCollection = db.collection('chatMessages');
     
@@ -126,6 +127,116 @@ export async function processBatchedNotifications(frequency) {
         }
       } catch (error) {
         console.error(`Error processing ${frequency} notifications for organization ${organization.email}:`, error);
+      }
+    }
+    
+    // Find users with this notification frequency
+    const users = await usersCollection.find({
+      chatNotificationFrequency: frequency
+    }).toArray();
+    
+    console.log(`Processing ${frequency} notifications for ${users.length} users`);
+    
+    for (const user of users) {
+      try {
+        // Get all opportunities this user has committed to
+        const userCommitments = user.commitments || [];
+        const opportunities = [];
+        
+        for (const commitmentId of userCommitments) {
+          let opportunity = null;
+          
+          // Try to find opportunity by different ID formats
+          if (typeof commitmentId === 'number' || !isNaN(parseInt(commitmentId))) {
+            opportunity = await opportunitiesCollection.findOne({ id: parseInt(commitmentId) });
+          }
+          
+          if (!opportunity && ObjectId.isValid(commitmentId)) {
+            opportunity = await opportunitiesCollection.findOne({ _id: new ObjectId(commitmentId) });
+          }
+          
+          if (opportunity) {
+            opportunities.push(opportunity);
+          }
+        }
+        
+        for (const opportunity of opportunities) {
+          // Get all chat messages in the time window for this opportunity
+          const recentMessages = await chatMessagesCollection.find({
+            opportunityId: opportunity._id,
+            timestamp: { $gte: windowStart },
+            senderId: { $ne: user._id } // Exclude messages from the user itself
+          }).toArray();
+          
+          if (recentMessages.length === 0) {
+            continue; // No new messages in this window
+          }
+          
+          // Check if we've already sent a notification for this user/opportunity in this window
+          const lastNotification = await emailNotificationsCollection.findOne({
+            opportunityId: opportunity._id,
+            recipientEmail: user.email.toLowerCase().trim(),
+            lastSentAt: { $gte: windowStart }
+          });
+          
+          if (lastNotification) {
+            continue; // Already sent notification in this window
+          }
+          
+          // Prepare notification content
+          const messageCount = recentMessages.length;
+          const latestMessage = recentMessages[recentMessages.length - 1];
+          
+          // Get sender information for the latest message
+          let senderName = 'Someone';
+          if (latestMessage.senderType === 'user') {
+            const sender = await usersCollection.findOne({ _id: latestMessage.senderId });
+            if (sender) {
+              senderName = sender.name;
+            }
+          } else if (latestMessage.senderType === 'organization' || latestMessage.senderType === 'admin_as_host') {
+            const sender = await companiesCollection.findOne({ _id: latestMessage.senderId });
+            if (sender) {
+              senderName = sender.name;
+            }
+          }
+          
+          // Send batched notification
+          const notificationResult = await sendChatNotificationEmail(
+            {
+              email: user.email,
+              name: user.name,
+              type: 'user'
+            },
+            opportunity,
+            senderName,
+            `You have ${messageCount} new message${messageCount > 1 ? 's' : ''} in the chat for "${opportunity.title}".`
+          );
+          
+          if (notificationResult.success) {
+            // Record that notification was sent
+            await emailNotificationsCollection.updateOne(
+              {
+                opportunityId: opportunity._id,
+                recipientEmail: user.email.toLowerCase().trim()
+              },
+              {
+                $set: {
+                  lastSentAt: now,
+                  batchFrequency: frequency,
+                  messageCount: messageCount
+                }
+              },
+              { upsert: true }
+            );
+            
+            console.log(`Sent ${frequency} batched notification to ${user.email} for opportunity ${opportunity.title}`);
+          } else {
+            console.error(`Failed to send ${frequency} batched notification to ${user.email}:`, notificationResult.error);
+          }
+        }
+      } catch (error) {
+        console.error(`Error processing ${frequency} notifications for user ${user.email}:`, error);
       }
     }
     

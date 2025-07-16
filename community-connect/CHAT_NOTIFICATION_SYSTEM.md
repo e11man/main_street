@@ -1,248 +1,307 @@
 # Chat Notification System
 
-This document describes the chat notification system that allows organizations to configure their email notification preferences for new chat messages.
-
 ## Overview
 
-The chat notification system provides organizations with flexible control over how often they receive email notifications for new chat messages in their volunteer opportunities. Organizations can choose from four notification frequency options:
-
-- **Never**: No email notifications are sent
-- **Immediate**: Email notifications are sent as soon as a new message is posted
-- **Every 5 minutes**: Batched notifications are sent every 5 minutes if there are new messages
-- **Every 30 minutes**: Batched notifications are sent every 30 minutes if there are new messages
+The Chat Notification System provides comprehensive email notifications for chat messages in Community Connect. Both users and organizations can configure their notification preferences to receive emails according to their preferred frequency.
 
 ## Features
 
-### 1. Organization Dashboard Integration
+### Notification Frequencies
 
-Organizations can configure their notification preferences through the organization dashboard:
+- **Never**: No email notifications sent
+- **Immediate**: Email sent as soon as a new message is posted (with 30-minute rate limiting)
+- **Every 5 minutes**: Batched notifications sent every 5 minutes
+- **Every 30 minutes**: Batched notifications sent every 30 minutes
 
-- Navigate to the organization dashboard
-- Click "Configure Notifications" in the Notification Settings section
-- Select your preferred notification frequency
-- Save your settings
+### User Management
 
-### 2. Database Schema Updates
+- **User Dashboard**: Users can manage their notification preferences at `/user-dashboard`
+- **Organization Dashboard**: Organizations can manage their notification preferences at `/organization-dashboard`
+- **API Endpoints**: RESTful APIs for updating notification settings
 
-The system adds a `chatNotificationFrequency` field to the `companies` collection in MongoDB:
+## System Architecture
 
-```javascript
-{
-  _id: ObjectId,
-  name: String,
-  email: String,
-  // ... other existing fields
-  chatNotificationFrequency: String // 'never', 'immediate', '5min', '30min'
-}
-```
+### Database Collections
 
-### 3. Smart Notification Logic
+1. **users** - Stores user data including `chatNotificationFrequency`
+2. **companies** - Stores organization data including `chatNotificationFrequency`
+3. **chatMessages** - Stores chat messages
+4. **emailNotifications** - Tracks sent notifications to prevent spam
+5. **pendingNotifications** - Stores notifications waiting to be sent (for batched notifications)
 
-The system intelligently handles different notification frequencies:
+### Key Components
 
-- **Immediate**: Sends notifications right away with a 30-minute rate limit to prevent spam
-- **Batched (5min/30min)**: Collects messages and sends batched notifications at the specified intervals
-- **Never**: Completely disables notifications for the organization
-
-### 4. Rate Limiting
-
-To prevent email spam, the system implements rate limiting:
-
-- Immediate notifications: Maximum one email per 30 minutes per opportunity
-- Batched notifications: Respects the organization's chosen interval
-- All notifications are logged for monitoring and debugging
-
-## API Endpoints
-
-### Update Notification Settings
-
-**Endpoint**: `PUT /api/organizations/notification-settings`
-
-**Request Body**:
-```json
-{
-  "organizationId": "organization_id_here",
-  "chatNotificationFrequency": "immediate"
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "message": "Notification settings updated successfully",
-  "organization": {
-    // Updated organization data
-  }
-}
-```
-
-### Process Batched Notifications (Admin)
-
-**Endpoint**: `POST /api/admin/process-notifications`
-
-**Request Body**:
-```json
-{
-  "adminKey": "your_admin_key_here",
-  "action": "process" // "process", "cleanup", or "both"
-}
-```
-
-## Files Modified/Created
-
-### Frontend Files
-- `pages/organization-dashboard.js` - Added notification settings UI
-- `components/Modal/Modal.jsx` - Used for notification settings modal
-
-### Backend Files
-- `pages/api/organizations/notification-settings.js` - New API endpoint
-- `pages/api/admin/process-notifications.js` - Admin endpoint for processing
-- `lib/emailUtils.js` - Updated to respect notification preferences
-- `lib/notificationJobSystem.js` - New system for batched notifications
-
-### Scripts
-- `scripts/test-notification-system.js` - Test script for verification
-- `scripts/notification-cron.js` - Cron job script for batched notifications
+1. **emailUtils.js** - Core email sending functionality
+2. **notificationJobSystem.js** - Handles batched notification processing
+3. **User Dashboard** - User interface for managing preferences
+4. **Organization Dashboard** - Organization interface for managing preferences
+5. **API Endpoints** - Backend APIs for updating preferences
 
 ## Setup Instructions
 
 ### 1. Environment Variables
 
-Add the following environment variables to your `.env.local` file:
+Ensure these environment variables are set in your `.env.local` file:
 
 ```bash
-# Email configuration (existing)
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
+# MongoDB Connection
+MONGODB_URI=mongodb://localhost:27017/mainStreetOpportunities
 
-# Admin key for notification processing (new)
-ADMIN_NOTIFICATION_KEY=your_secure_admin_key_here
+# Email Configuration (Gmail example)
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+
+# Application URL
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
 ### 2. Database Setup
 
-The system automatically adds the `chatNotificationFrequency` field to existing organizations. New organizations will have this field set to `'immediate'` by default.
-
-### 3. Cron Job Setup
-
-To enable batched notifications, set up cron jobs to run the notification processing:
+The system automatically creates required collections and indexes. Run the setup script to verify everything is configured correctly:
 
 ```bash
-# For 5-minute notifications (run every 5 minutes)
-*/5 * * * * cd /path/to/community-connect && node scripts/notification-cron.js 5min
-
-# For 30-minute notifications (run every 30 minutes)
-*/30 * * * * cd /path/to/community-connect && node scripts/notification-cron.js 30min
-
-# For cleanup (run daily at 2 AM)
-0 2 * * * cd /path/to/community-connect && node scripts/notification-cron.js cleanup
+npm run setup-notification-system
 ```
 
-### 4. Testing
-
-Run the test script to verify the system works correctly:
+### 3. Start the Application
 
 ```bash
-cd community-connect
-node scripts/test-notification-system.js
+npm run dev
 ```
 
-## Usage Examples
+### 4. Run Tests
 
-### Setting Up Notifications for an Organization
+```bash
+npm run test:notifications
+```
 
-1. Log in to the organization dashboard
-2. Click "Configure Notifications" in the Notification Settings section
-3. Select your preferred frequency:
-   - **Immediate**: Get notified right away for each message
-   - **Every 5 minutes**: Get batched notifications every 5 minutes
-   - **Every 30 minutes**: Get batched notifications every 30 minutes
-   - **Never**: Disable all email notifications
-4. Click "Save Settings"
+## Usage
 
-### Testing Different Frequencies
+### For Users
 
-1. Create test organizations with different notification frequencies
-2. Send chat messages to their opportunities
-3. Verify that emails are sent according to the correct intervals
-4. Use the test script to automate this process
+1. **Access User Dashboard**: Navigate to `/user-dashboard`
+2. **Configure Notifications**: Click "Configure Notifications" button
+3. **Select Frequency**: Choose from Never, Immediate, Every 5 minutes, or Every 30 minutes
+4. **Save Settings**: Click "Save Settings" to update preferences
 
-## Monitoring and Debugging
+### For Organizations
+
+1. **Access Organization Dashboard**: Navigate to `/organization-dashboard`
+2. **Configure Notifications**: Click "Configure Notifications" button
+3. **Select Frequency**: Choose from Never, Immediate, Every 5 minutes, or Every 30 minutes
+4. **Save Settings**: Click "Save Settings" to update preferences
+
+### API Usage
+
+#### Update User Notification Settings
+
+```javascript
+PUT /api/users/notification-settings
+Content-Type: application/json
+
+{
+  "userId": "user_id_here",
+  "chatNotificationFrequency": "immediate"
+}
+```
+
+#### Update Organization Notification Settings
+
+```javascript
+PUT /api/organizations/notification-settings
+Content-Type: application/json
+
+{
+  "organizationId": "org_id_here",
+  "chatNotificationFrequency": "5min"
+}
+```
+
+#### Process Batched Notifications (Admin)
+
+```javascript
+POST /api/admin/process-notifications
+```
+
+## How It Works
+
+### Immediate Notifications
+
+1. When a chat message is posted, the system identifies all participants
+2. For participants with "immediate" preference, emails are sent immediately
+3. Rate limiting prevents spam (30-minute minimum interval between emails)
+
+### Batched Notifications (5min/30min)
+
+1. Chat messages are stored in the database
+2. A cron job runs every minute to check for pending notifications
+3. For participants with batched preferences, notifications are sent according to their frequency
+4. Multiple messages are batched into a single email
+
+### Never Notifications
+
+1. Participants with "never" preference are completely excluded from email notifications
+2. No emails are sent regardless of message activity
+
+## Email Templates
+
+### Immediate Notifications
+
+- **Subject**: "New Message in [Opportunity Title] Chat"
+- **Content**: Includes sender name and message preview
+- **Action**: Link to view full conversation
+
+### Batched Notifications
+
+- **Subject**: "New Messages in [Opportunity Title] Chat"
+- **Content**: Summary of message count and latest sender
+- **Action**: Link to view full conversation
+
+## Testing
+
+### Automated Tests
+
+Run the comprehensive test suite:
+
+```bash
+npm run test:notifications
+```
+
+The test suite covers:
+- User and organization creation
+- Notification preference storage
+- Immediate notification sending
+- Batched notification processing
+- Email system functionality
+- Database operations
+
+### Manual Testing
+
+1. **Create Test Users/Organizations**: Use the test script to create test accounts
+2. **Send Chat Messages**: Post messages in chat interfaces
+3. **Verify Emails**: Check email delivery for different notification frequencies
+4. **Test Rate Limiting**: Verify that immediate notifications respect the 30-minute limit
+
+## Monitoring and Maintenance
 
 ### Logs
 
 The system logs all notification activities:
 
-- Email sending attempts and results
-- Rate limiting decisions
-- Batched notification processing
-- Errors and failures
-
-### Database Collections
-
-Monitor these collections for debugging:
-
-- `emailNotifications` - Records of sent notifications
-- `pendingNotifications` - Pending batched notifications
-- `chatMessages` - Chat message history
-- `companies` - Organization notification preferences
-
-### Manual Processing
-
-You can manually trigger notification processing:
-
-```bash
-# Process all batched notifications
-curl -X POST http://localhost:3000/api/admin/process-notifications \
-  -H "Content-Type: application/json" \
-  -d '{"adminKey": "your_admin_key", "action": "process"}'
-
-# Clean up old records
-curl -X POST http://localhost:3000/api/admin/process-notifications \
-  -H "Content-Type: application/json" \
-  -d '{"adminKey": "your_admin_key", "action": "cleanup"}'
+```javascript
+// Example log entries
+console.log(`Sent immediate notification to ${email} for opportunity ${opportunity.title}`);
+console.log(`Processing ${frequency} batched notifications for ${count} recipients`);
+console.log(`Notifications disabled for ${email}`);
 ```
+
+### Database Maintenance
+
+Regular cleanup tasks:
+
+1. **Old Notifications**: Remove notification records older than 30 days
+2. **Pending Notifications**: Clean up processed pending notifications
+3. **Rate Limiting**: Maintain email notification history for rate limiting
+
+### Performance Considerations
+
+1. **Database Indexes**: Ensure proper indexes on frequently queried fields
+2. **Email Batching**: Batch emails to reduce SMTP overhead
+3. **Rate Limiting**: Prevent email spam and respect provider limits
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Emails not being sent**
-   - Check email configuration in environment variables
-   - Verify organization notification preferences
-   - Check rate limiting logs
+#### Emails Not Sending
 
-2. **Batched notifications not working**
-   - Ensure cron jobs are properly configured
-   - Check the notification processing logs
-   - Verify the admin key is correct
+1. **Check Environment Variables**: Verify EMAIL_USER and EMAIL_PASS are set
+2. **Check SMTP Settings**: Ensure email provider allows SMTP access
+3. **Check Database Connection**: Verify MongoDB connection is working
+4. **Check Logs**: Look for error messages in console output
 
-3. **High email volume**
-   - Review organization notification preferences
-   - Consider adjusting rate limiting settings
-   - Monitor email sending logs
+#### Notifications Not Respecting Preferences
 
-### Performance Considerations
+1. **Check Database**: Verify notification frequency is stored correctly
+2. **Check API Calls**: Ensure preference updates are successful
+3. **Check Cache**: Clear any cached user/organization data
 
-- The system is designed to handle high message volumes efficiently
-- Batched notifications reduce email server load
-- Rate limiting prevents spam and abuse
-- Old notification records are automatically cleaned up
+#### Batched Notifications Not Working
+
+1. **Check Cron Job**: Ensure notification processing is running
+2. **Check Database**: Verify pending notifications are being created
+3. **Check Time Windows**: Ensure correct time calculations for batching
+
+### Debug Mode
+
+Enable debug logging by setting:
+
+```bash
+DEBUG_NOTIFICATIONS=true
+```
+
+This will provide detailed logging of all notification operations.
 
 ## Security Considerations
 
-- Admin endpoints require authentication
-- Email addresses are validated and sanitized
-- Rate limiting prevents abuse
-- Sensitive data is not logged
+1. **Email Validation**: All email addresses are validated before sending
+2. **Rate Limiting**: Prevents email spam and abuse
+3. **Authentication**: API endpoints require proper authentication
+4. **Data Privacy**: Only necessary information is included in emails
 
 ## Future Enhancements
 
-Potential improvements to consider:
+1. **Push Notifications**: Add mobile push notification support
+2. **SMS Notifications**: Add SMS notification option
+3. **Custom Templates**: Allow organizations to customize email templates
+4. **Advanced Scheduling**: Support for custom notification schedules
+5. **Analytics**: Track notification engagement and effectiveness
 
-- Webhook notifications for real-time integrations
-- SMS notifications as an alternative to email
-- Custom notification templates per organization
-- Advanced filtering and notification rules
-- Analytics dashboard for notification metrics
+## Support
+
+For issues or questions about the notification system:
+
+1. Check the troubleshooting section above
+2. Review the test logs for error details
+3. Verify environment configuration
+4. Check database connectivity and data integrity
+
+## API Reference
+
+### Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| PUT | `/api/users/notification-settings` | Update user notification preferences |
+| PUT | `/api/organizations/notification-settings` | Update organization notification preferences |
+| GET | `/api/users/commitments` | Get user commitments with opportunity details |
+| POST | `/api/admin/process-notifications` | Process batched notifications (admin only) |
+
+### Data Models
+
+#### User Notification Settings
+```javascript
+{
+  userId: ObjectId,
+  chatNotificationFrequency: "never" | "immediate" | "5min" | "30min"
+}
+```
+
+#### Organization Notification Settings
+```javascript
+{
+  organizationId: ObjectId,
+  chatNotificationFrequency: "never" | "immediate" | "5min" | "30min"
+}
+```
+
+#### Email Notification Record
+```javascript
+{
+  opportunityId: ObjectId,
+  recipientEmail: String,
+  lastSentAt: Date,
+  batchFrequency: String,
+  messageCount: Number
+}
+```
