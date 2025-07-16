@@ -95,20 +95,67 @@ export async function sendPasswordResetEmail(toEmail, code) {
 }
 
 /**
- * Checks if a user should receive an email notification based on rate limiting (30 minutes)
+ * Checks if a user should receive an email notification based on rate limiting and organization preferences
  * @param {string} opportunityId - The opportunity ID
  * @param {string} recipientEmail - The recipient's email address
- * @returns {Promise<boolean>} - True if email should be sent, false if rate limited
+ * @param {string} recipientType - The type of recipient ('user' or 'company')
+ * @returns {Promise<boolean>} - True if email should be sent, false if rate limited or disabled
  */
-async function shouldSendEmailNotification(opportunityId, recipientEmail) {
+async function shouldSendEmailNotification(opportunityId, recipientEmail, recipientType) {
   try {
     const client = await clientPromise;
     const db = client.db('mainStreetOpportunities');
     const emailNotificationsCollection = db.collection('emailNotifications');
 
-    // Check if user has been notified within the last 30 minutes
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    // If recipient is a company/organization, check their notification preferences
+    if (recipientType === 'company') {
+      const companiesCollection = db.collection('companies');
+      const organization = await companiesCollection.findOne({ email: recipientEmail.toLowerCase().trim() });
+      
+      if (organization) {
+        const notificationFrequency = organization.chatNotificationFrequency || 'immediate';
+        
+        // If notifications are disabled, don't send
+        if (notificationFrequency === 'never') {
+          console.log(`Notifications disabled for organization: ${recipientEmail}`);
+          return false;
+        }
+        
+        // For immediate notifications, check only the basic rate limit
+        if (notificationFrequency === 'immediate') {
+          const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+          const recentNotification = await emailNotificationsCollection.findOne({
+            opportunityId: new ObjectId(opportunityId),
+            recipientEmail: recipientEmail.toLowerCase().trim(),
+            lastSentAt: { $gte: thirtyMinutesAgo }
+          });
+          return !recentNotification;
+        }
+        
+        // For batched notifications (5min, 30min), check the specific interval
+        let intervalMinutes;
+        if (notificationFrequency === '5min') {
+          intervalMinutes = 5;
+        } else if (notificationFrequency === '30min') {
+          intervalMinutes = 30;
+        } else {
+          // Default to 30 minutes for unknown frequencies
+          intervalMinutes = 30;
+        }
+        
+        const intervalAgo = new Date(Date.now() - intervalMinutes * 60 * 1000);
+        const recentNotification = await emailNotificationsCollection.findOne({
+          opportunityId: new ObjectId(opportunityId),
+          recipientEmail: recipientEmail.toLowerCase().trim(),
+          lastSentAt: { $gte: intervalAgo }
+        });
+        
+        return !recentNotification;
+      }
+    }
     
+    // For regular users, use the default 30-minute rate limit
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
     const recentNotification = await emailNotificationsCollection.findOne({
       opportunityId: new ObjectId(opportunityId),
       recipientEmail: recipientEmail.toLowerCase().trim(),
@@ -437,11 +484,11 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
           continue;
         }
 
-        // Check rate limiting
-        const shouldSend = await shouldSendEmailNotification(opportunityId, participant.email);
+        // Check rate limiting and notification preferences
+        const shouldSend = await shouldSendEmailNotification(opportunityId, participant.email, participant.type);
         
         if (!shouldSend) {
-          console.log(`Rate limited: ${participant.email} for opportunity ${opportunityId}`);
+          console.log(`Rate limited or notifications disabled: ${participant.email} for opportunity ${opportunityId}`);
           results.rateLimited++;
           results.participants.push({
             email: participant.email,
