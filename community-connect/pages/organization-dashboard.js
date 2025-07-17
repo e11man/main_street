@@ -47,6 +47,11 @@ export default function OrganizationDashboard() {
   const [selectedOpportunityForChat, setSelectedOpportunityForChat] = useState(null);
   const [showSafetyModal, setShowSafetyModal] = useState(false);
   const [safetyContent, setSafetyContent] = useState({});
+  
+  // Notification settings state
+  const [notificationFrequency, setNotificationFrequency] = useState('immediate');
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [notificationLoading, setNotificationLoading] = useState(false);
 
   useEffect(() => {
     // Check if organization is logged in
@@ -76,6 +81,9 @@ export default function OrganizationDashboard() {
       website: parsedOrganizationData.website || '',
       phone: parsedOrganizationData.phone || ''
     });
+    
+    // Initialize notification frequency
+    setNotificationFrequency(parsedOrganizationData.chatNotificationFrequency || 'immediate');
     
     // Fetch organization opportunities
     fetchOpportunities(parsedOrganizationData._id);
@@ -292,6 +300,42 @@ export default function OrganizationDashboard() {
     setIsOrganizationInfoModalOpen(true);
   };
 
+  const openNotificationSettingsModal = () => {
+    setIsNotificationModalOpen(true);
+  };
+
+  const handleNotificationFrequencyChange = (e) => {
+    setNotificationFrequency(e.target.value);
+  };
+
+  const handleNotificationSettingsSubmit = async (e) => {
+    e.preventDefault();
+    setNotificationLoading(true);
+    
+    try {
+      const response = await axios.put('/api/organizations/notification-settings', {
+        organizationId: organizationData._id,
+        chatNotificationFrequency: notificationFrequency
+      });
+      
+      // Update local organization data
+      const updatedOrganizationData = {
+        ...organizationData,
+        chatNotificationFrequency: notificationFrequency
+      };
+      setOrganizationData(updatedOrganizationData);
+      localStorage.setItem('organizationData', JSON.stringify(updatedOrganizationData));
+      
+      setIsNotificationModalOpen(false);
+      setError('');
+    } catch (error) {
+      console.error('Error updating notification settings:', error);
+      setError('Failed to update notification settings');
+    } finally {
+      setNotificationLoading(false);
+    }
+  };
+
   if (!organizationData) {
     return <div className="text-center p-10">Loading...</div>;
   }
@@ -341,6 +385,36 @@ export default function OrganizationDashboard() {
             <div>
               <p className="text-text-secondary font-montserrat">Phone:</p>
               <p className="text-text-primary font-source-serif">{organizationData.phone || 'No phone number provided'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-background shadow-md rounded-lg p-6 mb-8 border border-border">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-primary font-montserrat">Notification Settings</h2>
+            <button
+              onClick={openNotificationSettingsModal}
+              className="bg-accent1 hover:bg-accent1-dark text-white font-bold py-2 px-4 rounded font-montserrat"
+            >
+              Configure Notifications
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-text-secondary font-montserrat">Chat Notification Frequency:</p>
+              <p className="text-text-primary font-source-serif capitalize">
+                {organizationData.chatNotificationFrequency === 'never' && 'Never'}
+                {organizationData.chatNotificationFrequency === 'immediate' && 'Immediate (as soon as a new message is posted)'}
+                {organizationData.chatNotificationFrequency === '5min' && 'Every 5 minutes'}
+                {organizationData.chatNotificationFrequency === '30min' && 'Every 30 minutes'}
+                {!organizationData.chatNotificationFrequency && 'Immediate (default)'}
+              </p>
+            </div>
+            <div>
+              <p className="text-text-secondary font-montserrat">Current Setting:</p>
+              <p className="text-text-primary font-source-serif">
+                {organizationData.chatNotificationFrequency || 'immediate'}
+              </p>
             </div>
           </div>
         </div>
@@ -859,6 +933,56 @@ export default function OrganizationDashboard() {
         type="org"
         content={safetyContent}
       />
+
+      {/* Notification Settings Modal */}
+      <Modal isOpen={isNotificationModalOpen} onClose={() => setIsNotificationModalOpen(false)}>
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4">Chat Notification Settings</h2>
+          <form onSubmit={handleNotificationSettingsSubmit}>
+            <div className="mb-6">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="notificationFrequency">
+                Email Notification Frequency for New Chat Messages
+              </label>
+              <select
+                id="notificationFrequency"
+                name="notificationFrequency"
+                value={notificationFrequency}
+                onChange={handleNotificationFrequencyChange}
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                required
+              >
+                <option value="never">Never</option>
+                <option value="immediate">Immediate (as soon as a new message is posted)</option>
+                <option value="5min">Every 5 minutes</option>
+                <option value="30min">Every 30 minutes</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Choose how often you want to receive email notifications for new chat messages in your opportunities.
+              </p>
+            </div>
+            
+            {error && <p className="text-red-500 mb-4">{error}</p>}
+            
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsNotificationModalOpen(false)}
+                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2"
+                disabled={notificationLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                disabled={notificationLoading}
+              >
+                {notificationLoading ? 'Saving...' : 'Save Settings'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
     </div>
   );
 }
