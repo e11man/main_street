@@ -201,31 +201,52 @@ function filterOutdatedOpportunities(opportunities) {
 function filterRecurringOpportunities(opportunities) {
   const recurringGroups = new Map();
   const nonRecurringOpportunities = [];
-  
+
   // Group opportunities by their parent ID or base ID
   opportunities.forEach(opportunity => {
     if (opportunity.isRecurring || opportunity.parentOpportunityId) {
-      // This is a recurring opportunity
+      // Identify the group key for this recurring set
       const groupKey = opportunity.parentOpportunityId || opportunity.baseOpportunityId || opportunity.id;
-      
+
       if (!recurringGroups.has(groupKey)) {
         recurringGroups.set(groupKey, []);
       }
       recurringGroups.get(groupKey).push(opportunity);
     } else {
-      // This is a non-recurring opportunity
+      // Non-recurring opportunity – keep it as-is
       nonRecurringOpportunities.push(opportunity);
     }
   });
-  
-  // For each recurring group, keep only the most recent opportunity
-  const mostRecentRecurring = [];
+
+  // For each recurring group, keep only the NEXT upcoming occurrence (earliest future date)
+  const nextUpcomingRecurring = [];
   recurringGroups.forEach(group => {
-    // Sort by date and take the most recent (latest date)
-    const sortedGroup = group.sort((a, b) => new Date(b.date) - new Date(a.date));
-    mostRecentRecurring.push(sortedGroup[0]);
+    // Sort ascending by date
+    const sortedGroup = group.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Because we already cleaned up past opportunities (see cleanupOldOpportunities)
+    // the first element should be the next upcoming instance. However, we still perform
+    // a safety check in case any past-dated instances slipped through.
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const nextInstance = sortedGroup.find(opp => {
+      try {
+        const oppDate = new Date(opp.date);
+        oppDate.setHours(0, 0, 0, 0);
+        return oppDate >= today; // today or future (although today normally cleaned out)
+      } catch (err) {
+        console.error('Error parsing opportunity date for recurring filter:', opp.date, err);
+        return false;
+      }
+    });
+
+    if (nextInstance) {
+      nextUpcomingRecurring.push(nextInstance);
+    }
   });
-  
-  // Combine non-recurring and most recent recurring opportunities
-  return [...nonRecurringOpportunities, ...mostRecentRecurring];
+
+  // Combine and return
+  return [...nonRecurringOpportunities, ...nextUpcomingRecurring];
 }
