@@ -306,10 +306,26 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
     const participants = [];
     const sanitizedSenderEmail = sanitizeEmail(senderEmail);
     
-    // Get company information
-    const companiesCollection = db.collection('companies');
-    const company = await companiesCollection.findOne({ _id: new ObjectId(opportunity.companyId) });
-    
+    // Determine the company/organization id field (supports both `companyId` and legacy `organizationId`)
+    const companyIdField = opportunity.companyId || opportunity.organizationId;
+
+    let company = null;
+    if (companyIdField) {
+      const companiesCollection = db.collection('companies');
+      try {
+        if (typeof companyIdField === 'string' && ObjectId.isValid(companyIdField)) {
+          company = await companiesCollection.findOne({ _id: new ObjectId(companyIdField) });
+        } else if (companyIdField instanceof ObjectId) {
+          company = await companiesCollection.findOne({ _id: companyIdField });
+        } else {
+          // Fallback: try direct match (in case stored as plain string)
+          company = await companiesCollection.findOne({ _id: companyIdField });
+        }
+      } catch (err) {
+        console.warn('Could not look up organization by companyIdField', companyIdField, err);
+      }
+    }
+ 
     if (company) {
       const companyEmail = sanitizeEmail(company.email);
       if (companyEmail) {
@@ -509,6 +525,7 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
       rateLimited: 0,
       failed: 0,
       invalidEmails: 0,
+      batched: 0, // participants deferred to batched notifications
       participants: [],
       errors: []
     };
@@ -518,6 +535,19 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
 
     // Send emails to eligible participants
     for (const participant of participants) {
+      // Skip immediate sending for participants who prefer batched notifications
+      if (participant.chatNotificationFrequency && participant.chatNotificationFrequency !== 'immediate') {
+        results.batched++;
+        results.participants.push({
+          email: participant.email,
+          name: participant.name,
+          type: participant.type,
+          status: 'batched',
+          batchFrequency: participant.chatNotificationFrequency
+        });
+        continue;
+      }
+
       try {
         // Double-check email validity
         if (!isValidEmail(participant.email)) {
@@ -594,7 +624,7 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
       }
     }
 
-    console.log(`Chat notifications completed: ${results.emailsSent} sent, ${results.rateLimited} rate limited, ${results.failed} failed, ${results.invalidEmails} invalid emails`);
+    console.log(`Chat notifications completed: ${results.emailsSent} sent, ${results.rateLimited} rate limited, ${results.failed} failed, ${results.invalidEmails} invalid emails, ${results.batched} batched`);
     return results;
 
   } catch (error) {

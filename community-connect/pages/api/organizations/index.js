@@ -150,7 +150,9 @@ async function handleSignup(req, res, organizationsCollection) {
       phone: phone || '',
       opportunities: [], // Array to store opportunity IDs created by this organization
       createdAt: new Date(),
-      approved: false // Organizations require approval
+      approved: false, // Organizations require approval
+      // Default messaging preference
+      chatNotificationFrequency: 'immediate'
     };
     
     // Insert new organization into pending organizations collection
