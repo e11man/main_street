@@ -312,7 +312,18 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
     let company = null;
     if (companyIdField) {
       const companiesCollection = db.collection('companies');
-      company = await companiesCollection.findOne({ _id: new ObjectId(companyIdField) });
+      try {
+        if (typeof companyIdField === 'string' && ObjectId.isValid(companyIdField)) {
+          company = await companiesCollection.findOne({ _id: new ObjectId(companyIdField) });
+        } else if (companyIdField instanceof ObjectId) {
+          company = await companiesCollection.findOne({ _id: companyIdField });
+        } else {
+          // Fallback: try direct match (in case stored as plain string)
+          company = await companiesCollection.findOne({ _id: companyIdField });
+        }
+      } catch (err) {
+        console.warn('Could not look up organization by companyIdField', companyIdField, err);
+      }
     }
  
     if (company) {
