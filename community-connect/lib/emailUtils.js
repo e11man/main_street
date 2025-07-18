@@ -121,6 +121,13 @@ async function shouldSendEmailNotification(opportunityId, recipientEmail, recipi
           return false;
         }
         
+        // FOR TESTING: Always send emails regardless of rate limiting or frequency
+        // This bypasses all rate limiting and frequency checks
+        console.log(`[TESTING MODE] Bypassing rate limiting for organization: ${recipientEmail} (frequency: ${notificationFrequency})`);
+        return true;
+        
+        // ORIGINAL RATE LIMITING CODE - COMMENTED OUT FOR TESTING
+        /*
         // For immediate notifications, check only the basic rate limit
         if (notificationFrequency === 'immediate') {
           const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
@@ -151,6 +158,7 @@ async function shouldSendEmailNotification(opportunityId, recipientEmail, recipi
         });
         
         return !recentNotification;
+        */
       }
     } else if (recipientType === 'user') {
       const usersCollection = db.collection('users');
@@ -165,6 +173,13 @@ async function shouldSendEmailNotification(opportunityId, recipientEmail, recipi
           return false;
         }
         
+        // FOR TESTING: Always send emails regardless of rate limiting or frequency
+        // This bypasses all rate limiting and frequency checks
+        console.log(`[TESTING MODE] Bypassing rate limiting for user: ${recipientEmail} (frequency: ${notificationFrequency})`);
+        return true;
+        
+        // ORIGINAL RATE LIMITING CODE - COMMENTED OUT FOR TESTING
+        /*
         // For immediate notifications, check only the basic rate limit
         if (notificationFrequency === 'immediate') {
           const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
@@ -195,9 +210,16 @@ async function shouldSendEmailNotification(opportunityId, recipientEmail, recipi
         });
         
         return !recentNotification;
+        */
       }
     }
     
+    // FOR TESTING: For regular users (fallback), always send (bypass rate limiting)
+    console.log(`[TESTING MODE] Bypassing rate limiting for regular user: ${recipientEmail}`);
+    return true;
+    
+    // ORIGINAL FALLBACK RATE LIMITING CODE - COMMENTED OUT FOR TESTING
+    /*
     // For regular users, use the default 30-minute rate limit
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
     const recentNotification = await emailNotificationsCollection.findOne({
@@ -207,9 +229,10 @@ async function shouldSendEmailNotification(opportunityId, recipientEmail, recipi
     });
 
     return !recentNotification;
+    */
   } catch (error) {
-    console.error('Error checking email notification rate limit:', error);
-    // Default to allowing email if rate limit check fails
+    console.error('Error checking email notification eligibility:', error);
+    // FOR TESTING: Return true on error to ensure emails are sent
     return true;
   }
 }
@@ -535,6 +558,15 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
 
     // Send emails to eligible participants
     for (const participant of participants) {
+      // FOR TESTING: Skip batched notification logic - send all emails immediately
+      // This ensures all participants receive immediate notifications regardless of their frequency setting
+      if (participant.chatNotificationFrequency && participant.chatNotificationFrequency !== 'immediate') {
+        console.log(`[TESTING MODE] Treating participant ${participant.email} as immediate (actual frequency: ${participant.chatNotificationFrequency})`);
+        // Continue processing as immediate instead of batching
+      }
+      
+      // ORIGINAL BATCHED NOTIFICATION CODE - COMMENTED OUT FOR TESTING
+      /*
       // Skip immediate sending for participants who prefer batched notifications
       if (participant.chatNotificationFrequency && participant.chatNotificationFrequency !== 'immediate') {
         results.batched++;
@@ -547,6 +579,7 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
         });
         continue;
       }
+      */
 
       try {
         // Double-check email validity
