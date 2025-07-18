@@ -303,6 +303,9 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
       return [];
     }
 
+    // Debug: Log opportunity found (can be removed in production)
+    console.log(`getChatParticipants: Found opportunity "${opportunity.title}" (${opportunityId})`);
+
     const participants = [];
     const sanitizedSenderEmail = sanitizeEmail(senderEmail);
     
@@ -325,6 +328,9 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
         console.warn('Could not look up organization by companyIdField', companyIdField, err);
       }
     }
+    
+    // Debug: Log company lookup result
+    console.log(`getChatParticipants: Company lookup - ${company ? `Found ${company.name} (${company.email})` : 'No company found'}`);
  
     if (company) {
       const companyEmail = sanitizeEmail(company.email);
@@ -370,9 +376,43 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
 
     // Get users who have committed to this opportunity (for organization and user senders)
     const usersCollection = db.collection('users');
+    
+    // Handle multiple commitment formats - users may have commitments stored as:
+    // - Numbers (for old opportunities with numeric 'id' field)
+    // - ObjectId strings (for new opportunities with '_id' field)
+    // - ObjectIds (for some edge cases)
+    const searchCriteria = [
+      new ObjectId(opportunityId), // ObjectId format
+      opportunityId, // String format
+    ];
+    
+    // If opportunityId is a valid ObjectId string, also check for numeric format
+    if (ObjectId.isValid(opportunityId)) {
+      // Try to find the opportunity to get its numeric ID if it exists
+      const opportunitiesCollection = db.collection('opportunities');
+      const foundOpportunity = await opportunitiesCollection.findOne({ _id: new ObjectId(opportunityId) });
+      if (foundOpportunity && foundOpportunity.id) {
+        searchCriteria.push(foundOpportunity.id); // Add numeric ID
+      }
+    } else {
+      // If opportunityId is numeric, also try as number
+      const numericOpportunityId = parseInt(opportunityId);
+      if (!isNaN(numericOpportunityId)) {
+        searchCriteria.push(numericOpportunityId);
+      }
+    }
+    
     const users = await usersCollection.find({ 
-      commitments: { $in: [new ObjectId(opportunityId)] }
+      commitments: { $in: searchCriteria }
     }).toArray();
+    
+    console.log(`getChatParticipants: Found ${users.length} users committed to opportunity ${opportunityId}`, {
+      opportunityId,
+      searchCriteria,
+      userEmails: users.map(u => u.email),
+      senderEmail: sanitizedSenderEmail,
+      senderType
+    });
 
     users.forEach(user => {
       const userEmail = sanitizeEmail(user.email);
@@ -388,6 +428,10 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
       }
     });
 
+    console.log(`getChatParticipants: Returning ${participants.length} total participants`, {
+      participants: participants.map(p => ({ email: p.email, name: p.name, type: p.type }))
+    });
+    
     return participants;
   } catch (error) {
     console.error('Error getting chat participants:', error);
