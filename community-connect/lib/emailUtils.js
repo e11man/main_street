@@ -306,10 +306,15 @@ async function getChatParticipants(opportunityId, senderEmail, senderType) {
     const participants = [];
     const sanitizedSenderEmail = sanitizeEmail(senderEmail);
     
-    // Get company information
-    const companiesCollection = db.collection('companies');
-    const company = await companiesCollection.findOne({ _id: new ObjectId(opportunity.companyId) });
-    
+    // Determine the company/organization id field (supports both `companyId` and legacy `organizationId`)
+    const companyIdField = opportunity.companyId || opportunity.organizationId;
+
+    let company = null;
+    if (companyIdField) {
+      const companiesCollection = db.collection('companies');
+      company = await companiesCollection.findOne({ _id: new ObjectId(companyIdField) });
+    }
+ 
     if (company) {
       const companyEmail = sanitizeEmail(company.email);
       if (companyEmail) {
