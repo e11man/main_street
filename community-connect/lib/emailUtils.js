@@ -509,6 +509,7 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
       rateLimited: 0,
       failed: 0,
       invalidEmails: 0,
+      batched: 0, // participants deferred to batched notifications
       participants: [],
       errors: []
     };
@@ -518,6 +519,19 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
 
     // Send emails to eligible participants
     for (const participant of participants) {
+      // Skip immediate sending for participants who prefer batched notifications
+      if (participant.chatNotificationFrequency && participant.chatNotificationFrequency !== 'immediate') {
+        results.batched++;
+        results.participants.push({
+          email: participant.email,
+          name: participant.name,
+          type: participant.type,
+          status: 'batched',
+          batchFrequency: participant.chatNotificationFrequency
+        });
+        continue;
+      }
+
       try {
         // Double-check email validity
         if (!isValidEmail(participant.email)) {
@@ -594,7 +608,7 @@ export async function sendChatNotifications(opportunityId, senderEmail, senderNa
       }
     }
 
-    console.log(`Chat notifications completed: ${results.emailsSent} sent, ${results.rateLimited} rate limited, ${results.failed} failed, ${results.invalidEmails} invalid emails`);
+    console.log(`Chat notifications completed: ${results.emailsSent} sent, ${results.rateLimited} rate limited, ${results.failed} failed, ${results.invalidEmails} invalid emails, ${results.batched} batched`);
     return results;
 
   } catch (error) {

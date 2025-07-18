@@ -37,6 +37,7 @@ async function seedOrganization() {
         website: 'https://testorganization.example.com',
         phone: '555-123-4567',
         opportunities: [], // Array to store opportunity IDs created by this organization
+        chatNotificationFrequency: 'immediate',
         createdAt: new Date(),
         approved: true
       };

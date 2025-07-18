@@ -107,7 +107,8 @@ export default async function handler(req, res) {
             insertedMessage.emailNotificationResults = {
               success: true,
               emailsSent: emailNotificationResults.emailsSent,
-              rateLimited: emailNotificationResults.rateLimited
+              rateLimited: emailNotificationResults.rateLimited,
+              batched: emailNotificationResults.batched
             };
           }
         } else {
