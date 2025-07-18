@@ -170,16 +170,25 @@ const ChatModal = ({ isOpen, onClose, opportunity, currentUser, isCompany }) => 
             details: emailResults
           });
         } else {
-          setEmailStatus({
-            message: 'Email notification system unavailable',
-            type: 'warning',
-            details: emailResults
-          });
+          // Handle system errors more gracefully
+          if (emailResults.systemError) {
+            setEmailStatus({
+              message: `Email notifications encountered an issue (${emailResults.systemErrorMessage}) - but your message was sent successfully`,
+              type: 'info',
+              details: emailResults
+            });
+          } else {
+            setEmailStatus({
+              message: 'Email notification system unavailable - but your message was sent successfully',
+              type: 'info',
+              details: emailResults
+            });
+          }
         }
       } else if (newMessageData.emailNotificationError) {
         setEmailStatus({
-          message: 'Email notifications temporarily unavailable',
-          type: 'warning',
+          message: 'Email notifications temporarily unavailable - but your message was sent successfully',
+          type: 'info',
           error: newMessageData.emailNotificationError
         });
       }
