@@ -205,8 +205,16 @@ function filterRecurringOpportunities(opportunities) {
   // Group opportunities by their parent ID or base ID
   opportunities.forEach(opportunity => {
     if (opportunity.isRecurring || opportunity.parentOpportunityId) {
-      // Identify the group key for this recurring set
-      const groupKey = opportunity.parentOpportunityId || opportunity.baseOpportunityId || opportunity.id;
+      // Identify the group key for this recurring set.  
+      // 1. If the instance has a parentOpportunityId, use that.  
+      // 2. Otherwise (the parent itself), fall back to its own _id (or id) so it forms its own group.  
+      // Convert to string to ensure consistent Map keys.
+      const groupKeyRaw = opportunity.parentOpportunityId || opportunity.baseOpportunityId || opportunity._id || opportunity.id;
+      if (!groupKeyRaw) {
+        console.warn('Unable to determine recurring group key for opportunity', opportunity);
+        return; // Skip grouping – treat as non-recurring to avoid duplicate display
+      }
+      const groupKey = groupKeyRaw.toString();
 
       if (!recurringGroups.has(groupKey)) {
         recurringGroups.set(groupKey, []);
