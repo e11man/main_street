@@ -921,7 +921,7 @@ export default function OrganizationDashboard() {
           }}
           opportunity={selectedOpportunityForChat}
           currentUser={organizationData} // Pass organizationData as currentUser
-          isOrganization={true} // Indicate that the sender is an organization
+          isCompany={true} // Indicate that the sender is an organization
         />
       )}
 
