@@ -11,9 +11,10 @@ const HeroStats = ({ content }) => {
     hoursServed: 0
   });
   const [loading, setLoading] = useState(true);
-  
+  const { content: dynamicContent } = useContent();
+
   const getContent = (key, defaultValue = '') => {
-    return content?.[key] || defaultValue;
+    return content?.[key] || dynamicContent[key] || defaultValue;
   };
   
   useEffect(() => {

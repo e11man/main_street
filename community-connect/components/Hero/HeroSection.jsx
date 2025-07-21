@@ -7,9 +7,11 @@ import useContent from '../../lib/useContent';
 
 const HeroSection = forwardRef(({ content, ...props }, ref) => {
   const [isVisible, setIsVisible] = useState(false);
-  
+  const { content: dynamicContent } = useContent();
+  const mergedContent = { ...dynamicContent, ...content };
+
   const getContent = (key, defaultValue = '') => {
-    return content?.[key] || defaultValue;
+    return mergedContent[key] || defaultValue;
   };
   
   useEffect(() => {
@@ -76,7 +78,7 @@ const HeroSection = forwardRef(({ content, ...props }, ref) => {
               </Button>
             </Link>
           </div>
-          <HeroStats content={content} />
+          <HeroStats content={mergedContent} />
         </div>
       </div>
     </section>
