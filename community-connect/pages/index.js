@@ -381,7 +381,7 @@ export default function Home({ content }) {
     <>
       <Header openModal={openModal} content={content} />
       <main>
-        <HeroSection ref={heroContentRef} content={content} />
+        <HeroSection ref={heroContentRef} />
         <FloatingCardSection content={content} />
         <SearchSection
         filter={filter}

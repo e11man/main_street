@@ -5,13 +5,12 @@ import Button from '../ui/Button';
 import Icon from '../ui/Icon';
 import useContent from '../../lib/useContent';
 
-const HeroSection = forwardRef(({ content, ...props }, ref) => {
+const HeroSection = forwardRef((_, ref) => {
   const [isVisible, setIsVisible] = useState(false);
-  const { content: dynamicContent } = useContent();
-  const mergedContent = { ...dynamicContent, ...content };
+  const { content } = useContent();
 
-  const getContent = (key, defaultValue = '') => {
-    return mergedContent[key] || defaultValue;
+  const getContent = (key) => {
+    return content[key] || '';
   };
   
   useEffect(() => {
@@ -49,36 +48,36 @@ const HeroSection = forwardRef(({ content, ...props }, ref) => {
 
           
           <h1 className="hero-title relative font-montserrat text-clamp-36-64 font-extrabold mb-8 md:mb-10 tracking-[-0.025em] text-primary leading-tight inline-block">
-{getContent('hero.title', 'Make the Connection')}
+{getContent('hero.title')}
             <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
           </h1>
           
           <p className="font-source-serif text-clamp-18-24 font-normal text-text-secondary mb-10 max-w-2xl mx-auto leading-relaxed">
-{getContent('hero.subtitle', 'Connect with meaningful opportunities that create lasting impact in upland.')}
+{getContent('hero.subtitle')}
           </p>
           
           <div className="flex flex-wrap justify-center gap-4 mb-16">
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               className="group text-base px-8 py-4 shadow-lg hover:shadow-xl"
               onClick={scrollToOpportunities}
             >
-{getContent('hero.cta.primary', 'Find Opportunities')}
+{getContent('hero.cta.primary')}
               <Icon 
                 path="M13 7l5 5m0 0l-5 5m5-5H6" 
                 className="ml-2 w-5 h-5 inline-block transition-transform group-hover:translate-x-1"
               />
             </Button>
             <Link href="/about">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="text-base px-8 py-4"
               >
-{getContent('hero.cta.secondary', 'Learn More')}
+{getContent('hero.cta.secondary')}
               </Button>
             </Link>
           </div>
-          <HeroStats content={mergedContent} />
+          <HeroStats />
         </div>
       </div>
     </section>
