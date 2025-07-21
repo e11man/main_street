@@ -51,7 +51,7 @@ const FilterTab = ({ category, isActive, onClick, content }) => {
         className={`w-4 h-4 md:w-5 md:h-5 ${isActive ? 'text-white' : 'text-accent1 group-hover:text-white'} transition-all duration-300`} 
       />
       <span className="relative z-10 font-bold">
-{getContent(`search.filter.${category}`, category.charAt(0).toUpperCase() + category.slice(1))}
+{getContent(`search.filter.${category}`)}
       </span>
       
       {/* Animated background shimmer effect */}

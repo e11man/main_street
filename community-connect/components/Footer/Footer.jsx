@@ -21,7 +21,7 @@ const Footer = ({ content }) => {
               Community Connect
             </h3>
             <p className="font-source-serif text-base text-text-secondary leading-relaxed mb-6">
-{getContent('footer.tagline', 'Connecting passionate volunteers with meaningful opportunities to create lasting change in upland.')}
+{getContent('footer.tagline')}
             </p>
             <div className="flex gap-4">
               <div className="bg-accent1/10 px-4 py-2 rounded-full flex items-center gap-2">
@@ -48,23 +48,23 @@ const Footer = ({ content }) => {
             </div>
             <div className="flex flex-wrap gap-6">
               <Link href="/about" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
-                <Icon path="M12 4v16m8-8H4" className="w-4 h-4 text-accent1" /> {getContent('nav.about', 'About')}
+                <Icon path="M12 4v16m8-8H4" className="w-4 h-4 text-accent1" /> {getContent('nav.about')}
               </Link>
               <Link href="/#contact" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
-                <Icon path="M21 8V7a2 2 0 00-2-2H5a2 2 0 00-2 2v1m18 0v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8m18 0l-9 6-9-6" className="w-4 h-4 text-accent1" /> {getContent('nav.contact', 'Contact')}
+                <Icon path="M21 8V7a2 2 0 00-2-2H5a2 2 0 00-2 2v1m18 0v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8m18 0l-9 6-9-6" className="w-4 h-4 text-accent1" /> {getContent('nav.contact')}
               </Link>
               <Link href="/#opportunities" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
-                <Icon path="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" className="w-4 h-4 text-accent1" /> {getContent('nav.opportunities', 'Opportunities')}
+                <Icon path="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" className="w-4 h-4 text-accent1" /> {getContent('nav.opportunities')}
               </Link>
               <Link href="/organization-login" className="text-text-secondary text-sm font-montserrat font-medium hover:text-accent1 transition-all duration-200 hover:scale-105 flex items-center gap-1">
-                <Icon path="M3 7v4a1 1 0 001 1h3v2a2 2 0 002 2h2a2 2 0 002-2v-2h3a1 1 0 001-1V7a1 1 0 00-1-1H4a1 1 0 00-1 1zm16 0V5a2 2 0 00-2-2H7a2 2 0 00-2 2v2" className="w-4 h-4 text-accent1" /> {getContent('nav.org_login', 'Organization Login')}
+                <Icon path="M3 7v4a1 1 0 001 1h3v2a2 2 0 002 2h2a2 2 0 002-2v-2h3a1 1 0 001-1V7a1 1 0 00-1-1H4a1 1 0 00-1 1zm16 0V5a2 2 0 00-2-2H7a2 2 0 00-2 2v2" className="w-4 h-4 text-accent1" /> {getContent('nav.org_login')}
               </Link>
             </div>
           </div>
         </div>
         <div className="border-t-2 border-gradient-to-r from-accent1/20 via-accent1/40 to-accent1/20 pt-8 text-center">
           <div className="bg-white/60 rounded-full px-6 py-3 inline-block border border-border/30">
-             <p className="text-text-tertiary text-sm font-medium">{getContent('footer.copyright', '© 2025 Community Connect. All rights reserved. Made with ❤️ for upland.')}</p>
+             <p className="text-text-tertiary text-sm font-medium">{getContent('footer.copyright')}</p>
           </div>
         </div>
       </div>

@@ -119,12 +119,12 @@ export default function About({ content }) {
               isVisible.hero ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
               <h1 className="hero-title relative font-montserrat text-clamp-36-64 font-extrabold mb-8 md:mb-10 tracking-[-0.025em] text-white leading-tight inline-block">
-{getContent('about.hero.title', 'Make the Connection')}
+{getContent('about.hero.title')}
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h1>
               
               <p className="font-source-serif text-clamp-18-24 font-normal text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-{getContent('about.hero.subtitle', 'Connect with meaningful opportunities that create lasting impact in upland.')}
+{getContent('about.hero.subtitle')}
               </p>
               
               <div className="flex flex-wrap justify-center gap-4">
@@ -159,11 +159,11 @@ export default function About({ content }) {
               isVisible.mission ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
               <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary relative inline-block">
-{getContent('about.mission.title', 'Our Mission')}
+{getContent('about.mission.title')}
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
               <p className="font-source-serif text-lg text-text-secondary max-w-4xl mx-auto leading-relaxed">
-{getContent('about.mission.text', 'Community Connect is dedicated to fostering meaningful relationships between passionate volunteers and impactful opportunities. We believe that when individuals come together with shared purpose, they can create transformative change that extends far beyond individual efforts. Our platform serves as a bridge, connecting hearts and hands to build stronger, more resilient upland through collective action.')}
+{getContent('about.mission.text')}
               </p>
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function About({ content }) {
               isVisible.impact ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
               <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary relative inline-block">
-{getContent('about.impact.title', 'Our Impact')}
+{getContent('about.impact.title')}
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
             </div>
@@ -202,11 +202,11 @@ export default function About({ content }) {
               isVisible.whatWeDo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
               <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary relative inline-block">
-{getContent('about.what_we_do.title', 'What We Do')}
+{getContent('about.what_we_do.title')}
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
               <p className="font-source-serif text-lg text-text-secondary max-w-4xl mx-auto leading-relaxed">
-{getContent('about.what_we_do.text', 'Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in upland.')}
+{getContent('about.what_we_do.text')}
               </p>
             </div>
 
@@ -372,11 +372,11 @@ export default function About({ content }) {
               isVisible.contact ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}>
               <h2 className="font-montserrat text-clamp-32-48 font-bold mb-8 text-primary relative inline-block">
-{getContent('about.contact.title', 'Get In Touch')}
+{getContent('about.contact.title')}
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary to-accent1 rounded-full"></span>
               </h2>
               <p className="font-source-serif text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed mb-8">
-{getContent('about.contact.text', 'Have questions or want to learn more about how you can get involved? We\'d love to hear from you and help you find the perfect opportunity to make a difference.')}
+{getContent('about.contact.text')}
               </p>
               
               <div className="mb-8">

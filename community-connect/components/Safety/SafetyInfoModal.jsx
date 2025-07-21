@@ -39,9 +39,9 @@ const SafetyInfoModal = ({
   ];
 
   const guidelines = type === 'user' ? userGuidelines : orgGuidelines;
-  const title = getContent(type === 'user' ? 'safety.user.title' : 'safety.org.title', 'Safety Guidelines');
-  const subtitle = getContent(type === 'user' ? 'safety.user.subtitle' : 'safety.org.subtitle', 'Please review these important guidelines.');
-  const acknowledgeText = getContent(type === 'user' ? 'safety.user.acknowledge' : 'safety.org.acknowledge', 'I have read and understand the safety guidelines');
+  const title = getContent(type === 'user' ? 'safety.user.title' : 'safety.org.title');
+  const subtitle = getContent(type === 'user' ? 'safety.user.subtitle' : 'safety.org.subtitle');
+  const acknowledgeText = getContent(type === 'user' ? 'safety.user.acknowledge' : 'safety.org.acknowledge');
 
   const handleAcknowledge = () => {
     if (acknowledged) {
@@ -79,7 +79,7 @@ const SafetyInfoModal = ({
                 </div>
                 <div className="flex-1">
                   <p className="text-gray-800 leading-relaxed">
-                    {getContent(guideline.key, 'Safety guideline')}
+                    {getContent(guideline.key)}
                   </p>
                 </div>
               </div>

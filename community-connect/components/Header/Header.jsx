@@ -15,10 +15,10 @@ const Header = ({ openModal, content }) => {
   };
   
   const NAV_LINKS = [
-    { name: getContent('nav.home', 'Home'), href: '/' },
-    { name: getContent('nav.about', 'About'), href: '/about' },
-    { name: getContent('nav.opportunities', 'Opportunities'), href: '/#opportunities' },
-    { name: getContent('nav.contact', 'Contact'), href: '/#contact' },
+    { name: getContent('nav.home'), href: '/' },
+    { name: getContent('nav.about'), href: '/about' },
+    { name: getContent('nav.opportunities'), href: '/#opportunities' },
+    { name: getContent('nav.contact'), href: '/#contact' },
   ];
 
   // Lock scroll when mobile nav is open
@@ -64,7 +64,7 @@ const Header = ({ openModal, content }) => {
             className="ml-4 shadow-sm hover:shadow-md whitespace-nowrap"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
           >
-            {getContent('nav.request_volunteers', 'Request Volunteers')}
+            {getContent('nav.request_volunteers')}
           </Button>
         </nav>
 
@@ -76,7 +76,7 @@ const Header = ({ openModal, content }) => {
             className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
             style={{ fontFamily: "'Montserrat', sans-serif" }}
           >
-            {getContent('nav.request_volunteers', 'Request Volunteers')}
+            {getContent('nav.request_volunteers')}
           </Button>
           <MobileMenuButton isOpen={mobileOpen} toggleMenu={() => setMobileOpen(v => !v)} />
         </div>

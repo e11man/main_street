@@ -16,10 +16,10 @@ const FilterTabs = ({ currentFilter, setFilter, content }) => {
     <div className="bg-gradient-to-r from-surface/50 via-white to-surface/50 rounded-2xl p-4 md:p-6 border border-border/30 shadow-sm mb-8">
       <div className="text-center mb-3 md:mb-4">
         <h3 className="font-montserrat text-base md:text-lg font-semibold text-primary mb-1 md:mb-2">
-          {getContent('search.filter.title', 'Filter Opportunities')}
+          {getContent('search.filter.title')}
         </h3>
         <p className="text-xs md:text-sm text-text-secondary">
-          {getContent('search.filter.subtitle', 'Click on a category to filter opportunities')}
+          {getContent('search.filter.subtitle')}
         </p>
       </div>
       
