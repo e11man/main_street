@@ -529,6 +529,14 @@ export async function getServerSideProps() {
     // Get all content
     const content = await getAllContent();
     
+    // Check if essential content exists
+    const requiredKeys = ['hero.title', 'hero.subtitle', 'hero.cta.primary', 'hero.cta.secondary'];
+    const missingKeys = requiredKeys.filter(key => !content[key]);
+    
+    if (missingKeys.length > 0) {
+      throw new Error(`Missing required content keys in MongoDB: ${missingKeys.join(', ')}`);
+    }
+    
     return {
       props: {
         content,
@@ -536,10 +544,7 @@ export async function getServerSideProps() {
     };
   } catch (error) {
     console.error('Error fetching content:', error);
-    return {
-      props: {
-        content: {},
-      },
-    };
+    // Don't provide empty fallback - let the error bubble up
+    throw error;
   }
 }

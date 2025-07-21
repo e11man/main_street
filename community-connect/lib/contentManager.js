@@ -58,6 +58,12 @@ async function getAllContent() {
 
 async function initializeDefaultContent() {
   try {
+    // Skip initialization in testing mode
+    if (process.env.TESTING_MODE === 'true') {
+      console.log('Testing mode: Skipping default content initialization');
+      return true;
+    }
+    
     const database = await connectToContentDB();
     const collection = database.collection('site_content');
     
