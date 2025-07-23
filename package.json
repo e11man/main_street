@@ -2,23 +2,62 @@
   "name": "community-connect",
   "version": "1.0.0",
   "private": true,
+  "description": "A community platform connecting volunteers with organizations and opportunities",
+  "main": "next.config.js",
+  "keywords": ["community", "volunteers", "organizations", "next.js", "react", "tailwindcss"],
+  "author": "",
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "node scripts/seed-db.js",
+    "check-cancellations": "node scripts/check-cancellations.js",
+    "setup-email-notifications": "node scripts/setup-email-notifications.js",
+    "validate-emails": "node scripts/validate-email-addresses.js",
+    "init-metrics": "node scripts/initialize-metrics.js",
+    "test:notifications": "node run-notification-tests.js"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.8",
     "@react-google-maps/api": "^2.20.7",
     "@tailwindcss/postcss": "^4.1.10",
     "autoprefixer": "^10.4.21",
     "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.17.0",
     "next": "^15.3.3",
+    "nodemailer": "^7.0.3",
     "postcss": "^8.5.5",
+    "queue-microtask": "^1.2.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.5.2",
     "tailwindcss": "4.1.10",
     "use-places-autocomplete": "^4.0.1"
+  },
+  "devDependencies": {
+    "eslint": "9.30.0",
+    "eslint-config-next": "15.3.4"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
